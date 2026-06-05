@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Prisma — migrations are COMMITTED (needed to reproduce schema)
+# prisma/schema.prisma and prisma.config.ts are both committed
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
