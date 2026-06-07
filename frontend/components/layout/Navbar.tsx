@@ -83,12 +83,10 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             {/* Currency picker */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="hidden md:flex items-center gap-1 text-sm text-[#6B6056] hover:text-[#1A1A1A] transition-colors px-2 py-1.5 rounded-md hover:bg-[#F5EDE6]">
-                  <Globe className="h-4 w-4" />
-                  <span>{currency}</span>
-                  <ChevronDown className="h-3 w-3" />
-                </button>
+              <DropdownMenuTrigger className="hidden md:flex items-center gap-1 text-sm text-[#6B6056] hover:text-[#1A1A1A] transition-colors px-2 py-1.5 rounded-md hover:bg-[#F5EDE6]">
+                <Globe className="h-4 w-4" />
+                <span>{currency}</span>
+                <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36 max-h-72 overflow-y-auto">
                 {CURRENCIES.map((c) => (
@@ -118,16 +116,14 @@ export function Navbar() {
             {/* Auth */}
             {isAuthenticated() ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-[#E8E0D8] hover:border-[#C8956C] transition-colors bg-white">
-                    <div className="h-7 w-7 rounded-full bg-[#F5EDE6] flex items-center justify-center">
-                      <User className="h-4 w-4 text-[#C8956C]" />
-                    </div>
-                    <span className="text-sm font-medium text-[#1A1A1A] max-w-[100px] truncate">
-                      {user?.name}
-                    </span>
-                    <ChevronDown className="h-3 w-3 text-[#6B6056]" />
-                  </button>
+                <DropdownMenuTrigger className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-[#E8E0D8] hover:border-[#C8956C] transition-colors bg-white">
+                  <div className="h-7 w-7 rounded-full bg-[#F5EDE6] flex items-center justify-center">
+                    <User className="h-4 w-4 text-[#C8956C]" />
+                  </div>
+                  <span className="text-sm font-medium text-[#1A1A1A] max-w-[100px] truncate">
+                    {user?.name}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-[#6B6056]" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
                   <div className="px-3 py-2 border-b border-[#E8E0D8]">
