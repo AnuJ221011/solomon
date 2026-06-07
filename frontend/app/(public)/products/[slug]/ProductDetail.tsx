@@ -12,10 +12,10 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 import { useProduct } from "@/lib/hooks/useProducts";
 import { AchievementBadge } from "@/components/shared/AchievementBadge";
-import { AuthGateModal } from "@/components/auth/AuthGateModal";
 import { useCurrencyStore } from "@/lib/stores/currencyStore";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useAuthModal } from "@/lib/stores/authModalStore";
 import { cn } from "@/lib/utils";
 
 const LEAD_TIME_LABELS: Record<string, string> = {
@@ -31,8 +31,8 @@ export function ProductDetail({ slug }: Props) {
   const { format } = useCurrencyStore();
   const { isAuthenticated } = useAuthStore();
   const { increment } = useCartStore();
+  const { openModal } = useAuthModal();
   const [activePhoto, setActivePhoto] = useState(0);
-  const [authGateOpen, setAuthGateOpen] = useState(false);
 
   const addToCartMutation = useMutation({
     mutationFn: async () => {
@@ -46,7 +46,12 @@ export function ProductDetail({ slug }: Props) {
   });
 
   const handleAddToCart = () => {
-    if (!isAuthenticated()) { setAuthGateOpen(true); return; }
+    if (!isAuthenticated()) {
+      openModal("signup", "Sign up to place wholesale orders", async () => {
+        addToCartMutation.mutate();
+      });
+      return;
+    }
     addToCartMutation.mutate();
   };
 
@@ -225,13 +230,6 @@ export function ProductDetail({ slug }: Props) {
               : <ShoppingBag className="h-5 w-5" />}
             {isAuthenticated() ? "Add to cart" : "Sign up to order"}
           </button>
-
-          <AuthGateModal
-            open={authGateOpen}
-            onClose={() => setAuthGateOpen(false)}
-            reason="Sign up to place wholesale orders"
-            pendingAction={async () => { addToCartMutation.mutate(); }}
-          />
 
           <div className="flex gap-3">
             <button className="flex-1 h-10 rounded-lg border border-[#E8E0D8] text-sm text-[#6B6056] flex items-center justify-center gap-2 hover:border-[#C8956C] hover:text-[#C8956C] transition-colors">

@@ -8,7 +8,7 @@ import { X, Loader2, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { ProductCard } from "@/components/product/ProductCard";
-import { AuthGateModal } from "@/components/auth/AuthGateModal";
+import { useAuthModal } from "@/lib/stores/authModalStore";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
@@ -17,8 +17,8 @@ interface Props { params: Promise<{ token: string }> }
 export default function ShareLinkPage({ params }: Props) {
   const { token } = use(params);
   const { isAuthenticated } = useAuthStore();
+  const { openModal } = useAuthModal();
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [authGateOpen, setAuthGateOpen] = useState(false);
 
   // Store token in sessionStorage for attribution on signup
   useEffect(() => {
@@ -71,13 +71,13 @@ export default function ShareLinkPage({ params }: Props) {
           <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-between gap-4">
             <p className="text-sm text-[#92400E]">
               <span className="font-semibold">{brandName}</span> invited you to their wholesale catalogue —{" "}
-              <button onClick={() => setAuthGateOpen(true)} className="font-semibold underline underline-offset-2 hover:text-[#C8956C]">
+              <button onClick={() => openModal("signup", `Sign up to order from ${brandName}`)} className="font-semibold underline underline-offset-2 hover:text-[#C8956C]">
                 create a free account to place orders
               </button>
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={() => setAuthGateOpen(true)}
+                onClick={() => openModal("signup", `Sign up to order from ${brandName}`)}
                 className="h-7 px-3 rounded-lg bg-[#C8956C] text-white text-xs font-medium hover:bg-[#B07D57] transition-colors"
               >
                 Sign up free
@@ -112,17 +112,11 @@ export default function ShareLinkPage({ params }: Props) {
 
         {/* Products */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <BrandProducts brandId={link.brandProfile?.id} onAddToCart={() => setAuthGateOpen(true)} isAuthed={isAuthenticated()} />
+          <BrandProducts brandId={link.brandProfile?.id} onAddToCart={() => openModal("signup", `Sign up to order from ${brandName}`)} isAuthed={isAuthenticated()} />
         </div>
       </main>
 
       <Footer />
-
-      <AuthGateModal
-        open={authGateOpen}
-        onClose={() => setAuthGateOpen(false)}
-        reason={`Sign up to order from ${brandName}`}
-      />
     </div>
   );
 }

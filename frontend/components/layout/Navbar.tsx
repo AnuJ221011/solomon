@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useCurrencyStore } from "@/lib/stores/currencyStore";
+import { useAuthModal } from "@/lib/stores/authModalStore";
 import { LinkButton } from "@/components/ui/link-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -29,6 +30,7 @@ export function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { itemCount } = useCartStore();
   const { currency, setCurrency } = useCurrencyStore();
+  const { openModal } = useAuthModal();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -157,12 +159,18 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <div className="hidden md:flex items-center gap-2">
-                <LinkButton href="/login" variant="ghost" size="sm" className="text-[#6B6056]">
+                <button
+                  onClick={() => openModal("login")}
+                  className="h-8 px-3 text-sm font-medium text-[#6B6056] hover:text-[#1A1A1A] hover:bg-[#F5EDE6] rounded-lg transition-colors"
+                >
                   Log in
-                </LinkButton>
-                <LinkButton href="/signup" variant="default" size="sm">
+                </button>
+                <button
+                  onClick={() => openModal("signup")}
+                  className="h-8 px-3 text-sm font-medium bg-[#C8956C] hover:bg-[#B07D57] text-white rounded-lg transition-colors"
+                >
                   Join free
-                </LinkButton>
+                </button>
               </div>
             )}
 
@@ -211,12 +219,18 @@ export function Navbar() {
                 </button>
               ) : (
                 <>
-                  <LinkButton href="/login" variant="outline" size="default" className="flex-1 justify-center" onClick={() => setMobileOpen(false)}>
+                  <button
+                    onClick={() => { setMobileOpen(false); openModal("login"); }}
+                    className="flex-1 h-9 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#1A1A1A] hover:bg-[#F5EDE6] transition-colors"
+                  >
                     Log in
-                  </LinkButton>
-                  <LinkButton href="/signup" variant="default" size="default" className="flex-1 justify-center" onClick={() => setMobileOpen(false)}>
+                  </button>
+                  <button
+                    onClick={() => { setMobileOpen(false); openModal("signup"); }}
+                    className="flex-1 h-9 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium transition-colors"
+                  >
                     Join free
-                  </LinkButton>
+                  </button>
                 </>
               )}
             </div>

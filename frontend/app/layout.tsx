@@ -4,6 +4,7 @@ import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/Providers";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthGateModal } from "@/components/auth/AuthGateModal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] antialiased">
         <Providers>
           {children}
+          <AuthGateModal />
           <Toaster
             position="bottom-right"
             toastOptions={{
