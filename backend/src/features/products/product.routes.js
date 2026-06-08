@@ -5,6 +5,7 @@ import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
 import { createProductSchema, updateProductSchema, productQuerySchema } from './product.validator.js';
 import { importProductsFromCsv } from './product.import.js';
+import variantRouter from './variant.routes.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import multer from 'multer';
 
@@ -34,5 +35,8 @@ router.post(
     sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
   }
 );
+
+// Variant sub-routes: /api/products/:productId/variants
+router.use('/:productId/variants', variantRouter);
 
 export default router;

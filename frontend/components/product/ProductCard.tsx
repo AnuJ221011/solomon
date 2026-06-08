@@ -95,6 +95,34 @@ export function ProductCard({ product, onSave, isSaved, className }: Props) {
           </h3>
         </Link>
 
+        {/* Variant color dots (if product has color variants) */}
+        {(() => {
+          const variants = (product as any).variants ?? [];
+          const colorAttrs = variants.flatMap((v: any) =>
+            v.attributes?.filter((a: any) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour") ?? []
+          );
+          const uniqueColors = [...new Set(colorAttrs.map((a: any) => a.value))] as string[];
+          if (uniqueColors.length > 1) {
+            return (
+              <div className="flex items-center gap-1 mt-1.5">
+                {uniqueColors.slice(0, 5).map((c) => (
+                  <span key={c} title={c}
+                    className="h-3 w-3 rounded-full border border-[#E8E0D8] shrink-0"
+                    style={{ background: c.toLowerCase() === "white" ? "#fff" : c.toLowerCase() === "black" ? "#1a1a1a" : c.toLowerCase() }}
+                  />
+                ))}
+                {uniqueColors.length > 5 && (
+                  <span className="text-[10px] text-[#6B6056]">+{uniqueColors.length - 5}</span>
+                )}
+              </div>
+            );
+          }
+          if (variants.length > 1) {
+            return <p className="text-[10px] text-[#6B6056] mt-1">{variants.length} variants</p>;
+          }
+          return null;
+        })()}
+
         {/* Price + MOQ */}
         <div className="mt-2 flex items-baseline justify-between">
           <div>

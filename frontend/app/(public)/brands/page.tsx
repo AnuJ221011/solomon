@@ -5,6 +5,7 @@ import { Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useBrands } from "@/lib/hooks/useBrands";
+import { useCategoriesFlat } from "@/lib/hooks/useCategories";
 import { AchievementBadge } from "@/components/shared/AchievementBadge";
 import type { AchievementLevel } from "@/lib/types";
 
@@ -17,9 +18,9 @@ const LEVELS = [
   { value: "L1_SPROUT",  label: "Sprout"  },
 ];
 
-const CATEGORIES = ["", "Textiles", "Home Décor", "Jewellery", "Accessories", "Stationery", "Apparel"];
 
 export default function BrandsPage() {
+  const { data: categories = [] } = useCategoriesFlat();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("");
   const [category, setCategory] = useState("");
@@ -53,7 +54,8 @@ export default function BrandsPage() {
         </select>
         <select value={category} onChange={(e) => setCategory(e.target.value)}
           className="h-10 pl-3 pr-8 rounded-lg border border-[#E8E0D8] bg-white text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C8956C] cursor-pointer">
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c || "All categories"}</option>)}
+          <option value="">All categories</option>
+          {categories.map((c) => <option key={c.slug} value={c.name}>{c.name}</option>)}
         </select>
       </div>
 

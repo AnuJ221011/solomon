@@ -13,6 +13,7 @@ import { logger } from './shared/utils/logger.js';
 
 // Feature routers
 import { authRouter } from './features/auth/index.js';
+import { categoryRouter } from './features/categories/index.js';
 import { brandRouter } from './features/brands/index.js';
 import { productRouter } from './features/products/index.js';
 import { shareLinkRouter } from './features/share-links/index.js';
@@ -65,6 +66,7 @@ app.get('/health', (req, res) => {
 
 // ─── Routes ──────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
+app.use('/api/categories', categoryRouter);
 app.use('/api/brands', brandRouter);
 app.use('/api/products', productRouter);
 app.use('/api/orders', orderRouter);

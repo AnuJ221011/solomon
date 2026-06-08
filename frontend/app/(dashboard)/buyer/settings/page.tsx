@@ -6,6 +6,7 @@ import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { useCurrencyStore } from "@/lib/stores/currencyStore";
+import { useCategoriesFlat } from "@/lib/hooks/useCategories";
 
 const STORE_TYPES = ["boutique", "gift_shop", "subscription_box", "online_store", "pop_up", "other"];
 const AESTHETICS  = ["artisan", "minimalist", "bohemian", "luxury", "contemporary", "eclectic"];
@@ -15,6 +16,7 @@ const COUNTRIES   = [["US","United States"],["GB","United Kingdom"],["AU","Austr
 export default function BuyerSettingsPage() {
   const qc = useQueryClient();
   const { currency, setCurrency } = useCurrencyStore();
+  const { data: categories = [] } = useCategoriesFlat();
   const [form, setForm] = useState<Record<string, any>>({});
 
   const { data, isLoading } = useQuery({
@@ -106,12 +108,12 @@ export default function BuyerSettingsPage() {
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-[#1A1A1A]">Product interests</label>
           <div className="flex flex-wrap gap-2">
-            {["textiles", "home_decor", "jewellery", "accessories", "stationery", "apparel", "food_wellness", "art_craft"].map((cat) => {
-              const selected = (form.categoryInterests ?? []).includes(cat);
+            {categories.map((cat) => {
+              const selected = (form.categoryInterests ?? []).includes(cat.name);
               return (
-                <button key={cat} onClick={() => toggleCategory(cat)}
+                <button key={cat.slug} onClick={() => toggleCategory(cat.name)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${selected ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] bg-white"}`}>
-                  {cat.replace(/_/g, " ")}
+                  {cat.name}
                 </button>
               );
             })}

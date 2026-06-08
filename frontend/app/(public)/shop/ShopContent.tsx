@@ -4,13 +4,9 @@ import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X, ChevronDown, Loader2 } from "lucide-react";
 import { useProducts, type ProductFilters } from "@/lib/hooks/useProducts";
+import { useCategoriesFlat } from "@/lib/hooks/useCategories";
 import { ProductCard } from "@/components/product/ProductCard";
 import { cn } from "@/lib/utils";
-
-const CATEGORIES = [
-  "Textiles", "Home Décor", "Jewellery", "Accessories",
-  "Stationery", "Apparel", "Food & Wellness", "Art & Craft",
-];
 const ZONES = [
   { value: "EUROPE", label: "Europe" },
   { value: "NORTH_AMERICA", label: "North America" },
@@ -39,6 +35,7 @@ interface Props {
 
 export function ShopContent({ initialFilters = {} }: Props) {
   const router = useRouter();
+  const { data: categories = [] } = useCategoriesFlat();
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState<ProductFilters>({
@@ -177,18 +174,18 @@ export function ShopContent({ initialFilters = {} }: Props) {
           {/* Categories */}
           <FilterGroup title="Category">
             <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
-                  key={cat}
-                  onClick={() => update({ category: filters.category === cat ? "" : cat })}
+                  key={cat.slug}
+                  onClick={() => update({ category: filters.category === cat.name ? "" : cat.name })}
                   className={cn(
                     "px-2.5 py-1 rounded-full text-xs font-medium border transition-all",
-                    filters.category === cat
+                    filters.category === cat.name
                       ? "bg-[#C8956C] border-[#C8956C] text-white"
                       : "bg-[#FAFAF8] border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] hover:text-[#C8956C]"
                   )}
                 >
-                  {cat}
+                  {cat.name}
                 </button>
               ))}
             </div>

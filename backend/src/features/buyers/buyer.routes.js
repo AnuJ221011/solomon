@@ -10,8 +10,8 @@ const router = Router();
 
 const cartItemSchema = z.object({
   productId: z.string().min(1),
+  variantId: z.string().optional(),  // required for products that have variants
   quantity: z.number().int().positive(),
-  variantOptions: z.any().optional(),
 });
 
 // All buyer routes require authentication
@@ -35,7 +35,8 @@ router.put('/cart/item', requireVerified, validate(cartItemSchema), async (req, 
 });
 
 router.delete('/cart/item/:productId', requireVerified, async (req, res) => {
-  await buyerService.removeCartItem(req.user.id, req.params.productId);
+  const variantId = req.query.variantId;
+  await buyerService.removeCartItem(req.user.id, req.params.productId, variantId);
   sendSuccess(res, null, 'Item removed');
 });
 

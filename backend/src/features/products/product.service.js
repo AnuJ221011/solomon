@@ -1,10 +1,14 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
+import { validateCategories } from '../categories/index.js';
 
 export const createProduct = async (userId, data) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
   if (!brand) throw createError('Brand profile not found', 404);
   if (brand.status !== 'APPROVED') throw createError('Brand must be approved to list products', 403);
+
+  // Validate that all supplied categories exist in the Category table
+  if (data.categories?.length) await validateCategories(data.categories);
 
   const slug = `${data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
@@ -33,7 +37,7 @@ export const getProductById = async (id) => {
     where: { id },
     include: {
       photos: { orderBy: { position: 'asc' } },
-      variants: true,
+      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
       brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
     },
   });
@@ -46,7 +50,7 @@ export const getProductBySlug = async (slug) => {
     where: { slug },
     include: {
       photos: { orderBy: { position: 'asc' } },
-      variants: true,
+      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
       brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
     },
   });

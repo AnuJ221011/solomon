@@ -3,28 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Upload, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { VariantBuilder, type VariantRow } from "@/components/product/VariantBuilder";
+import { CategoryCombobox } from "@/components/product/CategoryCombobox";
 
-const STEPS = ["Photos", "Details", "Pricing & Terms", "Preview"];
-const ZONES = ["DOMESTIC", "SOUTH_ASIA", "SOUTHEAST_ASIA", "MIDDLE_EAST", "EUROPE", "NORTH_AMERICA", "OCEANIA"];
-const CATEGORIES = ["Textiles", "Home Décor", "Jewellery", "Accessories", "Stationery", "Apparel", "Food & Wellness", "Art & Craft"];
+const STEPS = ["Photos", "Details", "Pricing & Terms", "Variants", "Preview"];
+const ZONES = ["DOMESTIC","SOUTH_ASIA","SOUTHEAST_ASIA","MIDDLE_EAST","EUROPE","NORTH_AMERICA","OCEANIA"];
 
 export default function NewProductPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [photos, setPhotos] = useState<File[]>([]);
+  const [variants, setVariants] = useState<VariantRow[]>([]);
   const [form, setForm] = useState({
     name: "", shortDescription: "", fullDescription: "",
     wholesalePriceInr: "", msrpInr: "", moq: "", weightGrams: "",
     hsTariffCode: "", leadTime: "ONE_TO_TWO_WEEKS",
     categories: [] as string[], tags: "", enabledZones: [] as string[],
   });
-  const [createdProductId, setCreatedProductId] = useState<string | null>(null);
 
+  // ── Create product, then bulk-create variants ──────────────────
   const createMutation = useMutation({
     mutationFn: async () => {
+      // 1. Create the product
       const { data } = await api.post("/products", {
         ...form,
         wholesalePriceInr: Number(form.wholesalePriceInr),
@@ -34,11 +37,9 @@ export default function NewProductPage() {
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
         countryOfOrigin: "IN",
       });
-      return data.data;
-    },
-    onSuccess: async (product) => {
-      setCreatedProductId(product.id);
-      // Upload photos if any
+      const product = data.data;
+
+      // 2. Upload photos
       if (photos.length > 0) {
         const fd = new FormData();
         photos.forEach((f) => fd.append("photos", f));
@@ -46,7 +47,26 @@ export default function NewProductPage() {
           headers: { "Content-Type": "multipart/form-data" },
         }).catch(() => {});
       }
-      toast.success("Product created!");
+
+      // 3. Bulk-create variants (if any)
+      const activeVariants = variants.filter((v) => v.sku && v.priceInr && v.stock !== "");
+      if (activeVariants.length > 0) {
+        await api.post(`/products/${product.id}/variants/bulk`, {
+          variants: activeVariants.map((v) => ({
+            sku: v.sku,
+            priceInr: Number(v.priceInr),
+            compareAtPriceInr: v.compareAtPriceInr ? Number(v.compareAtPriceInr) : undefined,
+            stock: Number(v.stock),
+            status: v.status,
+            attributes: v.attributes,
+          })),
+        });
+      }
+
+      return product;
+    },
+    onSuccess: () => {
+      toast.success("Product created successfully!");
       router.push("/brand/products");
     },
     onError: (err: any) => toast.error(err.response?.data?.message ?? "Failed to create product"),
@@ -54,10 +74,18 @@ export default function NewProductPage() {
 
   const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
   const toggleArr = (k: "categories" | "enabledZones", v: string) =>
-    set(k, form[k].includes(v) ? form[k].filter((x) => x !== v) : [...form[k], v]);
+    set(k, form[k].includes(v) ? form[k].filter((x: string) => x !== v) : [...form[k], v]);
+
+  // Step validation
+  const canProceed = () => {
+    if (step === 0) return photos.length > 0;
+    if (step === 1) return !!form.name && !!form.shortDescription && form.categories.length > 0;
+    if (step === 2) return !!form.wholesalePriceInr && !!form.moq && !!form.weightGrams && form.enabledZones.length > 0;
+    return true;
+  };
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="text-[#6B6056] hover:text-[#1A1A1A]">
           <ArrowLeft className="h-5 w-5" />
@@ -65,29 +93,30 @@ export default function NewProductPage() {
         <h1 className="font-heading text-2xl font-bold text-[#1A1A1A]">Add product</h1>
       </div>
 
-      {/* Step indicator */}
-      <div className="flex gap-2">
+      {/* Progress bar */}
+      <div className="flex gap-1.5">
         {STEPS.map((s, i) => (
           <div key={s} className={`flex-1 h-1.5 rounded-full transition-colors ${i <= step ? "bg-[#C8956C]" : "bg-[#E8E0D8]"}`} />
         ))}
       </div>
       <p className="text-sm font-medium text-[#C8956C]">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
 
-      <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
-        {/* Step 0 — Photos */}
+      <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-5">
+
+        {/* ── Step 0: Photos ──────────────────────────────────────── */}
         {step === 0 && (
           <>
             <p className="text-sm text-[#6B6056]">Upload up to 8 photos. First image is the cover.</p>
             <label className="block border-2 border-dashed border-[#E8E0D8] rounded-xl p-8 text-center cursor-pointer hover:border-[#C8956C] transition-colors">
               <Upload className="h-8 w-8 text-[#E8E0D8] mx-auto mb-2" />
-              <p className="text-sm text-[#6B6056]">Click to upload photos</p>
+              <p className="text-sm text-[#6B6056]">Click to select photos</p>
               <input type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, 8))} />
             </label>
             {photos.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2">
                 {photos.map((f, i) => (
-                  <div key={i} className="h-16 w-16 rounded-lg bg-[#F5EDE6] border border-[#E8E0D8] overflow-hidden relative">
+                  <div key={i} className="h-16 w-16 rounded-lg bg-[#F5EDE6] border border-[#E8E0D8] overflow-hidden">
                     <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
@@ -97,7 +126,7 @@ export default function NewProductPage() {
           </>
         )}
 
-        {/* Step 1 — Details */}
+        {/* ── Step 1: Details ──────────────────────────────────────── */}
         {step === 1 && (
           <>
             <Field label="Product name *">
@@ -105,22 +134,19 @@ export default function NewProductPage() {
                 placeholder="Hand-woven Silk Scarf" className={inp} />
             </Field>
             <Field label="Short description * (160 chars)">
-              <textarea value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} maxLength={160}
-                rows={2} placeholder="Artisan scarf from Varanasi…" className={inp + " resize-none"} />
+              <textarea value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)}
+                maxLength={160} rows={2} placeholder="Artisan scarf from Varanasi…" className={inp + " resize-none"} />
             </Field>
             <Field label="Full description (optional)">
               <textarea value={form.fullDescription} onChange={(e) => set("fullDescription", e.target.value)}
                 rows={4} placeholder="Detailed description…" className={inp + " resize-none"} />
             </Field>
-            <Field label="Categories *">
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((c) => (
-                  <button key={c} type="button" onClick={() => toggleArr("categories", c)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${form.categories.includes(c) ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C]"}`}>
-                    {c}
-                  </button>
-                ))}
-              </div>
+            <Field label="Categories * (max 2)">
+              <CategoryCombobox
+                selected={form.categories}
+                onChange={(names) => set("categories", names)}
+                max={2}
+              />
             </Field>
             <Field label="Tags (comma-separated)">
               <input value={form.tags} onChange={(e) => set("tags", e.target.value)}
@@ -129,15 +155,18 @@ export default function NewProductPage() {
           </>
         )}
 
-        {/* Step 2 — Pricing */}
+        {/* ── Step 2: Pricing & Terms ──────────────────────────────── */}
         {step === 2 && (
           <>
+            <div className="p-3 rounded-lg bg-[#F5EDE6] border border-[#E8C4A2] text-xs text-[#6B6056]">
+              <span className="font-medium text-[#1A1A1A]">Tip:</span> Set the base wholesale price here. You can set individual prices per variant in the next step.
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Wholesale price (₹) *">
                 <input type="number" value={form.wholesalePriceInr} onChange={(e) => set("wholesalePriceInr", e.target.value)}
                   placeholder="1200" className={inp} />
               </Field>
-              <Field label="MSRP (₹) optional">
+              <Field label="MSRP / RRP (₹) optional">
                 <input type="number" value={form.msrpInr} onChange={(e) => set("msrpInr", e.target.value)}
                   placeholder="2500" className={inp} />
               </Field>
@@ -161,7 +190,7 @@ export default function NewProductPage() {
               <input value={form.hsTariffCode} onChange={(e) => set("hsTariffCode", e.target.value)}
                 placeholder="6214.10" className={inp} />
             </Field>
-            <Field label="Shipping zones * (select all that apply)">
+            <Field label="Shipping zones * (select all you can fulfil)">
               <div className="flex flex-wrap gap-2">
                 {ZONES.map((z) => (
                   <button key={z} type="button" onClick={() => toggleArr("enabledZones", z)}
@@ -174,22 +203,47 @@ export default function NewProductPage() {
           </>
         )}
 
-        {/* Step 3 — Preview */}
+        {/* ── Step 3: Variants ─────────────────────────────────────── */}
         {step === 3 && (
+          <>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-semibold text-[#1A1A1A]">Product variants</p>
+                <p className="text-sm text-[#6B6056] mt-0.5">
+                  Define attributes (Color, Size, etc.) and generate all combinations. Skip this step if your product has no variants.
+                </p>
+              </div>
+              {variants.length > 0 && (
+                <span className="flex items-center gap-1.5 text-xs text-[#2D6A4F] font-medium">
+                  <CheckCircle2 className="h-4 w-4" /> {variants.filter(v => v.status === "ACTIVE").length} variants ready
+                </span>
+              )}
+            </div>
+
+            <VariantBuilder
+              basePriceInr={form.wholesalePriceInr}
+              onChange={setVariants}
+            />
+          </>
+        )}
+
+        {/* ── Step 4: Preview ──────────────────────────────────────── */}
+        {step === 4 && (
           <div className="space-y-3">
             <h2 className="font-heading text-lg font-semibold text-[#1A1A1A]">Review before publishing</h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
               {[
                 ["Name", form.name],
-                ["Price", `₹${form.wholesalePriceInr}`],
+                ["Base price", `₹${form.wholesalePriceInr}`],
                 ["MOQ", form.moq],
                 ["Weight", `${form.weightGrams}g`],
                 ["Lead time", form.leadTime.replace(/_/g, " ")],
                 ["Categories", form.categories.join(", ")],
-                ["Zones", form.enabledZones.length + " zones"],
-                ["Photos", photos.length + " selected"],
+                ["Shipping zones", `${form.enabledZones.length} zones`],
+                ["Photos", `${photos.length} selected`],
+                ["Variants", variants.length > 0 ? `${variants.length} variants (${variants.filter(v => v.status === "ACTIVE").length} active)` : "No variants"],
               ].map(([k, v]) => (
-                <div key={k} className="bg-[#FAFAF8] rounded-lg p-3">
+                <div key={k} className="bg-[#FAFAF8] rounded-lg p-3 border border-[#E8E0D8]">
                   <p className="text-xs text-[#6B6056]">{k}</p>
                   <p className="font-medium text-[#1A1A1A] mt-0.5">{v || "—"}</p>
                 </div>
@@ -202,19 +256,19 @@ export default function NewProductPage() {
       {/* Navigation */}
       <div className="flex gap-3">
         {step > 0 && (
-          <button onClick={() => setStep((s) => s - 1)}
+          <button type="button" onClick={() => setStep((s) => s - 1)}
             className="flex-1 h-11 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#6B6056] flex items-center justify-center gap-1 hover:bg-[#FAFAF8]">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
         )}
-        {step < 3 ? (
-          <button onClick={() => setStep((s) => s + 1)}
-            disabled={step === 0 && photos.length === 0}
+        {step < 4 ? (
+          <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed()}
             className="flex-1 h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50">
-            Next <ArrowRight className="h-4 w-4" />
+            {step === 3 ? (variants.length > 0 ? "Continue to preview" : "Skip — no variants") : "Next"}
+            <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending}
+          <button type="button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}
             className="flex-1 h-11 rounded-lg bg-[#2D6A4F] hover:bg-[#245c42] text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
             {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Publish product
@@ -233,4 +287,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
 const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";

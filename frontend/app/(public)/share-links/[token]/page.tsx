@@ -9,8 +9,6 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { ProductCard } from "@/components/product/ProductCard";
 import { useAuthModal } from "@/lib/stores/authModalStore";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 interface Props { params: Promise<{ token: string }> }
 
@@ -38,32 +36,24 @@ export default function ShareLinkPage({ params }: Props) {
   });
 
   if (isLoading) return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <div className="flex-1 flex justify-center items-center">
-        <Loader2 className="h-7 w-7 animate-spin text-[#C8956C]" />
-      </div>
+    <div className="flex-1 flex justify-center items-center py-20">
+      <Loader2 className="h-7 w-7 animate-spin text-[#C8956C]" />
     </div>
   );
 
   if (isError || !link) return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-        <span className="text-5xl mb-4">🔗</span>
-        <h2 className="font-heading text-2xl font-semibold text-[#1A1A1A] mb-2">Link not found</h2>
-        <p className="text-[#6B6056]">This link may have expired or been deactivated.</p>
-        <Link href="/shop" className="mt-4 text-sm text-[#C8956C] font-medium">Browse shop →</Link>
-      </div>
-      <Footer />
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <span className="text-5xl mb-4">🔗</span>
+      <h2 className="font-heading text-2xl font-semibold text-[#1A1A1A] mb-2">Link not found</h2>
+      <p className="text-[#6B6056]">This link may have expired or been deactivated.</p>
+      <Link href="/shop" className="mt-4 text-sm text-[#C8956C] font-medium">Browse shop →</Link>
     </div>
   );
 
   const brandName = link.brandProfile?.brandName;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div>
 
       {/* Sticky attribution banner */}
       {!isAuthenticated() && !bannerDismissed && (
@@ -115,8 +105,6 @@ export default function ShareLinkPage({ params }: Props) {
           <BrandProducts brandId={link.brandProfile?.id} onAddToCart={() => openModal("signup", `Sign up to order from ${brandName}`)} isAuthed={isAuthenticated()} />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

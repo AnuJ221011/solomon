@@ -9,8 +9,6 @@ import api from "@/lib/api";
 import { useCurrencyStore } from "@/lib/stores/currencyStore";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 const COUNTRIES = [
   ["US","United States"],["GB","United Kingdom"],["AU","Australia"],
@@ -78,9 +76,7 @@ export default function CheckoutPage() {
   const addressComplete = address.line1 && address.city && address.postalCode && address.countryCode;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 sm:px-6 lg:px-8 py-10">
+    <div className="mx-auto max-w-4xl w-full px-4 sm:px-6 lg:px-8 py-10">
         <h1 className="font-heading text-3xl font-bold text-[#1A1A1A] mb-2">Checkout</h1>
 
         {/* Step indicator */}
@@ -203,8 +199,6 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </main>
-      <Footer />
     </div>
   );
 }

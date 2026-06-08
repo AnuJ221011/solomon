@@ -77,6 +77,27 @@ async function main() {
   });
   console.log(`Buyer created: ${buyer.email}`);
 
+  // ── Seed categories ────────────────────────────────────────────
+  const CATEGORIES = [
+    { name: 'Textiles',         slug: 'textiles',         description: 'Silk, cotton, handloom fabrics and woven goods',             sortOrder: 1 },
+    { name: 'Home Decor',       slug: 'home-decor',       description: 'Pottery, brass, wood and home furnishing accents',            sortOrder: 2 },
+    { name: 'Jewellery',        slug: 'jewellery',        description: 'Silver, gold, gemstone and artisan jewellery',                sortOrder: 3 },
+    { name: 'Accessories',      slug: 'accessories',      description: 'Bags, scarves, wallets and fashion accessories',              sortOrder: 4 },
+    { name: 'Apparel',          slug: 'apparel',          description: 'Kurtas, dupattas, sarees and readymade garments',             sortOrder: 5 },
+    { name: 'Stationery',       slug: 'stationery',       description: 'Handmade journals, greeting cards and paper goods',           sortOrder: 6 },
+    { name: 'Art & Craft',      slug: 'art-craft',        description: 'Paintings, prints, folk art and handcrafted gifts',           sortOrder: 7 },
+    { name: 'Food & Wellness',  slug: 'food-wellness',    description: 'Artisan spices, teas, herbal remedies and wellness products', sortOrder: 8 },
+  ];
+
+  for (const cat of CATEGORIES) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: { name: cat.name, description: cat.description, sortOrder: cat.sortOrder },
+      create: cat,
+    });
+  }
+  console.log(`${CATEGORIES.length} categories seeded.`);
+
   console.log('Seeding complete.');
 }
 

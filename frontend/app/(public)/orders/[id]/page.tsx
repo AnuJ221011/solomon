@@ -7,8 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Package, Loader2, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
 import { useCurrencyStore } from "@/lib/stores/currencyStore";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
@@ -38,9 +36,7 @@ export default function OrderConfirmPage({ params }: Props) {
   });
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-10">
+    <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-10">
         {isLoading ? (
           <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[#C8956C]" /></div>
         ) : !data ? (
@@ -140,8 +136,6 @@ export default function OrderConfirmPage({ params }: Props) {
             </div>
           </div>
         )}
-      </main>
-      <Footer />
     </div>
   );
 }

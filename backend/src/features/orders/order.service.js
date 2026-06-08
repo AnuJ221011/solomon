@@ -55,6 +55,7 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
               brandProfile: { select: { id: true, achievementLevel: true, payoutSpeed: true } },
             },
           },
+          variant: { include: { attributes: true } },
         },
       },
     },
@@ -84,7 +85,11 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
 
   await prisma.$transaction(async (tx) => {
     for (const [brandProfileId, { brand, items }] of Object.entries(byBrand)) {
-      const subtotalInr = items.reduce((sum, item) => sum + Number(item.product.wholesalePriceInr) * item.quantity, 0);
+      // Use variant price when available, fall back to product price
+      const subtotalInr = items.reduce((sum, item) => {
+        const unitPrice = item.variant ? Number(item.variant.priceInr) : Number(item.product.wholesalePriceInr);
+        return sum + unitPrice * item.quantity;
+      }, 0);
       const totalWeightGrams = items.reduce((sum, item) => sum + item.product.weightGrams * item.quantity, 0);
 
       const shippingResult = await calculateShipping(brandProfileId, countryCode, totalWeightGrams, subtotalInr);
@@ -119,13 +124,26 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
           paypalOrderId,
           shareLinkId,
           items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              variantOptions: item.variantOptions,
-              quantity: item.quantity,
-              unitPriceInr: item.product.wholesalePriceInr,
-              totalInr: Number(item.product.wholesalePriceInr) * item.quantity,
-            })),
+            create: items.map((item) => {
+              // Use variant price when a variant is selected, fall back to product price
+              const unitPrice = item.variant
+                ? Number(item.variant.priceInr)
+                : Number(item.product.wholesalePriceInr);
+
+              // Build a human-readable label snapshot (e.g. "Color: Red / Size: L")
+              const variantLabel = item.variant?.attributes?.length
+                ? item.variant.attributes.map((a) => `${a.name}: ${a.value}`).join(' / ')
+                : null;
+
+              return {
+                productId: item.productId,
+                variantId: item.variantId ?? null,
+                variantLabel,
+                quantity: item.quantity,
+                unitPriceInr: unitPrice,
+                totalInr: unitPrice * item.quantity,
+              };
+            }),
           },
         },
         include: { items: true },
@@ -161,12 +179,23 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
         },
       });
 
-      // Update product order counts
+      // Update product order counts + decrement variant stock
       for (const item of items) {
         await tx.product.update({
           where: { id: item.productId },
           data: { orderCount: { increment: item.quantity } },
         });
+
+        if (item.variantId) {
+          const newStock = Math.max(0, (item.variant?.stock ?? 0) - item.quantity);
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              stock: newStock,
+              status: newStock === 0 ? 'OUT_OF_STOCK' : 'ACTIVE',
+            },
+          });
+        }
       }
 
       // Update share link stats if attributed
