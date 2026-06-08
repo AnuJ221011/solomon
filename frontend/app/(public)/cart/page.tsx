@@ -91,7 +91,7 @@ export default function CartPage() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Items */}
             <div className="lg:col-span-2 space-y-6">
-              {Object.entries(grouped).map(([brandId, brandItems]: [string, any[]]) => {
+              {(Object.entries(grouped) as [string, any[]][]).map(([brandId, brandItems]) => {
                 const brandName = brandItems[0].product.brandProfile?.brandName ?? "Brand";
                 const brandSlug = brandItems[0].product.brandProfile?.slug;
                 return (

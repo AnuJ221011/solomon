@@ -21,8 +21,8 @@ export const useAuthModal = create<AuthModalStore>((set) => ({
   pendingAction: null,
   reason: null,
 
-  openModal: (mode = "signup", reason = null, pendingAction = null) =>
-    set({ open: true, mode, reason, pendingAction }),
+  openModal: (mode = "signup", reason = undefined, pendingAction = undefined) =>
+    set({ open: true, mode, reason: reason ?? null, pendingAction: pendingAction ?? null }),
 
   closeModal: () =>
     set({ open: false, pendingAction: null, reason: null }),

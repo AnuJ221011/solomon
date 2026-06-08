@@ -44,37 +44,51 @@ export interface Product {
   moq: number;
   leadTime: string;
   weightGrams: number;
+  hsTariffCode?: string | null;
+  countryOfOrigin: string;
   categories: string[];
   tags: string[];
   availability: "ACTIVE" | "INACTIVE" | "COMING_SOON";
   enabledZones: ShippingZone[];
   photos: ProductPhoto[];
+  variants?: any[];
   brandProfile: BrandSummary;
   viewCount: number;
   orderCount: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // ── Brand ────────────────────────────────────────────────────────
 
 export interface BrandProfile {
   id: string;
+  userId?: string;
   brandName: string;
   slug: string;
   category: string[];
+  countryOfOrigin: string;
   description?: string | null;
   brandStory?: string | null;
   instagramHandle?: string | null;
   websiteUrl?: string | null;
   yearFounded?: number | null;
+  socialLinks?: Record<string, string> | null;
+  existingRetailPartners?: string | null;
+  pickupPincode?: string | null;
   logoUrl?: string | null;
   bannerUrl?: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
   achievementLevel: AchievementLevel;
+  isAdminOverride?: boolean;
   avgRating: number;
+  avgDispatchDays?: number;
   confirmedOrderCount: number;
   totalGmvInr: number;
   payoutSpeed: "NET_30" | "EXPRESS";
+  approvedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // ── Order ────────────────────────────────────────────────────────
