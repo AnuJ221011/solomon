@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ArrowRight, Loader2, Flame } from "lucide-react";
@@ -30,26 +30,26 @@ export function TrendingProducts() {
   if (!isLoading && (!products || products.length === 0)) return null;
 
   return (
-    <section className="py-14 bg-white border-y border-[#E8E0D8]">
+    <section className="py-14 bg-white border-y border-[#E5E1D8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-end justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Flame className="h-5 w-5 text-[#C8956C]" />
-              <span className="text-xs font-semibold text-[#C8956C] uppercase tracking-widest">
+              <Flame className="h-5 w-5 text-[#A68B67]" />
+              <span className="text-xs font-semibold text-[#A68B67] uppercase tracking-widest">
                 New this week
               </span>
             </div>
             <h2 className="font-heading text-3xl font-bold text-[#1A1A1A]">
               Just arrived
             </h2>
-            <p className="mt-1 text-sm text-[#6B6056]">
+            <p className="mt-1 text-sm text-[#444748]">
               Fresh wholesale products from verified Indian brands
             </p>
           </div>
           <Link href="/shop?sortBy=createdAt&sortOrder=desc"
-            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#C8956C] hover:text-[#B07D57] transition-colors">
+            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#A68B67] hover:text-[#8B7055] transition-colors">
             View all new <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -57,7 +57,7 @@ export function TrendingProducts() {
         {/* Grid */}
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" />
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

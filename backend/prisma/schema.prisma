@@ -249,7 +249,6 @@ model Product {
   shortDescription String              @db.VarChar(160)
   fullDescription  String?
   wholesalePriceInr Decimal            @db.Decimal(12, 2)
-  msrpInr          Decimal?            @db.Decimal(12, 2)
   moq              Int
   leadTime         LeadTime
   weightGrams      Int
@@ -295,7 +294,6 @@ model ProductVariant {
   product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   sku               String           @unique
   priceInr          Decimal          @db.Decimal(12, 2)
-  compareAtPriceInr Decimal?         @db.Decimal(12, 2)   // crossed-out "was" price
   stock             Int              @default(0)
   imageUrl          String?
   status            VariantStatus    @default(ACTIVE)

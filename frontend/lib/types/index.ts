@@ -40,7 +40,6 @@ export interface Product {
   shortDescription: string;
   fullDescription?: string | null;
   wholesalePriceInr: number;
-  msrpInr?: number | null;
   moq: number;
   leadTime: string;
   weightGrams: number;

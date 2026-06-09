@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -43,12 +43,12 @@ export function LoginForm() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <h1 className="font-heading text-3xl font-bold text-[#1A1A1A]">Welcome back</h1>
-        <p className="mt-2 text-sm text-[#6B6056]">
+        <p className="mt-2 text-sm text-[#444748]">
           Log in to your Solomon Bharat account
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Email address">
             <input
@@ -75,7 +75,7 @@ export function LoginForm() {
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6056]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444748]"
               >
                 {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -83,7 +83,7 @@ export function LoginForm() {
           </Field>
 
           <div className="text-right">
-            <Link href="/forgot-password" className="text-xs text-[#C8956C] hover:text-[#B07D57]">
+            <Link href="/forgot-password" className="text-xs text-[#A68B67] hover:text-[#8B7055]">
               Forgot password?
             </Link>
           </div>
@@ -91,7 +91,7 @@ export function LoginForm() {
           <button
             type="submit"
             disabled={loginMutation.isPending}
-            className="w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+            className="w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
           >
             {loginMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Log in
@@ -100,16 +100,16 @@ export function LoginForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#E8E0D8]" />
+            <div className="w-full border-t border-[#E5E1D8]" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-white px-3 text-xs text-[#6B6056]">New to Solomon Bharat?</span>
+            <span className="bg-white px-3 text-xs text-[#444748]">New to Solomon Bharat?</span>
           </div>
         </div>
 
         <Link
           href="/signup"
-          className="block w-full h-11 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#1A1A1A] flex items-center justify-center hover:border-[#C8956C] hover:bg-[#FAFAF8] transition-colors"
+          className="block w-full h-11 rounded-lg border border-[#E5E1D8] text-sm font-medium text-[#1A1A1A] flex items-center justify-center hover:border-[#A68B67] hover:bg-[#F9F7F2] transition-colors"
         >
           Create a free account
         </Link>
@@ -128,4 +128,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls =
-  "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
+  "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";

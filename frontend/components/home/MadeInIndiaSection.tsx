@@ -1,4 +1,4 @@
-import { LinkButton } from "@/components/ui/link-button";
+﻿import { LinkButton } from "@/components/ui/link-button";
 
 const IMPACT_STATS = [
   { value: "7M+",  label: "Artisan businesses in India" },
@@ -29,13 +29,13 @@ export function MadeInIndiaSection() {
 
           {/* Left — text */}
           <div>
-            <p className="text-xs font-semibold text-[#C8956C] uppercase tracking-widest mb-4">
+            <p className="text-xs font-semibold text-[#A68B67] uppercase tracking-widest mb-4">
               The story behind the platform
             </p>
             <h2 className="font-heading text-4xl lg:text-5xl font-bold text-white leading-tight text-balance">
               From the looms of Varanasi{" "}
               <span className="italic"
-                style={{ background: "linear-gradient(90deg,#C8956C,#E8B98A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                style={{ background: "linear-gradient(90deg,#A68B67,#E8B98A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 to the shelves of London boutiques.
               </span>
             </h2>
@@ -53,7 +53,7 @@ export function MadeInIndiaSection() {
               <LinkButton href="/about" size="lg" variant="copper" className="shadow-none">
                 How it works →
               </LinkButton>
-              <LinkButton href="/brands" size="lg" variant="dark" className="border-white/20 text-white/80 hover:border-[#C8956C]">
+              <LinkButton href="/brands" size="lg" variant="dark" className="border-white/20 text-white/80 hover:border-[#A68B67]">
                 Meet our brands
               </LinkButton>
             </div>
@@ -64,7 +64,7 @@ export function MadeInIndiaSection() {
             {IMPACT_STATS.map((stat, i) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-6 p-6 rounded-2xl border"
+                className="flex items-center gap-6 p-6 rounded-lg border"
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   borderColor: "rgba(200,149,108,0.20)",
@@ -73,7 +73,7 @@ export function MadeInIndiaSection() {
                 <div
                   className="font-heading text-5xl font-bold shrink-0 w-28 text-right"
                   style={{
-                    background: "linear-gradient(90deg,#C8956C,#E8B98A)",
+                    background: "linear-gradient(90deg,#A68B67,#E8B98A)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
@@ -87,13 +87,13 @@ export function MadeInIndiaSection() {
 
             {/* Quote */}
             <div
-              className="p-6 rounded-2xl border mt-2"
+              className="p-6 rounded-lg border mt-2"
               style={{ background: "rgba(200,149,108,0.08)", borderColor: "rgba(200,149,108,0.25)" }}
             >
-              <p className="text-[#E8C4A2] text-sm italic leading-relaxed">
+              <p className="text-[#DDD0BA] text-sm italic leading-relaxed">
                 "Discovery is public, commerce is gated. Browse freely — a free account is only needed when you're ready to place an order."
               </p>
-              <p className="text-[#C8956C] text-xs font-semibold mt-3 uppercase tracking-wider">
+              <p className="text-[#A68B67] text-xs font-semibold mt-3 uppercase tracking-wider">
                 — Core principle
               </p>
             </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,6 @@ export interface ProductVariantData {
   id: string;
   sku: string;
   priceInr: number;
-  compareAtPriceInr?: number | null;
   stock: number;
   imageUrl?: string | null;
   status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
@@ -124,7 +123,7 @@ export function VariantSelector({ variants, selected, onSelect }: Props) {
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-semibold text-[#1A1A1A]">{attrName}</span>
               {currentSelection[attrName] && (
-                <span className="text-sm text-[#6B6056]">{currentSelection[attrName]}</span>
+                <span className="text-sm text-[#444748]">{currentSelection[attrName]}</span>
               )}
             </div>
 
@@ -148,14 +147,14 @@ export function VariantSelector({ variants, selected, onSelect }: Props) {
                         "relative h-8 w-8 rounded-full border-2 transition-all",
                         isSelected
                           ? "border-[#1A1A1A] scale-110"
-                          : "border-transparent hover:border-[#6B6056] hover:scale-105",
+                          : "border-transparent hover:border-[#444748] hover:scale-105",
                         !available && "opacity-30 cursor-not-allowed",
                         !inStock && available && "opacity-60"
                       )}
                       style={{ backgroundColor: swatchColor }}
                     >
                       {swatchColor === "#FFFFFF" && (
-                        <span className="absolute inset-0 rounded-full border border-[#E8E0D8]" />
+                        <span className="absolute inset-0 rounded border border-[#E5E1D8]" />
                       )}
                       {/* Strikethrough overlay for out-of-stock */}
                       {!inStock && available && (
@@ -178,7 +177,7 @@ export function VariantSelector({ variants, selected, onSelect }: Props) {
                       "relative px-3 py-1.5 rounded-lg border text-sm font-medium transition-all",
                       isSelected
                         ? "border-[#1A1A1A] bg-[#1A1A1A] text-white"
-                        : "border-[#E8E0D8] text-[#1A1A1A] hover:border-[#1A1A1A] bg-white",
+                        : "border-[#E5E1D8] text-[#1A1A1A] hover:border-[#1A1A1A] bg-white",
                       !available && "opacity-30 cursor-not-allowed",
                       !inStock && available && "opacity-60"
                     )}
@@ -187,7 +186,7 @@ export function VariantSelector({ variants, selected, onSelect }: Props) {
                     {/* Diagonal strikethrough for out-of-stock */}
                     {!inStock && available && (
                       <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <span className="block h-px w-full bg-[#6B6056]/40 rotate-45" />
+                        <span className="block h-px w-full bg-[#444748]/40 rotate-45" />
                       </span>
                     )}
                   </button>
@@ -208,8 +207,8 @@ export function VariantSelector({ variants, selected, onSelect }: Props) {
           ) : (
             <span className="text-[#2D6A4F] font-medium">{selected.stock} in stock</span>
           )}
-          <span className="text-[#E8E0D8]">·</span>
-          <span className="text-[#6B6056] font-mono">{selected.sku}</span>
+          <span className="text-[#E5E1D8]">·</span>
+          <span className="text-[#444748] font-mono">{selected.sku}</span>
         </div>
       )}
     </div>

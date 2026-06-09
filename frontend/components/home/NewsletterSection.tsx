@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
@@ -24,21 +24,21 @@ export function NewsletterSection() {
   });
 
   return (
-    <section className="py-16 bg-[#FAFAF8] border-t border-[#E8E0D8]">
+    <section className="py-16 bg-[#F9F7F2] border-t border-[#E5E1D8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto text-center">
           {/* Icon */}
-          <div className="h-14 w-14 rounded-2xl bg-[#F5EDE6] border border-[#E8C4A2] flex items-center justify-center text-2xl mx-auto mb-6">
+          <div className="h-14 w-14 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA] flex items-center justify-center text-2xl mx-auto mb-6">
             📬
           </div>
 
-          <p className="text-xs font-semibold text-[#C8956C] uppercase tracking-widest mb-2">
+          <p className="text-xs font-semibold text-[#A68B67] uppercase tracking-widest mb-2">
             Weekly wholesale digest
           </p>
           <h2 className="font-heading text-3xl lg:text-4xl font-bold text-[#1A1A1A]">
             New Indian brands, every Monday.
           </h2>
-          <p className="mt-3 text-base text-[#6B6056] max-w-md mx-auto leading-relaxed">
+          <p className="mt-3 text-base text-[#444748] max-w-md mx-auto leading-relaxed">
             Curated new arrivals based on your store type. Be the first to discover brands
             before they sell out at wholesale.
           </p>
@@ -59,12 +59,12 @@ export function NewsletterSection() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="flex-1 h-12 px-4 rounded-xl border border-[#E8E0D8] bg-white text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors shadow-warm"
+                className="flex-1 h-12 px-4 rounded-lg border border-[#E5E1D8] bg-white text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors shadow-warm"
               />
               <button
                 type="submit"
                 disabled={!email || subscribeMutation.isPending}
-                className="h-12 px-6 rounded-xl bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap shadow-warm"
+                className="h-12 px-6 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap shadow-warm"
               >
                 {subscribeMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -77,12 +77,12 @@ export function NewsletterSection() {
             </form>
           )}
 
-          <p className="mt-4 text-xs text-[#6B6056]">
+          <p className="mt-4 text-xs text-[#444748]">
             Join 2,000+ retailers already on the list. Unsubscribe any time.
           </p>
 
           {/* Social proof */}
-          <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-[#6B6056]">
+          <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-[#444748]">
             {[
               "📦 Weekly new arrivals",
               "🎯 Curated to your store type",

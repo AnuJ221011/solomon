@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,7 +71,7 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
         {selected.map((name) => (
           <span
             key={name}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C8956C] text-white text-sm font-medium"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#1A1A1A] text-white text-sm font-medium"
           >
             {name}
             <button
@@ -84,7 +84,7 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
           </span>
         ))}
         {selected.length < max && (
-          <span className="text-xs text-[#6B6056] self-center">
+          <span className="text-xs text-[#444748] self-center">
             {max - selected.length} more allowed
           </span>
         )}
@@ -95,8 +95,8 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
         <div ref={containerRef} className="relative">
           <div
             className={cn(
-              "flex items-center gap-2 h-10 px-3 rounded-lg border bg-[#FAFAF8] cursor-text transition-colors",
-              open ? "border-[#C8956C] bg-white" : "border-[#E8E0D8]"
+              "flex items-center gap-2 h-10 px-3 rounded-lg border bg-[#F9F7F2] cursor-text transition-colors",
+              open ? "border-[#A68B67] bg-white" : "border-[#E5E1D8]"
             )}
             onClick={() => { setOpen(true); inputRef.current?.focus(); }}
           >
@@ -106,20 +106,20 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               placeholder={selected.length === 0 ? "Search or create a category…" : "Add another category…"}
-              className="flex-1 text-sm bg-transparent text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none"
+              className="flex-1 text-sm bg-transparent text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none"
             />
             {isLoading
-              ? <Loader2 className="h-4 w-4 text-[#6B6056] animate-spin shrink-0" />
-              : <ChevronDown className={cn("h-4 w-4 text-[#6B6056] shrink-0 transition-transform", open && "rotate-180")} />
+              ? <Loader2 className="h-4 w-4 text-[#444748] animate-spin shrink-0" />
+              : <ChevronDown className={cn("h-4 w-4 text-[#444748] shrink-0 transition-transform", open && "rotate-180")} />
             }
           </div>
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute z-20 top-full mt-1 w-full bg-white rounded-xl border border-[#E8E0D8] shadow-warm-md overflow-hidden">
+            <div className="absolute z-20 top-full mt-1 w-full bg-white rounded-lg border border-[#E5E1D8] shadow-warm-md overflow-hidden">
               <div className="max-h-52 overflow-y-auto">
                 {filtered.length === 0 && !showCreate && (
-                  <p className="px-4 py-3 text-sm text-[#6B6056]">No categories found.</p>
+                  <p className="px-4 py-3 text-sm text-[#444748]">No categories found.</p>
                 )}
 
                 {filtered.map((cat) => {
@@ -132,8 +132,8 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
                       className={cn(
                         "w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left",
                         isSelected
-                          ? "bg-[#F5EDE6] text-[#C8956C] font-medium"
-                          : "text-[#1A1A1A] hover:bg-[#FAFAF8]"
+                          ? "bg-[#F5F0E8] text-[#A68B67] font-medium"
+                          : "text-[#1A1A1A] hover:bg-[#F9F7F2]"
                       )}
                     >
                       <span>{cat.name}</span>
@@ -148,7 +148,7 @@ export function CategoryCombobox({ selected, onChange, max = 2 }: Props) {
                     type="button"
                     disabled={createMutation.isPending}
                     onClick={() => createMutation.mutate(trimmed)}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#C8956C] font-medium hover:bg-[#F5EDE6] transition-colors border-t border-[#E8E0D8] disabled:opacity-60"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#A68B67] font-medium hover:bg-[#F5F0E8] transition-colors border-t border-[#E5E1D8] disabled:opacity-60"
                   >
                     {createMutation.isPending
                       ? <Loader2 className="h-4 w-4 animate-spin shrink-0" />

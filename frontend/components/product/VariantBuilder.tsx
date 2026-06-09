@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { Plus, X, RefreshCw, Trash2 } from "lucide-react";
@@ -15,7 +15,6 @@ export interface VariantRow {
   attributes: { name: string; value: string }[];
   sku: string;
   priceInr: string;
-  compareAtPriceInr: string;
   stock: string;
   status: "ACTIVE" | "INACTIVE";
 }
@@ -104,7 +103,6 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
       attributes: combo,
       sku: makeSkuSlug(combo),
       priceInr: basePriceInr,
-      compareAtPriceInr: "",
       stock: "0",
       status: "ACTIVE",
     }));
@@ -146,24 +144,24 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
             type="button"
             onClick={addAttributeType}
             disabled={attributes.length >= 3}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#C8956C] hover:text-[#B07D57] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-[#A68B67] hover:text-[#8B7055] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <Plus className="h-3.5 w-3.5" /> Add attribute (max 3)
           </button>
         </div>
 
         {attributes.map((attr, i) => (
-          <div key={i} className="p-4 rounded-xl border border-[#E8E0D8] bg-[#FAFAF8] space-y-3">
+          <div key={i} className="p-4 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] space-y-3">
             <div className="flex items-center gap-2">
               <input
                 value={attr.name}
                 onChange={(e) => updateAttributeName(i, e.target.value)}
                 placeholder="Attribute name (e.g. Color, Size)"
-                className="flex-1 h-9 px-3 rounded-lg border border-[#E8E0D8] text-sm bg-white focus:outline-none focus:border-[#C8956C]"
+                className="flex-1 h-9 px-3 rounded-lg border border-[#E5E1D8] text-sm bg-white focus:outline-none focus:border-[#A68B67]"
               />
               {attributes.length > 1 && (
                 <button type="button" onClick={() => removeAttributeType(i)}
-                  className="h-9 w-9 flex items-center justify-center text-[#6B6056] hover:text-[#C0392B] border border-[#E8E0D8] rounded-lg hover:border-[#C0392B] transition-colors">
+                  className="h-9 w-9 flex items-center justify-center text-[#444748] hover:text-[#C0392B] border border-[#E5E1D8] rounded-lg hover:border-[#C0392B] transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </button>
               )}
@@ -173,10 +171,10 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
             <div className="flex flex-wrap gap-2">
               {attr.values.map((val) => (
                 <span key={val}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[#E8E0D8] text-sm font-medium text-[#1A1A1A]">
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] text-sm font-medium text-[#1A1A1A]">
                   {val}
                   <button type="button" onClick={() => removeValue(i, val)}
-                    className="text-[#6B6056] hover:text-[#C0392B]">
+                    className="text-[#444748] hover:text-[#C0392B]">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -190,10 +188,10 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
                 onChange={(e) => setNewValues((p) => ({ ...p, [i]: e.target.value }))}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addValue(i); } }}
                 placeholder={`Add ${attr.name || "value"} (press Enter)`}
-                className="flex-1 h-9 px-3 rounded-lg border border-[#E8E0D8] text-sm bg-white focus:outline-none focus:border-[#C8956C]"
+                className="flex-1 h-9 px-3 rounded-lg border border-[#E5E1D8] text-sm bg-white focus:outline-none focus:border-[#A68B67]"
               />
               <button type="button" onClick={() => addValue(i)}
-                className="h-9 px-3 rounded-lg border border-[#E8E0D8] text-sm text-[#6B6056] hover:bg-[#F5EDE6] hover:border-[#C8956C] transition-colors">
+                className="h-9 px-3 rounded-lg border border-[#E5E1D8] text-sm text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] transition-colors">
                 Add
               </button>
             </div>
@@ -213,7 +211,7 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
           {generated ? "Regenerate combinations" : "Generate combinations"}
         </button>
         {canGenerate && (
-          <span className="text-sm text-[#6B6056]">
+          <span className="text-sm text-[#444748]">
             {totalCombinations} combination{totalCombinations !== 1 ? "s" : ""} will be created
           </span>
         )}
@@ -221,10 +219,10 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
 
       {/* ── Variant matrix table ─────────────────────────────────────── */}
       {variants.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-[#E8E0D8]">
+        <div className="overflow-x-auto rounded-lg border border-[#E5E1D8]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#FAFAF8] border-b border-[#E8E0D8]">
+              <tr className="bg-[#F9F7F2] border-b border-[#E5E1D8]">
                 {/* Dynamic attribute columns */}
                 {attributes.filter(a => a.name && a.values.length > 0).map((a) => (
                   <th key={a.name} className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">
@@ -233,15 +231,14 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
                 ))}
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">SKU *</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Price ₹ *</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Was ₹</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Stock *</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Status</th>
                 <th className="px-3 py-2.5" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8E0D8]">
+            <tbody className="divide-y divide-[#E5E1D8]">
               {variants.map((row) => (
-                <tr key={row.id} className={`${row.status === "INACTIVE" ? "opacity-50" : ""} hover:bg-[#FAFAF8] transition-colors`}>
+                <tr key={row.id} className={`${row.status === "INACTIVE" ? "opacity-50" : ""} hover:bg-[#F9F7F2] transition-colors`}>
                   {/* Attribute value cells */}
                   {row.attributes.map((attr) => (
                     <td key={attr.name} className="px-3 py-2">
@@ -253,28 +250,21 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
                   <td className="px-3 py-2">
                     <input value={row.sku}
                       onChange={(e) => updateVariant(row.id, "sku", e.target.value)}
-                      className="w-32 h-8 px-2 rounded-lg border border-[#E8E0D8] text-xs font-mono focus:outline-none focus:border-[#C8956C] bg-white" />
+                      className="w-32 h-8 px-2 rounded-lg border border-[#E5E1D8] text-xs font-mono focus:outline-none focus:border-[#A68B67] bg-white" />
                   </td>
 
                   {/* Price */}
                   <td className="px-3 py-2">
                     <input type="number" value={row.priceInr} min={0}
                       onChange={(e) => updateVariant(row.id, "priceInr", e.target.value)}
-                      className="w-24 h-8 px-2 rounded-lg border border-[#E8E0D8] text-xs focus:outline-none focus:border-[#C8956C] bg-white" />
-                  </td>
-
-                  {/* Compare at price */}
-                  <td className="px-3 py-2">
-                    <input type="number" value={row.compareAtPriceInr} min={0} placeholder="–"
-                      onChange={(e) => updateVariant(row.id, "compareAtPriceInr", e.target.value)}
-                      className="w-24 h-8 px-2 rounded-lg border border-[#E8E0D8] text-xs focus:outline-none focus:border-[#C8956C] bg-white" />
+                      className="w-24 h-8 px-2 rounded-lg border border-[#E5E1D8] text-xs focus:outline-none focus:border-[#A68B67] bg-white" />
                   </td>
 
                   {/* Stock */}
                   <td className="px-3 py-2">
                     <input type="number" value={row.stock} min={0}
                       onChange={(e) => updateVariant(row.id, "stock", e.target.value)}
-                      className="w-20 h-8 px-2 rounded-lg border border-[#E8E0D8] text-xs focus:outline-none focus:border-[#C8956C] bg-white" />
+                      className="w-20 h-8 px-2 rounded-lg border border-[#E5E1D8] text-xs focus:outline-none focus:border-[#A68B67] bg-white" />
                   </td>
 
                   {/* Status toggle */}
@@ -284,7 +274,7 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
                         row.status === "ACTIVE"
                           ? "bg-[#E8F5EE] text-[#2D6A4F] hover:bg-[#D0EDD8]"
-                          : "bg-[#F5EDE6] text-[#6B6056] hover:bg-[#EAD9CC]"
+                          : "bg-[#F5F0E8] text-[#444748] hover:bg-[#EAD9CC]"
                       }`}>
                       {row.status}
                     </button>
@@ -293,7 +283,7 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
                   {/* Delete */}
                   <td className="px-3 py-2">
                     <button type="button" onClick={() => removeVariant(row.id)}
-                      className="h-7 w-7 flex items-center justify-center text-[#6B6056] hover:text-[#C0392B] transition-colors">
+                      className="h-7 w-7 flex items-center justify-center text-[#444748] hover:text-[#C0392B] transition-colors">
                       <X className="h-4 w-4" />
                     </button>
                   </td>
@@ -302,12 +292,12 @@ export function VariantBuilder({ basePriceInr = "", onChange }: Props) {
             </tbody>
           </table>
 
-          <div className="px-4 py-3 bg-[#FAFAF8] border-t border-[#E8E0D8] flex items-center justify-between">
-            <p className="text-xs text-[#6B6056]">
+          <div className="px-4 py-3 bg-[#F9F7F2] border-t border-[#E5E1D8] flex items-center justify-between">
+            <p className="text-xs text-[#444748]">
               {variants.filter(v => v.status === "ACTIVE").length} active variant{variants.filter(v => v.status === "ACTIVE").length !== 1 ? "s" : ""}
               {variants.filter(v => v.status === "INACTIVE").length > 0 && ` · ${variants.filter(v => v.status === "INACTIVE").length} inactive`}
             </p>
-            <p className="text-xs text-[#6B6056]">* Required fields</p>
+            <p className="text-xs text-[#444748]">* Required fields</p>
           </div>
         </div>
       )}

@@ -18,7 +18,6 @@ const attributeSchema = z.object({
 const createVariantSchema = z.object({
   sku: z.string().min(1).max(100),
   priceInr: z.number().positive(),
-  compareAtPriceInr: z.number().positive().optional(),
   stock: z.number().int().min(0).default(0),
   imageUrl: z.string().url().optional().or(z.literal('')),
   status: z.enum(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']).default('ACTIVE'),

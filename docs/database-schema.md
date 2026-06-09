@@ -1,6 +1,6 @@
 # Database Schema
 
-> Last updated: June 2026 · PRD v3.0 · All features complete
+> Last updated: June 2026 · PRD v3.1
 > Prisma 7 — driver adapter (`@prisma/adapter-pg`) configured in `prisma.config.ts`. No `url` in datasource block.
 > Schema file: `backend/prisma/schema.prisma`
 
@@ -133,7 +133,6 @@ Extended brand data. Created with `User` on signup. Admin approval required befo
 | `shortDescription` | VarChar(160) | Feed card text |
 | `fullDescription` | String? | Rich text for detail page |
 | `wholesalePriceInr` | Decimal | Stored in INR |
-| `msrpInr` | Decimal? | MSRP for margin display |
 | `moq` | Int | Minimum order quantity |
 | `leadTime` | Enum | `ONE_TO_THREE_DAYS \| ONE_TO_TWO_WEEKS \| TWO_TO_FOUR_WEEKS` |
 | `weightGrams` | Int | For per-kg shipping and Shiprocket |
@@ -148,6 +147,45 @@ Extended brand data. Created with `User` on signup. Admin approval required befo
 
 ---
 
+### ProductVariant
+Optional variants per product (size, colour, material, etc.).
+
+| Column | Type | Notes |
+|---|---|---|
+| `sku` | String | Unique across platform |
+| `priceInr` | Decimal | Variant-specific price |
+| `stock` | Int | Available units |
+| `imageUrl` | String? | Optional variant-specific image |
+| `status` | Enum | `ACTIVE \| INACTIVE \| OUT_OF_STOCK` |
+
+---
+
+### ProductPhoto
+Ordered product images. Uploaded to Cloudinary.
+
+| Column | Type | Notes |
+|---|---|---|
+| `productId` | String | FK → Product |
+| `url` | String | Cloudinary / picsum URL |
+| `publicId` | String | Cloudinary public ID |
+| `position` | Int | Display order (0-indexed) |
+
+---
+
+### Category
+Hierarchical product categories with self-referential parent.
+
+| Column | Type | Notes |
+|---|---|---|
+| `name` | String | Unique |
+| `slug` | String | Unique URL slug |
+| `description` | String? | |
+| `parentId` | String? | Self-referential for subcategories |
+| `sortOrder` | Int | Display order |
+| `isActive` | Boolean | |
+
+---
+
 ### Cart / CartItem
 Server-side cart. One cart per buyer user.
 
@@ -156,7 +194,8 @@ Server-side cart. One cart per buyer user.
 | `Cart.userId` | String | Unique — one cart per user |
 | `CartItem.productId` | String | |
 | `CartItem.quantity` | Int | Enforces MOQ at upsert time |
-| `CartItem.variantOptions` | Json? | Selected variant options |
+| `CartItem.variantId` | String? | FK → ProductVariant (nullable) |
+| `CartItem.variantLabel` | String? | Snapshot of variant label at add-to-cart time |
 
 ---
 

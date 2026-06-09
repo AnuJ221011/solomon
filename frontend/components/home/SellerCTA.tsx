@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+﻿import { ArrowRight } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 
 export function SellerCTA() {
@@ -7,14 +7,14 @@ export function SellerCTA() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           <div>
-            <p className="text-[#C8956C] text-sm font-medium mb-2 uppercase tracking-widest">
+            <p className="text-[#A68B67] text-sm font-medium mb-2 uppercase tracking-widest">
               For brands
             </p>
             <h2 className="font-heading text-3xl lg:text-4xl font-bold leading-tight text-balance">
               Reach international retailers.{" "}
-              <span className="text-[#C8956C] italic">No sales team needed.</span>
+              <span className="text-[#A68B67] italic">No sales team needed.</span>
             </h2>
-            <p className="mt-3 text-[#6B6056] max-w-lg leading-relaxed">
+            <p className="mt-3 text-[#444748] max-w-lg leading-relaxed">
               List your products, create a shareable wholesale catalogue link, and
               send it to your own customers — they order at 0% commission. Platform
               buyers pay the standard rate only.
@@ -27,8 +27,8 @@ export function SellerCTA() {
                 "INR payouts via PayPal or bank transfer",
                 "Achievement badges build buyer trust",
               ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-[#E8E0D8]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#C8956C] shrink-0" />
+                <li key={item} className="flex items-center gap-2 text-sm text-[#E5E1D8]">
+                  <span className="h-1.5 w-1.5 rounded bg-[#1A1A1A] shrink-0" />
                   {item}
                 </li>
               ))}

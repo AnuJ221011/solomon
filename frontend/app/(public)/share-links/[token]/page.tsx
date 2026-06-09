@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -37,7 +37,7 @@ export default function ShareLinkPage({ params }: Props) {
 
   if (isLoading) return (
     <div className="flex-1 flex justify-center items-center py-20">
-      <Loader2 className="h-7 w-7 animate-spin text-[#C8956C]" />
+      <Loader2 className="h-7 w-7 animate-spin text-[#A68B67]" />
     </div>
   );
 
@@ -45,8 +45,8 @@ export default function ShareLinkPage({ params }: Props) {
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <span className="text-5xl mb-4">🔗</span>
       <h2 className="font-heading text-2xl font-semibold text-[#1A1A1A] mb-2">Link not found</h2>
-      <p className="text-[#6B6056]">This link may have expired or been deactivated.</p>
-      <Link href="/shop" className="mt-4 text-sm text-[#C8956C] font-medium">Browse shop →</Link>
+      <p className="text-[#444748]">This link may have expired or been deactivated.</p>
+      <Link href="/shop" className="mt-4 text-sm text-[#A68B67] font-medium">Browse shop →</Link>
     </div>
   );
 
@@ -57,22 +57,22 @@ export default function ShareLinkPage({ params }: Props) {
 
       {/* Sticky attribution banner */}
       {!isAuthenticated() && !bannerDismissed && (
-        <div className="sticky top-14 z-30 bg-[#F5EDE6] border-b border-[#E8C4A2]">
+        <div className="sticky top-14 z-30 bg-[#F5F0E8] border-b border-[#DDD0BA]">
           <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-between gap-4">
-            <p className="text-sm text-[#92400E]">
+            <p className="text-sm text-[#6B4E2A]">
               <span className="font-semibold">{brandName}</span> invited you to their wholesale catalogue —{" "}
-              <button onClick={() => openModal("signup", `Sign up to order from ${brandName}`)} className="font-semibold underline underline-offset-2 hover:text-[#C8956C]">
+              <button onClick={() => openModal("signup", `Sign up to order from ${brandName}`)} className="font-semibold underline underline-offset-2 hover:text-[#A68B67]">
                 create a free account to place orders
               </button>
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => openModal("signup", `Sign up to order from ${brandName}`)}
-                className="h-7 px-3 rounded-lg bg-[#C8956C] text-white text-xs font-medium hover:bg-[#B07D57] transition-colors"
+                className="h-7 px-3 rounded-lg bg-[#1A1A1A] text-white text-xs font-medium hover:bg-[#8B7055] transition-colors"
               >
                 Sign up free
               </button>
-              <button onClick={() => setBannerDismissed(true)} className="text-[#6B6056] hover:text-[#1A1A1A]">
+              <button onClick={() => setBannerDismissed(true)} className="text-[#444748] hover:text-[#1A1A1A]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -82,19 +82,19 @@ export default function ShareLinkPage({ params }: Props) {
 
       <main className="flex-1">
         {/* Brand header */}
-        <div className="border-b border-[#E8E0D8] bg-white">
+        <div className="border-b border-[#E5E1D8] bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-[#F5EDE6] overflow-hidden flex items-center justify-center border border-[#E8E0D8]">
+            <div className="h-12 w-12 rounded bg-[#F5F0E8] overflow-hidden flex items-center justify-center border border-[#E5E1D8]">
               {link.brandProfile?.logoUrl ? (
                 <Image src={link.brandProfile.logoUrl} alt={brandName} width={48} height={48} className="object-cover" />
               ) : (
-                <span className="font-heading text-xl font-bold text-[#C8956C]">{brandName?.charAt(0)}</span>
+                <span className="font-heading text-xl font-bold text-[#A68B67]">{brandName?.charAt(0)}</span>
               )}
             </div>
             <div>
               <h1 className="font-heading text-xl font-bold text-[#1A1A1A]">{brandName}</h1>
               {link.customMessage && (
-                <p className="text-sm text-[#6B6056] mt-0.5">{link.customMessage}</p>
+                <p className="text-sm text-[#444748] mt-0.5">{link.customMessage}</p>
               )}
             </div>
           </div>
@@ -119,8 +119,8 @@ function BrandProducts({ brandId, onAddToCart, isAuthed }: { brandId?: string; o
     enabled: !!brandId,
   });
 
-  if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" /></div>;
-  if (!data?.length) return <p className="text-center text-[#6B6056] py-16">No products listed yet.</p>;
+  if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" /></div>;
+  if (!data?.length) return <p className="text-center text-[#444748] py-16">No products listed yet.</p>;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

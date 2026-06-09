@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -81,11 +81,11 @@ export default function CheckoutPage() {
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8 text-sm">
-          <span className={step === "address" ? "font-semibold text-[#C8956C]" : "text-[#2D6A4F]"}>
+          <span className={step === "address" ? "font-semibold text-[#A68B67]" : "text-[#2D6A4F]"}>
             1. Shipping address
           </span>
-          <ChevronRight className="h-4 w-4 text-[#E8E0D8]" />
-          <span className={step === "payment" ? "font-semibold text-[#C8956C]" : "text-[#6B6056]"}>
+          <ChevronRight className="h-4 w-4 text-[#E5E1D8]" />
+          <span className={step === "payment" ? "font-semibold text-[#A68B67]" : "text-[#444748]"}>
             2. Payment
           </span>
         </div>
@@ -93,9 +93,9 @@ export default function CheckoutPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             {step === "address" ? (
-              <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
+              <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-5 w-5 text-[#C8956C]" />
+                  <MapPin className="h-5 w-5 text-[#A68B67]" />
                   <h2 className="font-heading text-lg font-semibold text-[#1A1A1A]">Shipping address</h2>
                 </div>
 
@@ -121,25 +121,25 @@ export default function CheckoutPage() {
                 <button
                   onClick={() => setStep("payment")}
                   disabled={!addressComplete}
-                  className="w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-2"
+                  className="w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-2"
                 >
                   Continue to payment
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
+              <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="h-5 w-5 text-[#C8956C]" />
+                  <CreditCard className="h-5 w-5 text-[#A68B67]" />
                   <h2 className="font-heading text-lg font-semibold text-[#1A1A1A]">Payment</h2>
                 </div>
 
-                <div className="p-4 rounded-lg bg-[#F5EDE6] border border-[#E8C4A2] text-sm text-[#6B6056]">
+                <div className="p-4 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA] text-sm text-[#444748]">
                   <p className="font-medium text-[#1A1A1A] mb-1">Secure payment via PayPal</p>
                   <p>You'll be redirected to PayPal to complete your payment. Your order will be created once payment is confirmed.</p>
                 </div>
 
-                <div className="text-sm text-[#6B6056] space-y-1">
+                <div className="text-sm text-[#444748] space-y-1">
                   <div className="flex justify-between">
                     <span>Shipping to</span>
                     <span className="font-medium text-[#1A1A1A]">{address.city}, {address.countryCode}</span>
@@ -153,13 +153,13 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={() => setStep("address")} className="flex-1 h-11 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#6B6056] hover:bg-[#FAFAF8] transition-colors">
+                  <button onClick={() => setStep("address")} className="flex-1 h-11 rounded-lg border border-[#E5E1D8] text-sm font-medium text-[#444748] hover:bg-[#F9F7F2] transition-colors">
                     ← Back
                   </button>
                   <button
                     onClick={() => createOrderMutation.mutate()}
                     disabled={createOrderMutation.isPending || captureMutation.isPending}
-                    className="flex-1 h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+                    className="flex-1 h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
                   >
                     {(createOrderMutation.isPending || captureMutation.isPending) && (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -172,29 +172,29 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order summary sidebar */}
-          <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm h-fit">
-            <div className="p-4 border-b border-[#E8E0D8]">
+          <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm h-fit">
+            <div className="p-4 border-b border-[#E5E1D8]">
               <h3 className="font-heading text-sm font-semibold text-[#1A1A1A]">Order summary</h3>
             </div>
             <div className="p-4 space-y-2 text-sm">
               {isLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-[#C8956C]" /></div>
+                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-[#A68B67]" /></div>
               ) : totals ? (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-[#6B6056]">Subtotal (INR)</span>
+                    <span className="text-[#444748]">Subtotal (INR)</span>
                     <span>₹{Number(totals.grandTotalInr ?? 0).toLocaleString("en-IN")}</span>
                   </div>
-                  <div className="flex justify-between font-semibold pt-2 border-t border-[#E8E0D8]">
+                  <div className="flex justify-between font-semibold pt-2 border-t border-[#E5E1D8]">
                     <span>Total</span>
-                    <span className="text-[#C8956C]">{totals.currency} {Number(totals.grandTotalBuyerCurrency ?? 0).toFixed(2)}</span>
+                    <span className="text-[#A68B67]">{totals.currency} {Number(totals.grandTotalBuyerCurrency ?? 0).toFixed(2)}</span>
                   </div>
                   {totals.availableCreditsInr > 0 && (
                     <p className="text-xs text-[#2D6A4F]">₹{Number(totals.availableCreditsInr).toFixed(0)} wallet credits available</p>
                   )}
                 </>
               ) : (
-                <p className="text-[#6B6056] text-xs">Enter your country to see shipping costs.</p>
+                <p className="text-[#444748] text-xs">Enter your country to see shipping costs.</p>
               )}
             </div>
           </div>
@@ -203,4 +203,4 @@ export default function CheckoutPage() {
   );
 }
 
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";

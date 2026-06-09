@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -89,7 +89,7 @@ export default function BrandSettingsPage() {
     onError: () => toast.error("Failed to save"),
   });
 
-  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" /></div>;
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" /></div>;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -134,7 +134,7 @@ export default function BrandSettingsPage() {
           </select>
         </Field>
         <button onClick={() => profileMutation.mutate()} disabled={profileMutation.isPending}
-          className="h-10 px-5 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60">
+          className="h-10 px-5 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60">
           {profileMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save profile
         </button>
@@ -142,19 +142,19 @@ export default function BrandSettingsPage() {
 
       {/* Shopify Integration */}
       <Section title="Shopify Integration">
-        <p className="text-sm text-[#6B6056] -mt-2">
+        <p className="text-sm text-[#444748] -mt-2">
           Connect your Shopify store to sync products and push orders automatically.
         </p>
 
         {shopifyStore ? (
           /* ── Connected state ── */
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-[#E8F5EE] border border-[#B7DFC7]">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-[#E8F5EE] border border-[#B7DFC7]">
               <CheckCircle2 className="h-5 w-5 text-[#2D6A4F] shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[#1A1A1A]">Connected to {shopifyStore.shopDomain}</p>
                 {shopifyStore.lastSyncAt && (
-                  <p className="text-xs text-[#6B6056] mt-0.5">
+                  <p className="text-xs text-[#444748] mt-0.5">
                     Last synced: {new Date(shopifyStore.lastSyncAt).toLocaleString()}
                   </p>
                 )}
@@ -165,7 +165,7 @@ export default function BrandSettingsPage() {
               <button
                 onClick={() => importShopifyMutation.mutate()}
                 disabled={importShopifyMutation.isPending}
-                className="h-10 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+                className="h-10 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
               >
                 {importShopifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 Import products from Shopify
@@ -173,14 +173,14 @@ export default function BrandSettingsPage() {
               <button
                 onClick={() => { if (confirm("Disconnect your Shopify store?")) disconnectShopifyMutation.mutate(); }}
                 disabled={disconnectShopifyMutation.isPending}
-                className="h-10 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#C0392B] hover:bg-[#FEF2F2] hover:border-[#C0392B] flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+                className="h-10 rounded-lg border border-[#E5E1D8] text-sm font-medium text-[#C0392B] hover:bg-[#FEF2F2] hover:border-[#C0392B] flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
               >
                 {disconnectShopifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="h-4 w-4" />}
                 Disconnect
               </button>
             </div>
 
-            <div className="p-3 rounded-lg bg-[#FAFAF8] border border-[#E8E0D8] text-xs text-[#6B6056] space-y-1">
+            <div className="p-3 rounded-lg bg-[#F9F7F2] border border-[#E5E1D8] text-xs text-[#444748] space-y-1">
               <p>✦ <span className="font-medium text-[#1A1A1A]">Products:</span> Imported products appear in your listings for you to review and price.</p>
               <p>✦ <span className="font-medium text-[#1A1A1A]">Orders:</span> When you mark an order as dispatched, it's automatically pushed to Shopify.</p>
               <p>✦ <span className="font-medium text-[#1A1A1A]">Webhooks:</span> Product updates on Shopify sync back automatically via webhook.</p>
@@ -189,12 +189,12 @@ export default function BrandSettingsPage() {
         ) : (
           /* ── Connect form ── */
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#F5EDE6] border border-[#E8C4A2] text-sm text-[#6B6056]">
+            <div className="p-4 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA] text-sm text-[#444748]">
               <p className="font-medium text-[#1A1A1A] mb-1">How to get your access token</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
                 <li>In Shopify Admin → go to <span className="font-medium">Apps → Develop apps</span></li>
                 <li>Create a new app → enable Admin API access</li>
-                <li>Grant permissions: <code className="bg-[#E8E0D8] px-1 rounded">read_products</code>, <code className="bg-[#E8E0D8] px-1 rounded">write_orders</code></li>
+                <li>Grant permissions: <code className="bg-[#E5E1D8] px-1 rounded">read_products</code>, <code className="bg-[#E5E1D8] px-1 rounded">write_orders</code></li>
                 <li>Install the app → copy the Admin API access token</li>
               </ol>
             </div>
@@ -219,7 +219,7 @@ export default function BrandSettingsPage() {
             <button
               onClick={() => connectShopifyMutation.mutate()}
               disabled={!shopifyForm.shopDomain || !shopifyForm.accessToken || connectShopifyMutation.isPending}
-              className="h-10 px-5 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
+              className="h-10 px-5 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
             >
               {connectShopifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
               Connect Shopify store
@@ -230,15 +230,15 @@ export default function BrandSettingsPage() {
 
       {/* Shipping rates */}
       <Section title="Shipping rates">
-        <p className="text-sm text-[#6B6056] -mt-2">Set the shipping rate you charge buyers per zone.</p>
+        <p className="text-sm text-[#444748] -mt-2">Set the shipping rate you charge buyers per zone.</p>
         {SHIPPING_ZONES.map((zone) => {
           const r = shippingRates[zone] ?? { rateType: "FLAT" };
           return (
-            <div key={zone} className="border border-[#E8E0D8] rounded-xl p-4 space-y-3">
+            <div key={zone} className="border border-[#E5E1D8] rounded-lg p-4 space-y-3">
               <p className="font-medium text-sm text-[#1A1A1A]">{zone.replace(/_/g, " ")}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-[#6B6056]">Rate type</label>
+                  <label className="text-xs text-[#444748]">Rate type</label>
                   <select value={r.rateType ?? "FLAT"}
                     onChange={(e) => setShippingRates({ ...shippingRates, [zone]: { ...r, rateType: e.target.value } })}
                     className={inp + " h-9 text-xs cursor-pointer"}>
@@ -248,28 +248,28 @@ export default function BrandSettingsPage() {
                 </div>
                 {r.rateType === "FLAT" || !r.rateType ? (
                   <div className="space-y-1.5">
-                    <label className="text-xs text-[#6B6056]">Flat rate (₹)</label>
+                    <label className="text-xs text-[#444748]">Flat rate (₹)</label>
                     <input type="number" value={r.flatRateInr ?? ""}
                       onChange={(e) => setShippingRates({ ...shippingRates, [zone]: { ...r, flatRateInr: e.target.value } })}
                       placeholder="850" className={inp + " h-9 text-xs"} />
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-xs text-[#6B6056]">Per kg (₹)</label>
+                    <label className="text-xs text-[#444748]">Per kg (₹)</label>
                     <input type="number" value={r.perKgRateInr ?? ""}
                       onChange={(e) => setShippingRates({ ...shippingRates, [zone]: { ...r, perKgRateInr: e.target.value } })}
                       placeholder="200" className={inp + " h-9 text-xs"} />
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <label className="text-xs text-[#6B6056]">Free above (₹, optional)</label>
+                  <label className="text-xs text-[#444748]">Free above (₹, optional)</label>
                   <input type="number" value={r.freeShippingAboveInr ?? ""}
                     onChange={(e) => setShippingRates({ ...shippingRates, [zone]: { ...r, freeShippingAboveInr: e.target.value } })}
                     placeholder="15000" className={inp + " h-9 text-xs"} />
                 </div>
                 <div className="flex items-end">
                   <button onClick={() => shippingMutation.mutate(zone)} disabled={shippingMutation.isPending}
-                    className="h-9 px-3 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-60">
+                    className="h-9 px-3 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-60">
                     <Save className="h-3.5 w-3.5" /> Save
                   </button>
                 </div>
@@ -284,8 +284,8 @@ export default function BrandSettingsPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
-      <h2 className="font-heading text-base font-semibold text-[#1A1A1A] pb-3 border-b border-[#E8E0D8]">{title}</h2>
+    <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
+      <h2 className="font-heading text-base font-semibold text-[#1A1A1A] pb-3 border-b border-[#E5E1D8]">{title}</h2>
       {children}
     </div>
   );
@@ -298,4 +298,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";

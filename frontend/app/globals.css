@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -10,7 +10,7 @@
 
 @theme inline {
   /* Typography */
-  --font-sans:    var(--font-inter);
+  --font-sans:    var(--font-public-sans);
   --font-heading: var(--font-playfair);
   --font-mono:    var(--font-geist-mono);
 
@@ -42,27 +42,27 @@
   --color-input:                var(--border-warm);
   --color-ring:                 var(--accent);
 
-  /* Radius */
-  --radius:    0.5rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  /* Radius — 4px base per DESIGN.md */
+  --radius:     0.25rem;
+  --radius-sm:  0.125rem;
+  --radius-md:  0.375rem;
+  --radius-lg:  0.5rem;
+  --radius-xl:  0.75rem;
+  --radius-2xl: 1rem;
 }
 
 /* ── Design token values ─────────────────────────────────────────── */
 :root {
-  --bg:           #FAFAF8;   /* warm off-white — page bg          */
-  --surface:      #FFFFFF;   /* pure white — cards, modals        */
-  --primary:      #1A1A1A;   /* near-black — headings, body text  */
-  --accent:       #C8956C;   /* copper — CTA buttons, links       */
-  --accent-hover: #B07D57;   /* darker copper — hover             */
-  --muted-bg:     #F5EDE6;   /* warm nude — section fills, tags   */
-  --muted-text:   #6B6056;   /* warm brown-grey — secondary text  */
-  --border-warm:  #E8E0D8;   /* warm sand — borders, dividers     */
-  --success:      #2D6A4F;   /* forest green — badges, confirmed  */
-  --error:        #C0392B;   /* red — errors, disputes            */
+  --bg:           #F9F7F2;   /* handmade-paper — page bg          */
+  --surface:      #FCFAFA;   /* raw-linen — cards, modals         */
+  --primary:      #1A1A1A;   /* charcoal — headings, body text    */
+  --accent:       #A68B67;   /* aged-brass — active states, links */
+  --accent-hover: #8B7055;   /* darker brass — hover              */
+  --muted-bg:     #F5F0E8;   /* warm nude — section fills, tags   */
+  --muted-text:   #444748;   /* on-surface-variant — secondary    */
+  --border-warm:  #E5E1D8;   /* subtle-border — borders, dividers */
+  --success:      #6B7E6B;   /* success-muted — badges, confirmed */
+  --error:        #BA1A1A;   /* error — errors, disputes          */
 }
 
 /* ── Base layer ─────────────────────────────────────────────────── */
@@ -71,7 +71,7 @@
 
   html {
     @apply antialiased;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-public-sans), system-ui, sans-serif;
     scroll-behavior: smooth;
     color-scheme: light;
   }
@@ -122,27 +122,23 @@
   .animation-delay-300 { animation-delay: 0.3s; }
   .animation-delay-400 { animation-delay: 0.4s; }
 
-  /* Warm card shadows using copper tint */
+  /* Elevation via diffused shadow — DESIGN.md spec */
   .shadow-warm {
-    box-shadow:
-      0 1px 3px 0 rgba(200, 149, 108, 0.08),
-      0 1px 2px -1px rgba(26, 26, 26, 0.06);
+    box-shadow: 0 1px 3px 0 rgba(26, 26, 26, 0.04);
   }
   .shadow-warm-md {
-    box-shadow:
-      0 4px 12px 0 rgba(200, 149, 108, 0.10),
-      0 2px 4px -1px rgba(26, 26, 26, 0.06);
+    box-shadow: 0 4px 20px 0 rgba(26, 26, 26, 0.04);
   }
   .shadow-warm-lg {
-    box-shadow:
-      0 10px 30px 0 rgba(200, 149, 108, 0.12),
-      0 4px 8px -2px rgba(26, 26, 26, 0.08);
+    box-shadow: 0 8px 30px 0 rgba(26, 26, 26, 0.06);
   }
 
-  /* Copper gradient — hero CTAs, level-up cards */
-  .gradient-copper {
-    background: linear-gradient(135deg, #C8956C 0%, #B07D57 100%);
+  /* Brass gradient — level-up cards, hero accents */
+  .gradient-brass {
+    background: linear-gradient(135deg, #A68B67 0%, #8B7055 100%);
   }
+  /* keep alias for any legacy usage */
+  .gradient-copper { background: linear-gradient(135deg, #A68B67 0%, #8B7055 100%); }
 
   /* Hide scrollbar, keep scrollable */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -155,8 +151,8 @@
 }
 
 /* ── Achievement level badge colours ───────────────────────────── */
-.badge-sprout  { background: #E8F5EE; color: #2D6A4F; border-color: #B7DFC7; }
-.badge-rising  { background: #FEF3C7; color: #B45309; border-color: #FCD34D; }
-.badge-trusted { background: #FAF0EA; color: #92400E; border-color: #E8C4A2; }
-.badge-elite   { background: #EFF6FF; color: #1E3A5F; border-color: #BFDBFE; }
-.badge-legend  { background: #F5F3FF; color: #6D28D9; border-color: #DDD6FE; }
+.badge-sprout  { background: #F0F4F0; color: #4A6B4A; border-color: #C8D8C8; }
+.badge-rising  { background: #FBF5E8; color: #7A6040; border-color: #E0C99A; }
+.badge-trusted { background: #F5F0E8; color: #6B4E2A; border-color: #DDD0BA; }
+.badge-elite   { background: #F0F2F5; color: #2A3F5F; border-color: #C0CDD8; }
+.badge-legend  { background: #F2F0F5; color: #4A3A6B; border-color: #CEC8D8; }

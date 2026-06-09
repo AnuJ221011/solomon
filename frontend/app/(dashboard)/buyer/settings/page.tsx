@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -57,7 +57,7 @@ export default function BuyerSettingsPage() {
     });
   };
 
-  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" /></div>;
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" /></div>;
 
   return (
     <div className="max-w-xl space-y-8">
@@ -65,28 +65,28 @@ export default function BuyerSettingsPage() {
 
       {/* Currency preference */}
       <Section title="Display currency">
-        <p className="text-sm text-[#6B6056] -mt-2">Prices across the platform will show in this currency.</p>
+        <p className="text-sm text-[#444748] -mt-2">Prices across the platform will show in this currency.</p>
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
           {CURRENCIES.map((c) => (
             <button key={c} onClick={() => setCurrency(c)}
-              className={`h-9 rounded-lg border text-xs font-medium transition-all ${currency === c ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] bg-white"}`}>
+              className={`h-9 rounded-lg border text-xs font-medium transition-all ${currency === c ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] bg-white"}`}>
               {c}
             </button>
           ))}
         </div>
-        <p className="text-xs text-[#6B6056]">Currently showing: <span className="font-semibold text-[#1A1A1A]">{currency}</span></p>
+        <p className="text-xs text-[#444748]">Currently showing: <span className="font-semibold text-[#1A1A1A]">{currency}</span></p>
       </Section>
 
       {/* Store type quiz */}
       <Section title="Store preferences">
-        <p className="text-sm text-[#6B6056] -mt-2">We use these to personalise your product feed.</p>
+        <p className="text-sm text-[#444748] -mt-2">We use these to personalise your product feed.</p>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-[#1A1A1A]">Store type</label>
           <div className="flex flex-wrap gap-2">
             {STORE_TYPES.map((t) => (
               <button key={t} onClick={() => setForm({ ...form, storeType: form.storeType === t ? "" : t })}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${form.storeType === t ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] bg-white"}`}>
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${form.storeType === t ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] bg-white"}`}>
                 {t.replace(/_/g, " ")}
               </button>
             ))}
@@ -98,7 +98,7 @@ export default function BuyerSettingsPage() {
           <div className="flex flex-wrap gap-2">
             {AESTHETICS.map((a) => (
               <button key={a} onClick={() => setForm({ ...form, aesthetic: form.aesthetic === a ? "" : a })}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${form.aesthetic === a ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] bg-white"}`}>
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${form.aesthetic === a ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] bg-white"}`}>
                 {a}
               </button>
             ))}
@@ -112,7 +112,7 @@ export default function BuyerSettingsPage() {
               const selected = (form.categoryInterests ?? []).includes(cat.name);
               return (
                 <button key={cat.slug} onClick={() => toggleCategory(cat.name)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${selected ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] bg-white"}`}>
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${selected ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] bg-white"}`}>
                   {cat.name}
                 </button>
               );
@@ -121,7 +121,7 @@ export default function BuyerSettingsPage() {
         </div>
 
         <button onClick={() => quizMutation.mutate()} disabled={quizMutation.isPending}
-          className="h-10 px-5 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60">
+          className="h-10 px-5 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60">
           {quizMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save preferences
         </button>
@@ -136,13 +136,13 @@ export default function BuyerSettingsPage() {
             ["Phone",         form.phone ?? "Not set"],
             ["Verified",      form.businessVerified ? "Yes" : "Pending first order"],
           ].map(([k, v]) => (
-            <div key={k} className="bg-[#FAFAF8] rounded-lg p-3 border border-[#E8E0D8]">
-              <p className="text-xs text-[#6B6056]">{k}</p>
+            <div key={k} className="bg-[#F9F7F2] rounded-lg p-3 border border-[#E5E1D8]">
+              <p className="text-xs text-[#444748]">{k}</p>
               <p className="font-medium text-[#1A1A1A] mt-0.5">{v ?? "—"}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs text-[#6B6056]">To update email or password, contact support.</p>
+        <p className="text-xs text-[#444748]">To update email or password, contact support.</p>
       </Section>
     </div>
   );
@@ -150,8 +150,8 @@ export default function BuyerSettingsPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
-      <h2 className="font-heading text-base font-semibold text-[#1A1A1A] pb-3 border-b border-[#E8E0D8]">{title}</h2>
+    <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
+      <h2 className="font-heading text-base font-semibold text-[#1A1A1A] pb-3 border-b border-[#E5E1D8]">{title}</h2>
       {children}
     </div>
   );

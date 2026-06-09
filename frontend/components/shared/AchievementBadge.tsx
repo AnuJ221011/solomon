@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+﻿import { cn } from "@/lib/utils";
 import type { AchievementLevel } from "@/lib/types";
 
 const LEVEL_CONFIG: Record<AchievementLevel, { label: string; className: string }> = {

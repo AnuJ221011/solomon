@@ -1,4 +1,4 @@
-const ITEMS = [
+﻿const ITEMS = [
   "✦  500+ verified brands",
   "✦  40+ countries reached",
   "✦  Opening order protection — 30-day returns",
@@ -21,7 +21,7 @@ export function TrustStrip() {
         {doubled.map((item, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-3 px-8 text-sm font-medium text-[#C8956C]"
+            className="inline-flex items-center gap-3 px-8 text-sm font-medium text-[#A68B67]"
           >
             {item}
           </span>

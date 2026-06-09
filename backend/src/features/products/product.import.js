@@ -72,7 +72,6 @@ const validateRow = (row, rowIndex) => {
       shortDescription: row.short_description,
       fullDescription: row.full_description || null,
       wholesalePriceInr: price,
-      msrpInr: row.msrp_inr ? parseFloat(row.msrp_inr) : null,
       moq,
       leadTime,
       weightGrams: weight,

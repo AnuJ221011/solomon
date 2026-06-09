@@ -49,7 +49,7 @@ export const getVariantById = async (variantId) => {
  * Creates a single variant with its attributes.
  * attributes: [{ name: "Color", value: "Red" }, { name: "Size", value: "L" }]
  */
-export const createVariant = async (userId, productId, { sku, priceInr, compareAtPriceInr, stock, imageUrl, status, attributes }) => {
+export const createVariant = async (userId, productId, { sku, priceInr, stock, imageUrl, status, attributes }) => {
   await getOwnedProduct(userId, productId);
 
   // Check SKU uniqueness
@@ -61,7 +61,6 @@ export const createVariant = async (userId, productId, { sku, priceInr, compareA
       productId,
       sku,
       priceInr,
-      compareAtPriceInr: compareAtPriceInr ?? null,
       stock: stock ?? 0,
       imageUrl: imageUrl ?? null,
       status: status ?? 'ACTIVE',
@@ -78,7 +77,7 @@ export const createVariant = async (userId, productId, { sku, priceInr, compareA
  * Used by the "Generate combinations" feature on the product form.
  *
  * variants: [
- *   { sku, priceInr, compareAtPriceInr, stock, imageUrl, status, attributes: [{name,value}] },
+ *   { sku, priceInr, stock, imageUrl, status, attributes: [{name,value}] },
  *   ...
  * ]
  */
@@ -107,7 +106,6 @@ export const createVariantsBulk = async (userId, productId, variants) => {
           productId,
           sku: v.sku,
           priceInr: v.priceInr,
-          compareAtPriceInr: v.compareAtPriceInr ?? null,
           stock: v.stock ?? 0,
           imageUrl: v.imageUrl ?? null,
           status: v.status ?? 'ACTIVE',

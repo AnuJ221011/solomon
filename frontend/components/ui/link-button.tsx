@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
@@ -7,11 +7,11 @@ const linkButtonVariants = cva(
   {
     variants: {
       variant: {
-        default:  "bg-[#C8956C] text-white hover:bg-[#B07D57]",
-        outline:  "border border-[#E8E0D8] bg-white text-[#1A1A1A] hover:bg-[#F5EDE6] hover:border-[#C8956C]",
-        ghost:    "text-[#6B6056] hover:text-[#1A1A1A] hover:bg-[#F5EDE6]",
-        dark:     "border border-[#2D2D2D] text-[#E8E0D8] hover:bg-[#2D2D2D] hover:border-[#C8956C]",
-        copper:   "bg-[#C8956C] text-white hover:bg-[#B07D57]",
+        default:  "bg-[#1A1A1A] text-white hover:bg-[#8B7055]",
+        outline:  "border border-[#E5E1D8] bg-white text-[#1A1A1A] hover:bg-[#F5F0E8] hover:border-[#A68B67]",
+        ghost:    "text-[#444748] hover:text-[#1A1A1A] hover:bg-[#F5F0E8]",
+        dark:     "border border-[#2D2D2D] text-[#E5E1D8] hover:bg-[#2D2D2D] hover:border-[#A68B67]",
+        copper:   "bg-[#1A1A1A] text-white hover:bg-[#8B7055]",
       },
       size: {
         sm:      "h-8  px-3  text-xs",

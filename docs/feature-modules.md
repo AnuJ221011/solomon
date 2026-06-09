@@ -28,7 +28,7 @@ Each module under `backend/src/features/` is a self-contained domain slice follo
 | `achievements` | `features/achievements/` | ✅ | 5-level criteria engine (incl. avgDispatchDays), level-up email, progress endpoint, social card data |
 | `referrals` | `features/referrals/` | ✅ | Buyer referral link, wallet credits, reward + bonus issuance, leaderboard, reward email |
 | `payments` | `features/payments/` | ✅ | PayPal order creation, capture, webhook handler, cart total calculation |
-| `fx` | `features/fx/` | ✅ | Open Exchange Rates fetch, Redis cache (6h), INR-base conversion |
+| `fx` | `features/fx/` | ✅ | Frankfurter API fetch, Redis cache (6h), INR-base conversion |
 | `geo` | `features/geo/` | ✅ | ipapi.co geo-detect → country code + currency suggestion |
 | `admin` | `features/admin/` | ✅ | Brand approval/rejection, level override, user suspend/reactivate, payout management + CSV export, platform stats |
 

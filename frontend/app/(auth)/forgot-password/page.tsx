@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -35,14 +35,14 @@ export default function ForgotPasswordPage() {
         <h1 className="font-heading text-3xl font-bold text-[#1A1A1A]">
           {step === "email" ? "Forgot password?" : step === "otp" ? "Enter your code" : "New password"}
         </h1>
-        <p className="mt-2 text-sm text-[#6B6056]">
+        <p className="mt-2 text-sm text-[#444748]">
           {step === "email" && "Enter your email and we'll send a reset code."}
           {step === "otp" && `We sent a 6-digit code to ${email}.`}
           {step === "reset" && "Choose a new password for your account."}
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E8E0D8] shadow-warm p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4">
         {step === "email" && (
           <>
             <input type="email" placeholder="Email address" value={email}
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
           </>
         )}
 
-        <Link href="/login" className="flex items-center justify-center gap-1 text-sm text-[#6B6056] hover:text-[#C8956C]">
+        <Link href="/login" className="flex items-center justify-center gap-1 text-sm text-[#444748] hover:text-[#A68B67]">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to login
         </Link>
       </div>
@@ -84,5 +84,5 @@ export default function ForgotPasswordPage() {
   );
 }
 
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
-const btn = "w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";
+const btn = "w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50";

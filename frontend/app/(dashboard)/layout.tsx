@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -46,11 +46,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     BUYER_NAV;
 
   return (
-    <div className="flex min-h-screen bg-[#FAFAF8]">
+    <div className="flex min-h-screen bg-[#F9F7F2]">
       {/* Sidebar */}
-      <aside className="hidden lg:flex w-56 shrink-0 flex-col bg-white border-r border-[#E8E0D8]">
+      <aside className="hidden lg:flex w-56 shrink-0 flex-col bg-white border-r border-[#E5E1D8]">
         {/* Logo */}
-        <div className="h-14 flex items-center px-5 border-b border-[#E8E0D8]">
+        <div className="h-14 flex items-center px-5 border-b border-[#E5E1D8]">
           <Link href="/" className="font-heading text-base font-bold text-[#1A1A1A]">
             Solomon Bharat
           </Link>
@@ -67,8 +67,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                   active
-                    ? "bg-[#F5EDE6] text-[#C8956C]"
-                    : "text-[#6B6056] hover:bg-[#FAFAF8] hover:text-[#1A1A1A]"
+                    ? "bg-[#F5F0E8] text-[#A68B67]"
+                    : "text-[#444748] hover:bg-[#F9F7F2] hover:text-[#1A1A1A]"
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -80,21 +80,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-[#E8E0D8] p-3">
+        <div className="border-t border-[#E5E1D8] p-3">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="h-8 w-8 rounded-full bg-[#F5EDE6] flex items-center justify-center shrink-0">
-              <span className="text-sm font-semibold text-[#C8956C]">
+            <div className="h-8 w-8 rounded bg-[#F5F0E8] flex items-center justify-center shrink-0">
+              <span className="text-sm font-semibold text-[#A68B67]">
                 {user?.name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-[#1A1A1A] truncate">{user?.name}</p>
-              <p className="text-[10px] text-[#6B6056] truncate">{user?.email}</p>
+              <p className="text-[10px] text-[#444748] truncate">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[#6B6056] hover:bg-[#FAFAF8] hover:text-[#C0392B] transition-colors mt-1"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[#444748] hover:bg-[#F9F7F2] hover:text-[#C0392B] transition-colors mt-1"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sign out
@@ -105,9 +105,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header className="lg:hidden h-14 flex items-center justify-between px-4 bg-white border-b border-[#E8E0D8]">
+        <header className="lg:hidden h-14 flex items-center justify-between px-4 bg-white border-b border-[#E5E1D8]">
           <Link href="/" className="font-heading text-base font-bold text-[#1A1A1A]">Solomon Bharat</Link>
-          <span className="text-xs text-[#6B6056]">{user?.name}</span>
+          <span className="text-xs text-[#444748]">{user?.name}</span>
         </header>
 
         <main className="flex-1 p-6 lg:p-8">{children}</main>

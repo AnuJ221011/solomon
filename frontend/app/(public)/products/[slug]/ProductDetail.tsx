@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -111,8 +111,8 @@ export function ProductDetail({ slug }: Props) {
   if (isLoading) return <DetailSkeleton />;
   if (isError || !product) return (
     <div className="text-center py-20">
-      <p className="text-[#6B6056] mb-4">Product not found.</p>
-      <Link href="/shop" className="text-sm text-[#C8956C] font-medium">← Back to shop</Link>
+      <p className="text-[#444748] mb-4">Product not found.</p>
+      <Link href="/shop" className="text-sm text-[#A68B67] font-medium">← Back to shop</Link>
     </div>
   );
 
@@ -121,15 +121,8 @@ export function ProductDetail({ slug }: Props) {
 
   // Use variant price when a variant is selected; fall back to product base price
   const activePriceInr = selectedVariant ? Number(selectedVariant.priceInr) : Number(product.wholesalePriceInr);
-  const activeCompareAtInr = selectedVariant?.compareAtPriceInr
-    ? Number(selectedVariant.compareAtPriceInr)
-    : product.msrpInr ? Number(product.msrpInr) : null;
 
   const price = format(activePriceInr);
-  const msrp = activeCompareAtInr ? format(activeCompareAtInr) : null;
-  const margin = activeCompareAtInr && activeCompareAtInr > activePriceInr
-    ? Math.round(((activeCompareAtInr - activePriceInr) / activeCompareAtInr) * 100)
-    : null;
   const totalPrice = format(activePriceInr * qty);
   const avgRating = reviewsData?.reviews?.length
     ? (reviewsData.reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviewsData.reviews.length).toFixed(1)
@@ -138,24 +131,24 @@ export function ProductDetail({ slug }: Props) {
   return (
     <div className="bg-white">
       {/* ── Brand header bar ──────────────────────────────────────── */}
-      <div className="border-b border-[#E8E0D8] bg-white">
+      <div className="border-b border-[#E5E1D8] bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <Link href={`/brands/${product.brandProfile.slug}`} className="flex items-center gap-3 group">
-            <div className="h-10 w-10 rounded-full bg-[#F5EDE6] border border-[#E8E0D8] flex items-center justify-center overflow-hidden shrink-0">
+            <div className="h-10 w-10 rounded bg-[#F5F0E8] border border-[#E5E1D8] flex items-center justify-center overflow-hidden shrink-0">
               {(product.brandProfile as any).logoUrl ? (
                 <Image src={(product.brandProfile as any).logoUrl} alt={product.brandProfile.brandName} width={40} height={40} className="object-cover" />
               ) : (
-                <span className="font-heading font-bold text-[#C8956C]">{product.brandProfile.brandName.charAt(0)}</span>
+                <span className="font-heading font-bold text-[#A68B67]">{product.brandProfile.brandName.charAt(0)}</span>
               )}
             </div>
             <div>
-              <p className="font-semibold text-sm text-[#1A1A1A] group-hover:text-[#C8956C] transition-colors">
+              <p className="font-semibold text-sm text-[#1A1A1A] group-hover:text-[#A68B67] transition-colors">
                 {product.brandProfile.brandName}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
                 <AchievementBadge level={product.brandProfile.achievementLevel} size="sm" />
                 {avgRating && (
-                  <span className="flex items-center gap-1 text-xs text-[#6B6056]">
+                  <span className="flex items-center gap-1 text-xs text-[#444748]">
                     <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />
                     {avgRating}
                     {reviewsData?.total ? ` (${reviewsData.total})` : ""}
@@ -166,7 +159,7 @@ export function ProductDetail({ slug }: Props) {
           </Link>
           <div className="flex items-center gap-2 shrink-0">
             {product.moq && (
-              <span className="px-3 py-1.5 rounded-full border border-[#E8E0D8] text-xs font-medium text-[#6B6056]">
+              <span className="px-3 py-1.5 rounded border border-[#E5E1D8] text-xs font-medium text-[#444748]">
                 {price} minimum
               </span>
             )}
@@ -181,9 +174,9 @@ export function ProductDetail({ slug }: Props) {
           {/* ── Photo grid — sticky, self-start so images keep their natural size ── */}
           <div className="lg:sticky lg:top-20 lg:self-start lg:px-6">
             {photos.length === 0 ? (
-              <div className="aspect-square rounded-2xl bg-[#F5EDE6] flex items-center justify-center text-6xl text-[#E8E0D8]">✦</div>
+              <div className="aspect-square rounded-lg bg-[#F5F0E8] flex items-center justify-center text-6xl text-[#E5E1D8]">✦</div>
             ) : photos.length === 1 ? (
-              <button onClick={() => setLightbox(0)} className="block w-full aspect-square rounded-2xl overflow-hidden bg-[#F5EDE6] relative group">
+              <button onClick={() => setLightbox(0)} className="block w-full aspect-square rounded-lg overflow-hidden bg-[#F5F0E8] relative group">
                 <Image src={photos[0].url} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="50vw" priority />
               </button>
             ) : (
@@ -193,9 +186,9 @@ export function ProductDetail({ slug }: Props) {
                     key={photo.id}
                     onClick={() => setLightbox(i)}
                     className={cn(
-                      "relative bg-[#F5EDE6] overflow-hidden group",
+                      "relative bg-[#F5F0E8] overflow-hidden group",
                       photos.length === 3 && i === 0 ? "col-span-2 aspect-[2/1]" : "aspect-square",
-                      "rounded-xl"
+                      "rounded-lg"
                     )}
                   >
                     <Image
@@ -220,23 +213,16 @@ export function ProductDetail({ slug }: Props) {
 
           {/* ── Product info ────────────────────────────────────────── */}
           <div className="flex flex-col gap-5">
-            {/* Top badge */}
-            {margin && margin >= 15 && (
-              <p className="text-xs font-semibold text-[#C8956C]">
-                Top reordered in {product.categories?.[0] ?? "category"}
-              </p>
-            )}
-
             {/* Name + actions */}
             <div className="flex items-start justify-between gap-4">
               <h1 className="font-heading text-2xl lg:text-3xl font-bold text-[#1A1A1A] leading-tight">
                 {product.name}
               </h1>
               <div className="flex items-center gap-2 shrink-0">
-                <button className="h-9 w-9 rounded-full border border-[#E8E0D8] flex items-center justify-center text-[#6B6056] hover:border-[#C8956C] hover:text-[#C8956C] transition-colors">
+                <button className="h-9 w-9 rounded border border-[#E5E1D8] flex items-center justify-center text-[#444748] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors">
                   <Heart className="h-4 w-4" />
                 </button>
-                <button className="h-9 w-9 rounded-full border border-[#E8E0D8] flex items-center justify-center text-[#6B6056] hover:border-[#C8956C] hover:text-[#C8956C] transition-colors">
+                <button className="h-9 w-9 rounded border border-[#E5E1D8] flex items-center justify-center text-[#444748] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors">
                   <Share2 className="h-4 w-4" />
                 </button>
               </div>
@@ -245,19 +231,13 @@ export function ProductDetail({ slug }: Props) {
             {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold text-[#1A1A1A]">{price}</span>
-              {msrp && <span className="text-sm text-[#6B6056] line-through">MSRP {msrp}</span>}
-              {margin && margin > 0 && (
-                <span className="text-xs font-semibold text-[#2D6A4F] bg-[#E8F5EE] px-2 py-0.5 rounded-full">
-                  {margin}% margin
-                </span>
-              )}
             </div>
 
             {/* Tags */}
             {product.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {product.tags.map((tag) => (
-                  <span key={tag} className="px-2.5 py-1 rounded-full bg-[#F5EDE6] text-xs text-[#6B6056]">{tag}</span>
+                  <span key={tag} className="px-2.5 py-1 rounded bg-[#F5F0E8] text-xs text-[#444748]">{tag}</span>
                 ))}
               </div>
             )}
@@ -271,7 +251,7 @@ export function ProductDetail({ slug }: Props) {
                   onSelect={setSelectedVariant}
                 />
                 {hasVariants && !selectedVariant && (
-                  <p className="text-xs text-[#C8956C]">Select options to continue</p>
+                  <p className="text-xs text-[#A68B67]">Select options to continue</p>
                 )}
               </div>
             )}
@@ -280,12 +260,12 @@ export function ProductDetail({ slug }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-[#1A1A1A]">
-                  Item Quantity <span className="font-normal text-[#6B6056]">(Minimum {product.moq})</span>
+                  Item Quantity <span className="font-normal text-[#444748]">(Minimum {product.moq})</span>
                 </label>
-                <span className="text-xs text-[#6B6056]">Case of {product.moq}</span>
+                <span className="text-xs text-[#444748]">Case of {product.moq}</span>
               </div>
               <div
-                className="inline-flex items-center border border-[#E8E0D8] rounded-lg bg-white"
+                className="inline-flex items-center border border-[#E5E1D8] rounded-lg bg-white"
                 style={{ width: "9rem" }}
               >
                 <button
@@ -293,7 +273,7 @@ export function ProductDetail({ slug }: Props) {
                   onClick={() => setQuantity(Math.max(product.moq, qty - 1))}
                   disabled={qty <= product.moq}
                   style={{ width: "2.5rem", height: "2.5rem", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  className="text-[#6B6056] hover:bg-[#F5EDE6] transition-colors disabled:opacity-40 rounded-l-lg border-r border-[#E8E0D8]"
+                  className="text-[#444748] hover:bg-[#F5F0E8] transition-colors disabled:opacity-40 rounded-l-lg border-r border-[#E5E1D8]"
                 >
                   <Minus style={{ width: "1rem", height: "1rem" }} />
                 </button>
@@ -307,7 +287,7 @@ export function ProductDetail({ slug }: Props) {
                   type="button"
                   onClick={() => setQuantity(qty + 1)}
                   style={{ width: "2.5rem", height: "2.5rem", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  className="text-[#6B6056] hover:bg-[#F5EDE6] transition-colors rounded-r-lg border-l border-[#E8E0D8]"
+                  className="text-[#444748] hover:bg-[#F5F0E8] transition-colors rounded-r-lg border-l border-[#E5E1D8]"
                 >
                   <Plus style={{ width: "1rem", height: "1rem" }} />
                 </button>
@@ -338,41 +318,41 @@ export function ProductDetail({ slug }: Props) {
             </button>
 
             {/* Free shipping info */}
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F5EDE6] border border-[#E8C4A2]">
-              <Truck className="h-4 w-4 text-[#C8956C] mt-0.5 shrink-0" />
-              <p className="text-sm text-[#6B6056]">
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA]">
+              <Truck className="h-4 w-4 text-[#A68B67] mt-0.5 shrink-0" />
+              <p className="text-sm text-[#444748]">
                 Shipping costs calculated at checkout based on your zone and order weight.
               </p>
             </div>
 
             {/* Shipping & policies */}
-            <div className="border border-[#E8E0D8] rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E8E0D8]">
+            <div className="border border-[#E5E1D8] rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-[#E5E1D8]">
                 <h3 className="text-sm font-semibold text-[#1A1A1A]">Shipping & policies</h3>
               </div>
               <div className="px-4 py-3 space-y-3">
                 <div className="flex items-center gap-3">
-                  <Truck className="h-4 w-4 text-[#6B6056] shrink-0" />
-                  <span className="text-sm text-[#6B6056]">
+                  <Truck className="h-4 w-4 text-[#444748] shrink-0" />
+                  <span className="text-sm text-[#444748]">
                     Lead time: <span className="font-medium text-[#1A1A1A]">{LEAD_TIME_LABELS[product.leadTime] ?? product.leadTime}</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-[#6B6056] shrink-0" />
-                  <span className="text-sm text-[#6B6056]">
+                  <MapPin className="h-4 w-4 text-[#444748] shrink-0" />
+                  <span className="text-sm text-[#444748]">
                     Ships from <span className="font-medium text-[#1A1A1A]">India ({product.countryOfOrigin})</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <RotateCcw className="h-4 w-4 text-[#2D6A4F] shrink-0" />
-                  <span className="text-sm text-[#6B6056]">
+                  <span className="text-sm text-[#444748]">
                     <span className="font-medium text-[#2D6A4F]">Opening order protection</span> — 30-day free returns on your first order from this brand
                   </span>
                 </div>
                 {product.hsTariffCode && (
                   <div className="flex items-center gap-3">
-                    <ShieldCheck className="h-4 w-4 text-[#6B6056] shrink-0" />
-                    <span className="text-sm text-[#6B6056]">HS Code: {product.hsTariffCode}</span>
+                    <ShieldCheck className="h-4 w-4 text-[#444748] shrink-0" />
+                    <span className="text-sm text-[#444748]">HS Code: {product.hsTariffCode}</span>
                   </div>
                 )}
               </div>
@@ -380,7 +360,7 @@ export function ProductDetail({ slug }: Props) {
 
             {/* Description accordion */}
             <Accordion title="Description" open={descOpen} onToggle={() => setDescOpen((v) => !v)}>
-              <p className="text-sm text-[#6B6056] leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-[#444748] leading-relaxed whitespace-pre-line">
                 {product.fullDescription
                   ? <span dangerouslySetInnerHTML={{ __html: product.fullDescription }} />
                   : product.shortDescription}
@@ -398,7 +378,7 @@ export function ProductDetail({ slug }: Props) {
                   ...(product.hsTariffCode ? [["HS Code", product.hsTariffCode]] : []),
                 ].map(([k, v]) => (
                   <div key={k}>
-                    <p className="text-[#6B6056] text-xs">{k}</p>
+                    <p className="text-[#444748] text-xs">{k}</p>
                     <p className="font-medium text-[#1A1A1A] mt-0.5">{v}</p>
                   </div>
                 ))}
@@ -408,14 +388,14 @@ export function ProductDetail({ slug }: Props) {
         </div>
 
         {/* ── Shop more from brand ───────────────────────────────── */}
-        <div className="mt-16 pt-10 border-t border-[#E8E0D8]">
+        <div className="mt-16 pt-10 border-t border-[#E5E1D8]">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-xs text-[#6B6056] mb-1">More from this brand</p>
+              <p className="text-xs text-[#444748] mb-1">More from this brand</p>
               <h2 className="font-heading text-xl font-bold text-[#1A1A1A]">
                 Shop more from {product.brandProfile.brandName}
               </h2>
-              <p className="text-xs text-[#6B6056] mt-0.5 flex items-center gap-1">
+              <p className="text-xs text-[#444748] mt-0.5 flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> India
                 {product.brandProfile.achievementLevel && (
                   <AchievementBadge level={product.brandProfile.achievementLevel} size="sm" className="ml-1" />
@@ -436,9 +416,9 @@ export function ProductDetail({ slug }: Props) {
               {brandProducts.slice(0, 6).map((p: any) => <ProductCard key={p.id} product={p} />)}
             </div>
           ) : (
-            <div className="py-10 text-center bg-[#FAFAF8] rounded-xl border border-[#E8E0D8]">
-              <p className="text-sm text-[#6B6056]">No other products from this brand yet.</p>
-              <Link href={`/brands/${product.brandProfile.slug}`} className="mt-2 text-xs text-[#C8956C] font-medium">
+            <div className="py-10 text-center bg-[#F9F7F2] rounded-lg border border-[#E5E1D8]">
+              <p className="text-sm text-[#444748]">No other products from this brand yet.</p>
+              <Link href={`/brands/${product.brandProfile.slug}`} className="mt-2 text-xs text-[#A68B67] font-medium">
                 View brand page →
               </Link>
             </div>
@@ -446,11 +426,11 @@ export function ProductDetail({ slug }: Props) {
         </div>
 
         {/* ── Ratings & Reviews ─────────────────────────────────── */}
-        <div className="mt-14 pt-10 border-t border-[#E8E0D8]">
+        <div className="mt-14 pt-10 border-t border-[#E5E1D8]">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-heading text-xl font-bold text-[#1A1A1A]">Ratings & Reviews</h2>
             {reviewsData && reviewsData.total > 0 && (
-              <Link href="#" className="text-sm text-[#C8956C] font-medium hover:text-[#B07D57]">
+              <Link href="#" className="text-sm text-[#A68B67] font-medium hover:text-[#8B7055]">
                 See all reviews
               </Link>
             )}
@@ -464,22 +444,22 @@ export function ProductDetail({ slug }: Props) {
                   <span className="font-heading text-5xl font-bold text-[#1A1A1A]">{avgRating}</span>
                   <div className="flex mb-1">
                     {[1,2,3,4,5].map((s) => (
-                      <Star key={s} className={cn("h-5 w-5", Number(avgRating) >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#E8E0D8]")} />
+                      <Star key={s} className={cn("h-5 w-5", Number(avgRating) >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#E5E1D8]")} />
                     ))}
                   </div>
                 </div>
-                <p className="text-sm text-[#6B6056]">Rating ({reviewsData.total} brand reviews)</p>
+                <p className="text-sm text-[#444748]">Rating ({reviewsData.total} brand reviews)</p>
                 <div className="mt-4 space-y-1.5">
                   {[5,4,3,2,1].map((star) => {
                     const count = reviewsData.reviews?.filter((r: any) => r.rating === star).length ?? 0;
                     const pct = reviewsData.total > 0 ? (count / reviewsData.total) * 100 : 0;
                     return (
                       <div key={star} className="flex items-center gap-2">
-                        <span className="text-xs text-[#6B6056] w-3">{star}</span>
-                        <div className="flex-1 h-1.5 bg-[#F5EDE6] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#C8956C] rounded-full" style={{ width: `${pct}%` }} />
+                        <span className="text-xs text-[#444748] w-3">{star}</span>
+                        <div className="flex-1 h-1.5 bg-[#F5F0E8] rounded-full overflow-hidden">
+                          <div className="h-full bg-[#1A1A1A] rounded-full" style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-xs text-[#6B6056] w-6 text-right">{count}</span>
+                        <span className="text-xs text-[#444748] w-6 text-right">{count}</span>
                       </div>
                     );
                   })}
@@ -488,43 +468,43 @@ export function ProductDetail({ slug }: Props) {
               {/* Review cards */}
               <div className="lg:col-span-3 grid sm:grid-cols-3 gap-4">
                 {reviewsData.reviews?.slice(0, 3).map((review: any) => (
-                  <div key={review.id} className="p-4 rounded-xl border border-[#E8E0D8] bg-[#FAFAF8] space-y-2">
+                  <div key={review.id} className="p-4 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] space-y-2">
                     <div className="flex">
                       {[1,2,3,4,5].map((s) => (
-                        <Star key={s} className={cn("h-3.5 w-3.5", review.rating >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#E8E0D8]")} />
+                        <Star key={s} className={cn("h-3.5 w-3.5", review.rating >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#E5E1D8]")} />
                       ))}
                     </div>
                     {review.comment && <p className="text-sm text-[#1A1A1A] font-medium line-clamp-2">{review.comment}</p>}
                     <div>
                       <p className="text-xs font-medium text-[#1A1A1A]">{review.reviewer?.buyerProfile?.businessName ?? review.reviewer?.name}</p>
-                      <p className="text-xs text-[#6B6056]">{new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                      <p className="text-xs text-[#444748]">{new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="py-10 text-center bg-[#FAFAF8] rounded-xl border border-[#E8E0D8]">
+            <div className="py-10 text-center bg-[#F9F7F2] rounded-lg border border-[#E5E1D8]">
               <div className="flex justify-center mb-3">
-                {[1,2,3,4,5].map((s) => <Star key={s} className="h-5 w-5 text-[#E8E0D8]" />)}
+                {[1,2,3,4,5].map((s) => <Star key={s} className="h-5 w-5 text-[#E5E1D8]" />)}
               </div>
               <p className="text-sm font-medium text-[#1A1A1A]">No reviews yet</p>
-              <p className="text-xs text-[#6B6056] mt-1">Be the first to review this product after ordering.</p>
+              <p className="text-xs text-[#444748] mt-1">Be the first to review this product after ordering.</p>
             </div>
           )}
         </div>
 
         {/* ── Similar products ──────────────────────────────────── */}
-        <div className="mt-14 pt-10 border-t border-[#E8E0D8]">
+        <div className="mt-14 pt-10 border-t border-[#E5E1D8]">
           <h2 className="font-heading text-xl font-bold text-[#1A1A1A] mb-6">Similar products</h2>
           {similar && similar.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {similar.map((p: any) => <ProductCard key={p.id} product={p} />)}
             </div>
           ) : (
-            <div className="py-10 text-center bg-[#FAFAF8] rounded-xl border border-[#E8E0D8]">
-              <p className="text-sm text-[#6B6056]">No similar products found yet.</p>
-              <Link href="/shop" className="mt-2 text-xs text-[#C8956C] font-medium">Browse all products →</Link>
+            <div className="py-10 text-center bg-[#F9F7F2] rounded-lg border border-[#E5E1D8]">
+              <p className="text-sm text-[#444748]">No similar products found yet.</p>
+              <Link href="/shop" className="mt-2 text-xs text-[#A68B67] font-medium">Browse all products →</Link>
             </div>
           )}
         </div>
@@ -569,11 +549,11 @@ function Accordion({ title, open, onToggle, children }: {
   title: string; open: boolean; onToggle: () => void; children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#E8E0D8] rounded-xl overflow-hidden">
+    <div className="border border-[#E5E1D8] rounded-lg overflow-hidden">
       {/* Always-visible preview strip */}
       <div className="px-4 pt-3.5 pb-0">
         {/* Clamp to 2 lines when collapsed */}
-        <div className={cn("text-sm text-[#6B6056] leading-relaxed", !open && "line-clamp-2")}>
+        <div className={cn("text-sm text-[#444748] leading-relaxed", !open && "line-clamp-2")}>
           {children}
         </div>
         {/* Fade-out gradient when collapsed */}
@@ -586,12 +566,12 @@ function Accordion({ title, open, onToggle, children }: {
       {/* Toggle button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-[#1A1A1A] hover:bg-[#FAFAF8] transition-colors border-t border-[#E8E0D8] mt-2"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F9F7F2] transition-colors border-t border-[#E5E1D8] mt-2"
       >
         <span>{title}</span>
         {open
-          ? <span className="flex items-center gap-1 text-xs font-medium text-[#C8956C]"><ChevronUp className="h-4 w-4" /> Show less</span>
-          : <span className="flex items-center gap-1 text-xs font-medium text-[#C8956C]"><ChevronDown className="h-4 w-4" /> Show more</span>
+          ? <span className="flex items-center gap-1 text-xs font-medium text-[#A68B67]"><ChevronUp className="h-4 w-4" /> Show less</span>
+          : <span className="flex items-center gap-1 text-xs font-medium text-[#A68B67]"><ChevronDown className="h-4 w-4" /> Show more</span>
         }
       </button>
     </div>
@@ -603,11 +583,11 @@ function DetailSkeleton() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="grid grid-cols-2 gap-2">
-          {[1,2,3,4].map((i) => <div key={i} className="aspect-square rounded-xl bg-[#F5EDE6] animate-pulse" />)}
+          {[1,2,3,4].map((i) => <div key={i} className="aspect-square rounded-lg bg-[#F5F0E8] animate-pulse" />)}
         </div>
         <div className="space-y-4">
           {[100,60,80,40,100,40,60].map((w, i) => (
-            <div key={i} className="h-5 bg-[#F5EDE6] rounded animate-pulse" style={{ width: `${w}%` }} />
+            <div key={i} className="h-5 bg-[#F5F0E8] rounded animate-pulse" style={{ width: `${w}%` }} />
           ))}
         </div>
       </div>

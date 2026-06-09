@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, useRef } from "react";
@@ -92,11 +92,11 @@ export function SignupFlow() {
   if (step === "otp") {
     return (
       <div className="w-full max-w-sm text-center">
-        <div className="w-14 h-14 rounded-2xl bg-[#F5EDE6] flex items-center justify-center mx-auto mb-6">
+        <div className="w-14 h-14 rounded-lg bg-[#F5F0E8] flex items-center justify-center mx-auto mb-6">
           <span className="text-2xl">📬</span>
         </div>
         <h1 className="font-heading text-2xl font-bold text-[#1A1A1A]">Check your email</h1>
-        <p className="mt-2 text-sm text-[#6B6056]">
+        <p className="mt-2 text-sm text-[#444748]">
           We sent a 6-digit code to <span className="font-medium text-[#1A1A1A]">{email}</span>
         </p>
 
@@ -111,7 +111,7 @@ export function SignupFlow() {
               value={digit}
               onChange={(e) => handleOtpChange(i, e.target.value)}
               onKeyDown={(e) => { if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus(); }}
-              className="h-12 w-10 rounded-lg border border-[#E8E0D8] bg-white text-center text-lg font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#C8956C] transition-colors"
+              className="h-12 w-10 rounded-lg border border-[#E5E1D8] bg-white text-center text-lg font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#A68B67] transition-colors"
             />
           ))}
         </div>
@@ -119,18 +119,18 @@ export function SignupFlow() {
         <button
           onClick={() => verifyMutation.mutate()}
           disabled={otp.join("").length < 6 || verifyMutation.isPending}
-          className="mt-6 w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+          className="mt-6 w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
         >
           {verifyMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Verify email
         </button>
 
-        <p className="mt-4 text-sm text-[#6B6056]">
+        <p className="mt-4 text-sm text-[#444748]">
           Didn't get it?{" "}
           <button
             onClick={() => resendMutation.mutate()}
             disabled={resendMutation.isPending}
-            className="text-[#C8956C] hover:text-[#B07D57] font-medium"
+            className="text-[#A68B67] hover:text-[#8B7055] font-medium"
           >
             Resend code
           </button>
@@ -138,7 +138,7 @@ export function SignupFlow() {
 
         <button
           onClick={() => setStep("form")}
-          className="mt-2 text-xs text-[#6B6056] hover:text-[#1A1A1A]"
+          className="mt-2 text-xs text-[#444748] hover:text-[#1A1A1A]"
         >
           ← Change email
         </button>
@@ -153,7 +153,7 @@ export function SignupFlow() {
         <h1 className="font-heading text-3xl font-bold text-[#1A1A1A]">
           {role === "BUYER" ? "Join Solomon Bharat" : "Apply as a brand"}
         </h1>
-        <p className="mt-2 text-sm text-[#6B6056]">
+        <p className="mt-2 text-sm text-[#444748]">
           {role === "BUYER"
             ? "Discover Indian wholesale brands. Free forever."
             : "Reach international retailers. Under 15 minutes to list."}
@@ -161,16 +161,16 @@ export function SignupFlow() {
       </div>
 
       {/* Role tabs */}
-      <div className="flex rounded-lg border border-[#E8E0D8] p-1 mb-6 bg-[#FAFAF8]">
+      <div className="flex rounded-lg border border-[#E5E1D8] p-1 mb-6 bg-[#F9F7F2]">
         <Link
           href="/signup?role=buyer"
-          className={`flex-1 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-all ${role === "BUYER" ? "bg-white shadow-warm text-[#1A1A1A]" : "text-[#6B6056] hover:text-[#1A1A1A]"}`}
+          className={`flex-1 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-all ${role === "BUYER" ? "bg-white shadow-warm text-[#1A1A1A]" : "text-[#444748] hover:text-[#1A1A1A]"}`}
         >
           I'm a retailer
         </Link>
         <Link
           href="/signup?role=brand"
-          className={`flex-1 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-all ${role === "BRAND" ? "bg-white shadow-warm text-[#1A1A1A]" : "text-[#6B6056] hover:text-[#1A1A1A]"}`}
+          className={`flex-1 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-all ${role === "BRAND" ? "bg-white shadow-warm text-[#1A1A1A]" : "text-[#444748] hover:text-[#1A1A1A]"}`}
         >
           I'm a brand
         </Link>
@@ -178,7 +178,7 @@ export function SignupFlow() {
 
       <form
         onSubmit={(e) => { e.preventDefault(); signupMutation.mutate(); }}
-        className="bg-white rounded-2xl border border-[#E8E0D8] shadow-warm p-6 space-y-4"
+        className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-4"
       >
         <Field label="Email address">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -193,7 +193,7 @@ export function SignupFlow() {
               placeholder="Min 8 chars, at least 1 number" required minLength={8} className={inp + " pr-10"}
             />
             <button type="button" tabIndex={-1} onClick={() => setShowPw((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6056]">
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444748]">
               {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
@@ -215,11 +215,11 @@ export function SignupFlow() {
               </select>
             </Field>
             <div>
-              <p className="text-sm font-medium text-[#1A1A1A] mb-2">Store type <span className="text-[#6B6056] font-normal">(optional)</span></p>
+              <p className="text-sm font-medium text-[#1A1A1A] mb-2">Store type <span className="text-[#444748] font-normal">(optional)</span></p>
               <div className="flex flex-wrap gap-2">
                 {STORE_TYPES.map((t) => (
                   <button key={t} type="button" onClick={() => setForm({ ...form, storeType: form.storeType === t ? "" : t })}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${form.storeType === t ? "bg-[#C8956C] border-[#C8956C] text-white" : "bg-[#FAFAF8] border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C]"}`}>
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${form.storeType === t ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "bg-[#F9F7F2] border-[#E5E1D8] text-[#444748] hover:border-[#A68B67]"}`}>
                     {t}
                   </button>
                 ))}
@@ -235,7 +235,7 @@ export function SignupFlow() {
             </Field>
             <Field label="Instagram handle (optional)">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6056] text-sm">@</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444748] text-sm">@</span>
                 <input type="text" value={form.instagramHandle}
                   onChange={(e) => setForm({ ...form, instagramHandle: e.target.value })}
                   placeholder="yourbrand" className={inp + " pl-7"} />
@@ -245,31 +245,31 @@ export function SignupFlow() {
               <textarea value={form.brandStory}
                 onChange={(e) => setForm({ ...form, brandStory: e.target.value })}
                 rows={3} placeholder="Tell buyers your story…"
-                className="w-full px-3 py-2 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors resize-none" />
+                className="w-full px-3 py-2 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors resize-none" />
             </Field>
           </>
         )}
 
-        <p className="text-xs text-[#6B6056]">
+        <p className="text-xs text-[#444748]">
           By signing up you agree to our{" "}
-          <Link href="/terms" className="text-[#C8956C] hover:underline">Terms</Link> and{" "}
-          <Link href="/privacy" className="text-[#C8956C] hover:underline">Privacy policy</Link>.
+          <Link href="/terms" className="text-[#A68B67] hover:underline">Terms</Link> and{" "}
+          <Link href="/privacy" className="text-[#A68B67] hover:underline">Privacy policy</Link>.
         </p>
 
         <button type="submit" disabled={signupMutation.isPending}
-          className="w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
+          className="w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
           {signupMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {role === "BUYER" ? "Create free account" : "Submit application"}
         </button>
       </form>
 
-      <p className="mt-5 text-center text-sm text-[#6B6056]">
+      <p className="mt-5 text-center text-sm text-[#444748]">
         Already have an account?{" "}
-        <Link href="/login" className="text-[#C8956C] hover:text-[#B07D57] font-medium">Log in</Link>
+        <Link href="/login" className="text-[#A68B67] hover:text-[#8B7055] font-medium">Log in</Link>
       </p>
 
       {role === "BRAND" && (
-        <div className="mt-4 p-3 rounded-lg bg-[#F5EDE6] border border-[#E8C4A2] text-xs text-[#6B6056]">
+        <div className="mt-4 p-3 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA] text-xs text-[#444748]">
           ⏱ Applications are reviewed within 24–48 hours. You'll receive an email when approved.
         </div>
       )}
@@ -285,4 +285,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";

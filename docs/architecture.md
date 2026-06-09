@@ -42,7 +42,7 @@ backend/
 │   │   ├── achievements/             # 5-level criteria engine, progress, level-up email, social card
 │   │   ├── referrals/                # Buyer referral program, wallet credits, leaderboard
 │   │   ├── payments/                 # PayPal create/capture/webhook, cart total calculator
-│   │   ├── fx/                       # Open Exchange Rates fetch, Redis cache, INR-base conversion
+│   │   ├── fx/                       # Frankfurter API fetch, Redis cache (6h), INR-base conversion
 │   │   ├── geo/                      # ipapi.co geo-detect → country code + currency
 │   │   └── admin/                    # Brand approvals, user management, payout management + CSV
 │   │

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,13 +46,13 @@ export default function AdminPayoutsPage() {
         <div>
           <h1 className="font-heading text-2xl font-bold text-[#1A1A1A]">Payout Management</h1>
           {isPaidFilter === "false" && payouts.length > 0 && (
-            <p className="text-sm text-[#6B6056] mt-0.5">
+            <p className="text-sm text-[#444748] mt-0.5">
               Total pending: <span className="font-semibold text-[#1A1A1A]">₹{totalPending.toLocaleString("en-IN")}</span>
             </p>
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={exportCsv} className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E8E0D8] text-sm text-[#6B6056] hover:bg-[#FAFAF8] transition-colors">
+          <button onClick={exportCsv} className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E5E1D8] text-sm text-[#444748] hover:bg-[#F9F7F2] transition-colors">
             <Download className="h-4 w-4" /> Export CSV
           </button>
           {selected.length > 0 && (
@@ -70,28 +70,28 @@ export default function AdminPayoutsPage() {
         {[["false", "Pending"], ["true", "Paid"]].map(([v, l]) => (
           <button key={v} onClick={() => { setIsPaidFilter(v as any); setSelected([]); }}
             className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all border",
-              isPaidFilter === v ? "bg-[#C8956C] border-[#C8956C] text-white" : "bg-white border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C]")}>
+              isPaidFilter === v ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "bg-white border-[#E5E1D8] text-[#444748] hover:border-[#A68B67]")}>
             {l}
           </button>
         ))}
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" /></div>
       ) : payouts.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-[#E8E0D8]">
+        <div className="text-center py-20 bg-white rounded-lg border border-[#E5E1D8]">
           <CheckCircle2 className="h-8 w-8 text-[#2D6A4F] mx-auto mb-2" />
-          <p className="text-sm text-[#6B6056]">No {isPaidFilter === "false" ? "pending" : "paid"} payouts.</p>
+          <p className="text-sm text-[#444748]">No {isPaidFilter === "false" ? "pending" : "paid"} payouts.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm overflow-hidden">
+        <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#FAFAF8] border-b border-[#E8E0D8] text-xs text-[#6B6056] uppercase tracking-wider">
+                <tr className="bg-[#F9F7F2] border-b border-[#E5E1D8] text-xs text-[#444748] uppercase tracking-wider">
                   {isPaidFilter === "false" && (
                     <th className="px-4 py-3">
-                      <input type="checkbox" checked={selected.length === payouts.length} onChange={toggleAll} className="accent-[#C8956C]" />
+                      <input type="checkbox" checked={selected.length === payouts.length} onChange={toggleAll} className="accent-[#A68B67]" />
                     </th>
                   )}
                   {["Brand", "Order ID", "Gross (₹)", "Commission", "Net (₹)", "Speed", "Scheduled", isPaidFilter === "true" ? "Paid on" : ""].map((h) => h && (
@@ -99,26 +99,26 @@ export default function AdminPayoutsPage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E8E0D8]">
+              <tbody className="divide-y divide-[#E5E1D8]">
                 {payouts.map((p: any) => (
-                  <tr key={p.id} className="hover:bg-[#FAFAF8] transition-colors">
+                  <tr key={p.id} className="hover:bg-[#F9F7F2] transition-colors">
                     {isPaidFilter === "false" && (
                       <td className="px-4 py-3">
-                        <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleOne(p.id)} className="accent-[#C8956C]" />
+                        <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleOne(p.id)} className="accent-[#A68B67]" />
                       </td>
                     )}
                     <td className="px-4 py-3 font-medium text-[#1A1A1A]">{p.brandProfile?.brandName}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#6B6056]">{p.orderId?.slice(0, 10)}…</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[#444748]">{p.orderId?.slice(0, 10)}…</td>
                     <td className="px-4 py-3">₹{Number(p.grossInr).toLocaleString("en-IN")}</td>
                     <td className="px-4 py-3 text-[#C0392B]">-₹{Number(p.commissionInr).toLocaleString("en-IN")}</td>
                     <td className="px-4 py-3 font-semibold text-[#2D6A4F]">₹{Number(p.netInr).toLocaleString("en-IN")}</td>
                     <td className="px-4 py-3">
                       <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold",
-                        p.payoutSpeed === "EXPRESS" ? "bg-[#FEF3C7] text-[#B45309]" : "bg-[#F5F5F5] text-[#6B6056]")}>
+                        p.payoutSpeed === "EXPRESS" ? "bg-[#FEF3C7] text-[#B45309]" : "bg-[#F5F5F5] text-[#444748]")}>
                         {p.payoutSpeed === "EXPRESS" ? "Express" : "Net 30"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#6B6056]">
+                    <td className="px-4 py-3 text-xs text-[#444748]">
                       {p.scheduledAt ? new Date(p.scheduledAt).toLocaleDateString() : "—"}
                     </td>
                     {isPaidFilter === "true" && (

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -115,7 +115,7 @@ export function AuthGateModal() {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-warm-lg border border-[#E8E0D8] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-white rounded-lg shadow-warm-lg border border-[#E5E1D8] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-4">
@@ -124,24 +124,24 @@ export function AuthGateModal() {
               <>
                 <button
                   onClick={() => setStep("auth")}
-                  className="flex items-center gap-1.5 text-xs text-[#6B6056] hover:text-[#1A1A1A] mb-3 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[#444748] hover:text-[#1A1A1A] mb-3 transition-colors"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" /> Back
                 </button>
                 <h2 className="font-heading text-2xl font-bold text-[#1A1A1A]">Check your email</h2>
-                <p className="text-sm text-[#6B6056] mt-1">
+                <p className="text-sm text-[#444748] mt-1">
                   We sent a 6-digit code to <span className="font-medium text-[#1A1A1A]">{email}</span>
                 </p>
               </>
             ) : (
               <>
                 {reason && (
-                  <p className="text-xs font-medium text-[#C8956C] uppercase tracking-wider mb-1">{reason}</p>
+                  <p className="text-xs font-medium text-[#A68B67] uppercase tracking-wider mb-1">{reason}</p>
                 )}
                 <h2 className="font-heading text-2xl font-bold text-[#1A1A1A]">
                   {mode === "signup" ? "Join Solomon Bharat" : "Welcome back"}
                 </h2>
-                <p className="text-sm text-[#6B6056] mt-0.5">
+                <p className="text-sm text-[#444748] mt-0.5">
                   {mode === "signup" ? "Free forever for retailers." : "Log in to your account."}
                 </p>
               </>
@@ -149,7 +149,7 @@ export function AuthGateModal() {
           </div>
           <button
             onClick={handleClose}
-            className="ml-4 h-8 w-8 rounded-full flex items-center justify-center text-[#6B6056] hover:bg-[#F5EDE6] hover:text-[#1A1A1A] transition-colors shrink-0"
+            className="ml-4 h-8 w-8 rounded-full flex items-center justify-center text-[#444748] hover:bg-[#F5F0E8] hover:text-[#1A1A1A] transition-colors shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -157,7 +157,7 @@ export function AuthGateModal() {
 
         {/* Tabs — only on auth step */}
         {step === "auth" && (
-          <div className="flex border-b border-[#E8E0D8] mx-6">
+          <div className="flex border-b border-[#E5E1D8] mx-6">
             {(["signup", "login"] as const).map((t) => (
               <button
                 key={t}
@@ -165,8 +165,8 @@ export function AuthGateModal() {
                 className={cn(
                   "flex-1 py-2.5 text-sm font-medium transition-colors",
                   mode === t
-                    ? "text-[#C8956C] border-b-2 border-[#C8956C] -mb-px"
-                    : "text-[#6B6056] hover:text-[#1A1A1A]"
+                    ? "text-[#A68B67] border-b-2 border-[#A68B67] -mb-px"
+                    : "text-[#444748] hover:text-[#1A1A1A]"
                 )}
               >
                 {t === "signup" ? "Create account" : "Log in"}
@@ -194,7 +194,7 @@ export function AuthGateModal() {
                     onKeyDown={(e) => {
                       if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
                     }}
-                    className="h-13 w-11 rounded-lg border border-[#E8E0D8] bg-white text-center text-xl font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#C8956C] transition-colors"
+                    className="h-13 w-11 rounded-lg border border-[#E5E1D8] bg-white text-center text-xl font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#A68B67] transition-colors"
                   />
                 ))}
               </div>
@@ -208,12 +208,12 @@ export function AuthGateModal() {
                 Verify email
               </button>
 
-              <div className="text-center text-sm text-[#6B6056]">
+              <div className="text-center text-sm text-[#444748]">
                 Didn't receive it?{" "}
                 <button
                   onClick={() => resendMutation.mutate()}
                   disabled={resendMutation.isPending}
-                  className="text-[#C8956C] hover:text-[#B07D57] font-medium"
+                  className="text-[#A68B67] hover:text-[#8B7055] font-medium"
                 >
                   Resend code
                 </button>
@@ -232,7 +232,7 @@ export function AuthGateModal() {
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   className={inp + " pr-10"} />
                 <button type="button" onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6056]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444748]">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -240,7 +240,7 @@ export function AuthGateModal() {
               <div className="text-right">
                 <button
                   onClick={() => { handleClose(); }}
-                  className="text-xs text-[#C8956C] hover:text-[#B07D57]"
+                  className="text-xs text-[#A68B67] hover:text-[#8B7055]"
                 >
                   <Link href="/forgot-password">Forgot password?</Link>
                 </button>
@@ -266,7 +266,7 @@ export function AuthGateModal() {
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   className={inp + " pr-10"} />
                 <button type="button" onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6056]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444748]">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -288,13 +288,13 @@ export function AuthGateModal() {
               </button>
 
               {/* Brand signup CTA */}
-              <div className="pt-1 border-t border-[#E8E0D8] text-center">
-                <p className="text-xs text-[#6B6056]">
+              <div className="pt-1 border-t border-[#E5E1D8] text-center">
+                <p className="text-xs text-[#444748]">
                   Selling wholesale from India?{" "}
                   <Link
                     href="/signup?role=brand"
                     onClick={handleClose}
-                    className="text-[#C8956C] hover:text-[#B07D57] font-medium"
+                    className="text-[#A68B67] hover:text-[#8B7055] font-medium"
                   >
                     Apply as a brand →
                   </Link>
@@ -305,11 +305,11 @@ export function AuthGateModal() {
 
           {/* Terms */}
           {step === "auth" && mode === "signup" && (
-            <p className="text-xs text-[#6B6056] text-center">
+            <p className="text-xs text-[#444748] text-center">
               By signing up you agree to our{" "}
-              <Link href="/terms" onClick={handleClose} className="text-[#C8956C] hover:underline">Terms</Link>
+              <Link href="/terms" onClick={handleClose} className="text-[#A68B67] hover:underline">Terms</Link>
               {" "}and{" "}
-              <Link href="/privacy" onClick={handleClose} className="text-[#C8956C] hover:underline">Privacy policy</Link>.
+              <Link href="/privacy" onClick={handleClose} className="text-[#A68B67] hover:underline">Privacy policy</Link>.
             </p>
           )}
         </div>
@@ -318,5 +318,5 @@ export function AuthGateModal() {
   );
 }
 
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
-const btnCls = "w-full h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";
+const btnCls = "w-full h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Play, Pause } from "lucide-react";
@@ -94,8 +94,8 @@ export function HeroSection() {
           {/* Eyebrow */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-7 transition-all duration-700 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             style={{ background: "rgba(200,149,108,0.15)", borderColor: "rgba(200,149,108,0.40)" }}>
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C8956C] animate-pulse" />
-            <span className="text-xs font-medium text-[#E8C4A2] tracking-wide">
+            <span className="h-1.5 w-1.5 rounded bg-[#1A1A1A] animate-pulse" />
+            <span className="text-xs font-medium text-[#DDD0BA] tracking-wide">
               India's B2B Wholesale Marketplace
             </span>
           </div>
@@ -108,7 +108,7 @@ export function HeroSection() {
             <span
               className="italic"
               style={{
-                background: "linear-gradient(90deg, #C8956C, #E8B98A, #C8956C)",
+                background: "linear-gradient(90deg, #A68B67, #E8B98A, #A68B67)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundSize: "200% auto",
@@ -159,7 +159,7 @@ export function HeroSection() {
               <div key={stat.label} className="flex flex-col gap-1">
                 <div
                   className="font-heading text-4xl font-bold"
-                  style={{ background: "linear-gradient(90deg,#C8956C,#E8B98A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+                  style={{ background: "linear-gradient(90deg,#A68B67,#E8B98A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
                 >
                   {stat.value}
                 </div>
@@ -183,7 +183,7 @@ export function HeroSection() {
 
       {/* ── Bottom fade ──────────────────────────────────── */}
       <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-        style={{ background: "linear-gradient(to top, #FAFAF8, transparent)" }} />
+        style={{ background: "linear-gradient(to top, #F9F7F2, transparent)" }} />
     </section>
   );
 }

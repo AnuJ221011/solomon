@@ -1,4 +1,4 @@
-const REASONS = [
+﻿const REASONS = [
   {
     icon: "🏺",
     title: "Authentic artisan goods",
@@ -27,13 +27,13 @@ const REASONS = [
 
 export function WhySection() {
   return (
-    <section className="py-16 bg-white border-y border-[#E8E0D8]">
+    <section className="py-16 bg-white border-y border-[#E5E1D8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="font-heading text-3xl font-bold text-[#1A1A1A]">
             Why Solomon Bharat
           </h2>
-          <p className="mt-2 text-sm text-[#6B6056] max-w-md mx-auto">
+          <p className="mt-2 text-sm text-[#444748] max-w-md mx-auto">
             Built for independent retailers and Indian artisan brands who want
             to trade internationally without the friction.
           </p>
@@ -43,13 +43,13 @@ export function WhySection() {
           {REASONS.map((r) => (
             <div
               key={r.title}
-              className="p-6 rounded-xl bg-[#FAFAF8] border border-[#E8E0D8] hover:border-[#C8956C] hover:bg-white transition-all"
+              className="p-6 rounded-lg bg-[#F9F7F2] border border-[#E5E1D8] hover:border-[#A68B67] hover:bg-white transition-all"
             >
               <span className="text-3xl">{r.icon}</span>
               <h3 className="mt-3 font-heading text-base font-semibold text-[#1A1A1A]">
                 {r.title}
               </h3>
-              <p className="mt-1.5 text-sm text-[#6B6056] leading-relaxed">
+              <p className="mt-1.5 text-sm text-[#444748] leading-relaxed">
                 {r.description}
               </p>
             </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export default function NewProductPage() {
   const [variants, setVariants] = useState<VariantRow[]>([]);
   const [form, setForm] = useState({
     name: "", shortDescription: "", fullDescription: "",
-    wholesalePriceInr: "", msrpInr: "", moq: "", weightGrams: "",
+    wholesalePriceInr: "", moq: "", weightGrams: "",
     hsTariffCode: "", leadTime: "ONE_TO_TWO_WEEKS",
     categories: [] as string[], tags: "", enabledZones: [] as string[],
   });
@@ -31,7 +31,6 @@ export default function NewProductPage() {
       const { data } = await api.post("/products", {
         ...form,
         wholesalePriceInr: Number(form.wholesalePriceInr),
-        msrpInr: form.msrpInr ? Number(form.msrpInr) : undefined,
         moq: Number(form.moq),
         weightGrams: Number(form.weightGrams),
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
@@ -55,7 +54,6 @@ export default function NewProductPage() {
           variants: activeVariants.map((v) => ({
             sku: v.sku,
             priceInr: Number(v.priceInr),
-            compareAtPriceInr: v.compareAtPriceInr ? Number(v.compareAtPriceInr) : undefined,
             stock: Number(v.stock),
             status: v.status,
             attributes: v.attributes,
@@ -87,7 +85,7 @@ export default function NewProductPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-[#6B6056] hover:text-[#1A1A1A]">
+        <button onClick={() => router.back()} className="text-[#444748] hover:text-[#1A1A1A]">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-heading text-2xl font-bold text-[#1A1A1A]">Add product</h1>
@@ -96,31 +94,31 @@ export default function NewProductPage() {
       {/* Progress bar */}
       <div className="flex gap-1.5">
         {STEPS.map((s, i) => (
-          <div key={s} className={`flex-1 h-1.5 rounded-full transition-colors ${i <= step ? "bg-[#C8956C]" : "bg-[#E8E0D8]"}`} />
+          <div key={s} className={`flex-1 h-1.5 rounded-full transition-colors ${i <= step ? "bg-[#1A1A1A]" : "bg-[#E5E1D8]"}`} />
         ))}
       </div>
-      <p className="text-sm font-medium text-[#C8956C]">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
+      <p className="text-sm font-medium text-[#A68B67]">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
 
-      <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm p-6 space-y-5">
+      <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm p-6 space-y-5">
 
         {/* ── Step 0: Photos ──────────────────────────────────────── */}
         {step === 0 && (
           <>
-            <p className="text-sm text-[#6B6056]">Upload up to 8 photos. First image is the cover.</p>
-            <label className="block border-2 border-dashed border-[#E8E0D8] rounded-xl p-8 text-center cursor-pointer hover:border-[#C8956C] transition-colors">
-              <Upload className="h-8 w-8 text-[#E8E0D8] mx-auto mb-2" />
-              <p className="text-sm text-[#6B6056]">Click to select photos</p>
+            <p className="text-sm text-[#444748]">Upload up to 8 photos. First image is the cover.</p>
+            <label className="block border-2 border-dashed border-[#E5E1D8] rounded-lg p-8 text-center cursor-pointer hover:border-[#A68B67] transition-colors">
+              <Upload className="h-8 w-8 text-[#E5E1D8] mx-auto mb-2" />
+              <p className="text-sm text-[#444748]">Click to select photos</p>
               <input type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, 8))} />
             </label>
             {photos.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {photos.map((f, i) => (
-                  <div key={i} className="h-16 w-16 rounded-lg bg-[#F5EDE6] border border-[#E8E0D8] overflow-hidden">
+                  <div key={i} className="h-16 w-16 rounded-lg bg-[#F5F0E8] border border-[#E5E1D8] overflow-hidden">
                     <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
-                <p className="w-full text-xs text-[#6B6056]">{photos.length} photo(s) selected</p>
+                <p className="w-full text-xs text-[#444748]">{photos.length} photo(s) selected</p>
               </div>
             )}
           </>
@@ -158,17 +156,13 @@ export default function NewProductPage() {
         {/* ── Step 2: Pricing & Terms ──────────────────────────────── */}
         {step === 2 && (
           <>
-            <div className="p-3 rounded-lg bg-[#F5EDE6] border border-[#E8C4A2] text-xs text-[#6B6056]">
+            <div className="p-3 rounded-lg bg-[#F5F0E8] border border-[#DDD0BA] text-xs text-[#444748]">
               <span className="font-medium text-[#1A1A1A]">Tip:</span> Set the base wholesale price here. You can set individual prices per variant in the next step.
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Wholesale price (₹) *">
                 <input type="number" value={form.wholesalePriceInr} onChange={(e) => set("wholesalePriceInr", e.target.value)}
                   placeholder="1200" className={inp} />
-              </Field>
-              <Field label="MSRP / RRP (₹) optional">
-                <input type="number" value={form.msrpInr} onChange={(e) => set("msrpInr", e.target.value)}
-                  placeholder="2500" className={inp} />
               </Field>
               <Field label="MOQ *">
                 <input type="number" value={form.moq} onChange={(e) => set("moq", e.target.value)}
@@ -194,7 +188,7 @@ export default function NewProductPage() {
               <div className="flex flex-wrap gap-2">
                 {ZONES.map((z) => (
                   <button key={z} type="button" onClick={() => toggleArr("enabledZones", z)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${form.enabledZones.includes(z) ? "bg-[#C8956C] border-[#C8956C] text-white" : "border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C]"}`}>
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${form.enabledZones.includes(z) ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "border-[#E5E1D8] text-[#444748] hover:border-[#A68B67]"}`}>
                     {z.replace(/_/g, " ")}
                   </button>
                 ))}
@@ -209,7 +203,7 @@ export default function NewProductPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-semibold text-[#1A1A1A]">Product variants</p>
-                <p className="text-sm text-[#6B6056] mt-0.5">
+                <p className="text-sm text-[#444748] mt-0.5">
                   Define attributes (Color, Size, etc.) and generate all combinations. Skip this step if your product has no variants.
                 </p>
               </div>
@@ -243,8 +237,8 @@ export default function NewProductPage() {
                 ["Photos", `${photos.length} selected`],
                 ["Variants", variants.length > 0 ? `${variants.length} variants (${variants.filter(v => v.status === "ACTIVE").length} active)` : "No variants"],
               ].map(([k, v]) => (
-                <div key={k} className="bg-[#FAFAF8] rounded-lg p-3 border border-[#E8E0D8]">
-                  <p className="text-xs text-[#6B6056]">{k}</p>
+                <div key={k} className="bg-[#F9F7F2] rounded-lg p-3 border border-[#E5E1D8]">
+                  <p className="text-xs text-[#444748]">{k}</p>
                   <p className="font-medium text-[#1A1A1A] mt-0.5">{v || "—"}</p>
                 </div>
               ))}
@@ -257,13 +251,13 @@ export default function NewProductPage() {
       <div className="flex gap-3">
         {step > 0 && (
           <button type="button" onClick={() => setStep((s) => s - 1)}
-            className="flex-1 h-11 rounded-lg border border-[#E8E0D8] text-sm font-medium text-[#6B6056] flex items-center justify-center gap-1 hover:bg-[#FAFAF8]">
+            className="flex-1 h-11 rounded-lg border border-[#E5E1D8] text-sm font-medium text-[#444748] flex items-center justify-center gap-1 hover:bg-[#F9F7F2]">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
         )}
         {step < 4 ? (
           <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed()}
-            className="flex-1 h-11 rounded-lg bg-[#C8956C] hover:bg-[#B07D57] text-white text-sm font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50">
+            className="flex-1 h-11 rounded-lg bg-[#1A1A1A] hover:bg-[#8B7055] text-white text-sm font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50">
             {step === 3 ? (variants.length > 0 ? "Continue to preview" : "Skip — no variants") : "Next"}
             <ArrowRight className="h-4 w-4" />
           </button>
@@ -288,4 +282,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inp = "w-full h-10 px-3 rounded-lg border border-[#E8E0D8] bg-[#FAFAF8] text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] focus:bg-white transition-colors";
+const inp = "w-full h-10 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] focus:bg-white transition-colors";

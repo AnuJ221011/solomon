@@ -4,6 +4,8 @@
 
 **v3.0 Changelog:** Complete rewrite from v2.1. All features collapsed into a single build — no Phase 2 deferral. Integrated full Faire-equivalent platform flows: brand onboarding (9-step application), buyer onboarding (store type quiz + background verification), multi-brand cart, order pipeline, opening order returns, payout speed options, 0% commission on Share Link orders, full brand portal (CRM, invoicing, collections, team management, promotions, Shopify sync), discovery algorithm signals, and returns & disputes framework.
 
+**v3.1 Amendment:** MSRP / retail price fields removed from Product and ProductVariant models — margin display removed from all buyer-facing UI. FX provider updated to Frankfurter (free, no API key). Supported currencies expanded to 42. Tech stack updated to Next.js 16 + shadcn/ui v4.
+
 **v3.0 Amendment:** Google OAuth (Sign in with Google) deferred — email + password authentication is the only signup method in the current build. Google OAuth will be added as a follow-on feature once the core platform is live.
 
 ---
@@ -79,8 +81,8 @@ Internal team member who manages brand applications, buyer verifications, achiev
 
 - Geo-detection on first visit via ipapi.co — auto-suggest country and matching currency
 - Preference persisted in buyer profile and localStorage; overridable from top nav at any time
-- Supported currencies: USD, GBP, EUR, AUD, CAD, SGD, AED, INR
-- Exchange rates refreshed every 6 hours via Open Exchange Rates API; cached in Redis
+- Supported currencies: USD, GBP, EUR, AUD, CAD, SGD, AED, INR, JPY, CHF, SEK, NOK, DKK, NZD, HKD, MYR, THB, IDR, PHP, KRW, BDT, LKR, NPR, PKR, QAR, KWD, BHD, OMR, SAR, EGP, ZAR, BRL, MXN, ARS, CLP, COP, NGN, KES, TZS, GHS, TRY (42 currencies total, INR-base)
+- Exchange rates refreshed every 6 hours via Frankfurter API (free, no API key required); cached in Redis
 - All prices stored in INR in the database; converted to display currency on the fly
 - Checkout and invoice always show both local currency amount and INR equivalent
 - Currency symbol and formatting respect locale conventions (£1,200.00 vs ₹1,00,000)
@@ -147,7 +149,6 @@ Brands go through a gated application before accessing the marketplace. Not all 
 - Registered business entity (sole proprietorship, partnership, or company)
 - GST number or business registration number (required for payout eligibility)
 - Minimum ~10 SKUs recommended with product photography
-- Wholesale pricing set at approximately 40–60% of retail (MSRP) price
 - At least one active social media presence (Instagram preferred)
 
 ### Onboarding Steps
@@ -251,7 +252,6 @@ Google OAuth users skip email+password and business name entry (name and email p
 | Short description | Text (160 chars) | Yes | Feed card text |
 | Full description | Rich text | No | Product detail page |
 | Wholesale price (INR) | Currency | Yes | Displayed in buyer currency |
-| MSRP (INR) | Currency | No | Shows buyer margin potential |
 | MOQ | Number | Yes | Per SKU or per order |
 | Variants | Variant builder | No | Up to 3 variant types |
 | Lead time | Dropdown | Yes | 1–3 days / 1–2 weeks / 2–4 weeks |
@@ -669,11 +669,11 @@ Brands select their preferred payout speed in the Payouts tab. Can be changed pe
 
 | Layer | Technologies |
 |---|---|
-| Frontend | Next.js 14 (App Router), Tailwind CSS, shadcn/ui, React Query (TanStack), Zustand |
+| Frontend | Next.js 16 (App Router), Tailwind CSS, shadcn/ui v4 (Base UI), React Query (TanStack), Zustand |
 | Backend | Node.js / Express, PostgreSQL, Prisma ORM, Redis (cache + session store), pg_trgm (trigram search) |
 | Infrastructure | Vercel (frontend), Render (backend), Cloudinary (images) |
-| Auth | Self-managed JWT (access 15 min, refresh 30 days, httpOnly cookie), Google OAuth via Passport.js |
-| Services | Resend (transactional email + OTP), PayPal Business (payments + payouts), Open Exchange Rates (FX), ipapi.co (geo-detect), Shiprocket (shipping quotes) |
+| Auth | Self-managed JWT (access 15 min, refresh 30 days, httpOnly cookie) |
+| Services | Resend (transactional email + OTP), PayPal Business (payments + payouts), Frankfurter API (FX — free, no key), ipapi.co (geo-detect), Shiprocket (shipping quotes) |
 | Search | PostgreSQL pg_trgm + ranking signals computed in backend; no external search engine at MVP scale |
 | Integrations | Shopify (two-way product/order/inventory sync via Shopify Admin API + webhooks) |
 | Future (auto-triggers when volume demands) | Stripe Connect or PayPal Commerce Platform (automated commission splits) |
@@ -709,4 +709,4 @@ All features ship in a single build. Milestones represent internal QA gates, not
 
 ---
 
-*PRD v3.0 · Solomon Bharat · June 2026 · Confidential*
+*PRD v3.1 · Solomon Bharat · June 2026 · Confidential*

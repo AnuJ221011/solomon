@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+﻿import type { Metadata } from "next";
+import { Public_Sans, Playfair_Display } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/Providers";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGateModal } from "@/components/auth/AuthGateModal";
 
-const inter = Inter({
-  variable: "--font-inter",
+const publicSans = Public_Sans({
+  variable: "--font-public-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -45,10 +45,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${geistMono.variable}`}
+      className={`${publicSans.variable} ${playfair.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] antialiased">
+      <body className="min-h-screen bg-[#F9F7F2] text-[#1A1A1A] antialiased">
         <Providers>
           {children}
           <AuthGateModal />
@@ -57,7 +57,7 @@ export default function RootLayout({
             toastOptions={{
               style: {
                 background: "#FFFFFF",
-                border: "1px solid #E8E0D8",
+                border: "1px solid #E5E1D8",
                 color: "#1A1A1A",
               },
             }}

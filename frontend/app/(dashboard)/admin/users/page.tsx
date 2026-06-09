@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,20 +52,20 @@ export default function AdminUsersPage() {
     <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-[#1A1A1A]">User Management</h1>
-        <p className="text-sm text-[#6B6056] mt-0.5">Suspend or reactivate user accounts.</p>
+        <p className="text-sm text-[#444748] mt-0.5">Suspend or reactivate user accounts.</p>
       </div>
 
       <div className="flex gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6056]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#444748]" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name…"
-            className="pl-9 pr-4 h-10 w-64 rounded-lg border border-[#E8E0D8] bg-white text-sm focus:outline-none focus:border-[#C8956C]" />
+            className="pl-9 pr-4 h-10 w-64 rounded-lg border border-[#E5E1D8] bg-white text-sm focus:outline-none focus:border-[#A68B67]" />
         </div>
         <div className="flex gap-1.5">
           {["BRAND", "BUYER"].map((r) => (
             <button key={r} onClick={() => setRoleFilter(r)}
               className={cn("px-4 py-2 rounded-lg text-sm font-medium border transition-all",
-                roleFilter === r ? "bg-[#C8956C] border-[#C8956C] text-white" : "bg-white border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C]")}>
+                roleFilter === r ? "bg-[#1A1A1A] border-[#A68B67] text-white" : "bg-white border-[#E5E1D8] text-[#444748] hover:border-[#A68B67]")}>
               {r}s
             </button>
           ))}
@@ -73,27 +73,27 @@ export default function AdminUsersPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#C8956C]" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#A68B67]" /></div>
       ) : users.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-[#E8E0D8]">
-          <p className="text-sm text-[#6B6056]">No {roleFilter.toLowerCase()}s found.</p>
+        <div className="text-center py-16 bg-white rounded-lg border border-[#E5E1D8]">
+          <p className="text-sm text-[#444748]">No {roleFilter.toLowerCase()}s found.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm overflow-hidden">
+        <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#FAFAF8] border-b border-[#E8E0D8] text-xs text-[#6B6056] uppercase tracking-wider">
+              <tr className="bg-[#F9F7F2] border-b border-[#E5E1D8] text-xs text-[#444748] uppercase tracking-wider">
                 {["Name", "Role", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8E0D8]">
+            <tbody className="divide-y divide-[#E5E1D8]">
               {users.map((u: any) => (
-                <tr key={u.id} className="hover:bg-[#FAFAF8] transition-colors">
+                <tr key={u.id} className="hover:bg-[#F9F7F2] transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-medium text-[#1A1A1A]">{u.name}</p>
-                    <p className="text-xs text-[#6B6056]">{u.email}</p>
+                    <p className="text-xs text-[#444748]">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#EFF6FF] text-[#1E3A5F]">{u.role}</span>
@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3">
                     {u.isActive ? (
                       <button onClick={() => { if (confirm(`Suspend ${u.name}?`)) suspendMutation.mutate(u.userId ?? u.id); }}
-                        className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-[#E8E0D8] text-xs font-medium text-[#C0392B] hover:bg-[#FEF2F2] hover:border-[#C0392B] transition-colors">
+                        className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-[#E5E1D8] text-xs font-medium text-[#C0392B] hover:bg-[#FEF2F2] hover:border-[#C0392B] transition-colors">
                         <UserX className="h-3.5 w-3.5" /> Suspend
                       </button>
                     ) : (

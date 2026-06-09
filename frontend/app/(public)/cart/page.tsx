@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -74,17 +74,17 @@ export default function CartPage() {
 
         {!isAuthenticated() ? (
           <div className="text-center py-20">
-            <ShoppingBag className="h-12 w-12 text-[#E8E0D8] mx-auto mb-4" />
+            <ShoppingBag className="h-12 w-12 text-[#E5E1D8] mx-auto mb-4" />
             <h2 className="font-heading text-xl font-semibold text-[#1A1A1A] mb-2">Sign in to view your cart</h2>
             <LinkButton href="/login" variant="default" size="lg" className="mt-4">Log in</LinkButton>
           </div>
         ) : isLoading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[#C8956C]" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[#A68B67]" /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-20">
-            <ShoppingBag className="h-12 w-12 text-[#E8E0D8] mx-auto mb-4" />
+            <ShoppingBag className="h-12 w-12 text-[#E5E1D8] mx-auto mb-4" />
             <h2 className="font-heading text-xl font-semibold text-[#1A1A1A] mb-2">Your cart is empty</h2>
-            <p className="text-[#6B6056] mb-6">Discover unique Indian wholesale products.</p>
+            <p className="text-[#444748] mb-6">Discover unique Indian wholesale products.</p>
             <LinkButton href="/shop" variant="default" size="lg">Browse products</LinkButton>
           </div>
         ) : (
@@ -95,52 +95,52 @@ export default function CartPage() {
                 const brandName = brandItems[0].product.brandProfile?.brandName ?? "Brand";
                 const brandSlug = brandItems[0].product.brandProfile?.slug;
                 return (
-                  <div key={brandId} className="bg-white rounded-xl border border-[#E8E0D8] overflow-hidden shadow-warm">
-                    <div className="px-5 py-3 border-b border-[#E8E0D8] bg-[#FAFAF8]">
-                      <Link href={`/brands/${brandSlug}`} className="text-sm font-semibold text-[#1A1A1A] hover:text-[#C8956C] transition-colors">
+                  <div key={brandId} className="bg-white rounded-lg border border-[#E5E1D8] overflow-hidden shadow-warm">
+                    <div className="px-5 py-3 border-b border-[#E5E1D8] bg-[#F9F7F2]">
+                      <Link href={`/brands/${brandSlug}`} className="text-sm font-semibold text-[#1A1A1A] hover:text-[#A68B67] transition-colors">
                         {brandName}
                       </Link>
                     </div>
-                    <div className="divide-y divide-[#E8E0D8]">
+                    <div className="divide-y divide-[#E5E1D8]">
                       {brandItems.map((item: any) => {
                         const photo = item.product.photos?.[0]?.url;
                         const unitPrice = Number(item.product.wholesalePriceInr);
                         return (
                           <div key={item.id} className="flex gap-4 p-4">
-                            <div className="h-20 w-20 rounded-lg bg-[#F5EDE6] overflow-hidden shrink-0 relative">
+                            <div className="h-20 w-20 rounded-lg bg-[#F5F0E8] overflow-hidden shrink-0 relative">
                               {photo ? (
                                 <Image src={photo} alt={item.product.name} fill className="object-cover" sizes="80px" />
                               ) : (
-                                <div className="h-full flex items-center justify-center text-2xl text-[#E8E0D8]">✦</div>
+                                <div className="h-full flex items-center justify-center text-2xl text-[#E5E1D8]">✦</div>
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <Link href={`/products/${item.product.slug}`} className="text-sm font-semibold text-[#1A1A1A] hover:text-[#C8956C] line-clamp-2">
+                              <Link href={`/products/${item.product.slug}`} className="text-sm font-semibold text-[#1A1A1A] hover:text-[#A68B67] line-clamp-2">
                                 {item.product.name}
                               </Link>
-                              <p className="text-xs text-[#6B6056] mt-0.5">
+                              <p className="text-xs text-[#444748] mt-0.5">
                                 {format(unitPrice)} / unit · MOQ {item.product.moq}
                               </p>
                               <div className="flex items-center gap-3 mt-3">
                                 {/* Quantity */}
-                                <div className="flex items-center gap-1 border border-[#E8E0D8] rounded-lg overflow-hidden">
+                                <div className="flex items-center gap-1 border border-[#E5E1D8] rounded-lg overflow-hidden">
                                   <button
                                     onClick={() => updateMutation.mutate({ productId: item.productId, quantity: Math.max(item.product.moq, item.quantity - 1) })}
-                                    className="h-8 w-8 flex items-center justify-center text-[#6B6056] hover:bg-[#F5EDE6] transition-colors"
+                                    className="h-8 w-8 flex items-center justify-center text-[#444748] hover:bg-[#F5F0E8] transition-colors"
                                   >
                                     <Minus className="h-3.5 w-3.5" />
                                   </button>
                                   <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
                                   <button
                                     onClick={() => updateMutation.mutate({ productId: item.productId, quantity: item.quantity + 1 })}
-                                    className="h-8 w-8 flex items-center justify-center text-[#6B6056] hover:bg-[#F5EDE6] transition-colors"
+                                    className="h-8 w-8 flex items-center justify-center text-[#444748] hover:bg-[#F5F0E8] transition-colors"
                                   >
                                     <Plus className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                                 <button
                                   onClick={() => removeMutation.mutate(item.productId)}
-                                  className="h-8 w-8 flex items-center justify-center text-[#6B6056] hover:text-[#C0392B] transition-colors"
+                                  className="h-8 w-8 flex items-center justify-center text-[#444748] hover:text-[#C0392B] transition-colors"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -148,7 +148,7 @@ export default function CartPage() {
                             </div>
                             <div className="text-right shrink-0">
                               <p className="font-semibold text-[#1A1A1A]">{format(unitPrice * item.quantity)}</p>
-                              <p className="text-xs text-[#6B6056] mt-0.5">{item.quantity} units</p>
+                              <p className="text-xs text-[#444748] mt-0.5">{item.quantity} units</p>
                             </div>
                           </div>
                         );
@@ -160,20 +160,20 @@ export default function CartPage() {
             </div>
 
             {/* Summary */}
-            <div className="bg-white rounded-xl border border-[#E8E0D8] shadow-warm h-fit sticky top-20">
-              <div className="p-5 border-b border-[#E8E0D8]">
+            <div className="bg-white rounded-lg border border-[#E5E1D8] shadow-warm h-fit sticky top-20">
+              <div className="p-5 border-b border-[#E5E1D8]">
                 <h2 className="font-heading text-base font-semibold text-[#1A1A1A]">Order summary</h2>
               </div>
               <div className="p-5 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6B6056]">Subtotal ({items.length} items)</span>
+                  <span className="text-[#444748]">Subtotal ({items.length} items)</span>
                   <span className="font-medium text-[#1A1A1A]">{format(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6B6056]">Shipping</span>
-                  <span className="text-[#6B6056]">Calculated at checkout</span>
+                  <span className="text-[#444748]">Shipping</span>
+                  <span className="text-[#444748]">Calculated at checkout</span>
                 </div>
-                <div className="pt-3 border-t border-[#E8E0D8] flex justify-between">
+                <div className="pt-3 border-t border-[#E5E1D8] flex justify-between">
                   <span className="font-semibold text-[#1A1A1A]">Estimated total</span>
                   <span className="font-bold text-[#1A1A1A]">{format(subtotal)}</span>
                 </div>
@@ -183,7 +183,7 @@ export default function CartPage() {
                   Proceed to checkout
                   <ArrowRight className="h-4 w-4" />
                 </LinkButton>
-                <p className="text-xs text-[#6B6056] text-center mt-3">
+                <p className="text-xs text-[#444748] text-center mt-3">
                   Opening order? 30-day free returns on your first order from each brand.
                 </p>
               </div>

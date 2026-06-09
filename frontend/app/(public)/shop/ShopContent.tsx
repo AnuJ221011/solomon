@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -78,18 +78,18 @@ export function ShopContent({ initialFilters = {} }: Props) {
       <div className="flex items-center gap-3 mb-6">
         {/* Search */}
         <div className="relative flex-1 max-w-lg">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6056]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#444748]" />
           <input
             type="text"
             placeholder="Search products, brands…"
             value={filters.search}
             onChange={(e) => update({ search: e.target.value })}
-            className="w-full pl-9 pr-4 h-10 rounded-lg border border-[#E8E0D8] bg-white text-sm text-[#1A1A1A] placeholder:text-[#6B6056] focus:outline-none focus:border-[#C8956C] transition-colors"
+            className="w-full pl-9 pr-4 h-10 rounded-lg border border-[#E5E1D8] bg-white text-sm text-[#1A1A1A] placeholder:text-[#444748] focus:outline-none focus:border-[#A68B67] transition-colors"
           />
           {filters.search && (
             <button
               onClick={() => update({ search: "" })}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6056] hover:text-[#1A1A1A]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444748] hover:text-[#1A1A1A]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -101,13 +101,13 @@ export function ShopContent({ initialFilters = {} }: Props) {
           <select
             value={sortValue}
             onChange={(e) => applySort(e.target.value)}
-            className="h-10 pl-3 pr-8 rounded-lg border border-[#E8E0D8] bg-white text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C8956C] appearance-none cursor-pointer"
+            className="h-10 pl-3 pr-8 rounded-lg border border-[#E5E1D8] bg-white text-sm text-[#1A1A1A] focus:outline-none focus:border-[#A68B67] appearance-none cursor-pointer"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6056] pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#444748] pointer-events-none" />
         </div>
 
         {/* Mobile filter toggle */}
@@ -116,14 +116,14 @@ export function ShopContent({ initialFilters = {} }: Props) {
           className={cn(
             "lg:hidden flex items-center gap-2 h-10 px-3 rounded-lg border text-sm font-medium transition-colors",
             activeFilterCount > 0
-              ? "border-[#C8956C] bg-[#F5EDE6] text-[#C8956C]"
-              : "border-[#E8E0D8] bg-white text-[#6B6056]"
+              ? "border-[#A68B67] bg-[#F5F0E8] text-[#A68B67]"
+              : "border-[#E5E1D8] bg-white text-[#444748]"
           )}
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filters
           {activeFilterCount > 0 && (
-            <span className="h-5 w-5 rounded-full bg-[#C8956C] text-white text-[10px] font-semibold flex items-center justify-center">
+            <span className="h-5 w-5 rounded bg-[#1A1A1A] text-white text-[10px] font-semibold flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
@@ -131,7 +131,7 @@ export function ShopContent({ initialFilters = {} }: Props) {
 
         {/* Clear all */}
         {activeFilterCount > 0 && (
-          <button onClick={clearAll} className="text-sm text-[#C8956C] hover:text-[#B07D57] font-medium whitespace-nowrap">
+          <button onClick={clearAll} className="text-sm text-[#A68B67] hover:text-[#8B7055] font-medium whitespace-nowrap">
             Clear all
           </button>
         )}
@@ -157,8 +157,8 @@ export function ShopContent({ initialFilters = {} }: Props) {
         <aside
           className={cn(
             "w-56 shrink-0 space-y-7",
-            "hidden lg:block",
-            mobileFilterOpen && "fixed inset-0 z-50 bg-white p-6 overflow-y-auto lg:static lg:bg-transparent lg:p-0 lg:overflow-visible block"
+            "hidden lg:block lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-hidden",
+            mobileFilterOpen && "fixed inset-0 z-50 bg-white p-6 overflow-y-auto lg:static lg:bg-transparent lg:p-0 lg:overflow-y-hidden block"
           )}
         >
           {/* Mobile header */}
@@ -166,7 +166,7 @@ export function ShopContent({ initialFilters = {} }: Props) {
             <div className="flex items-center justify-between mb-6 lg:hidden">
               <h2 className="font-heading text-xl font-semibold">Filters</h2>
               <button onClick={() => setMobileFilterOpen(false)}>
-                <X className="h-5 w-5 text-[#6B6056]" />
+                <X className="h-5 w-5 text-[#444748]" />
               </button>
             </div>
           )}
@@ -181,8 +181,8 @@ export function ShopContent({ initialFilters = {} }: Props) {
                   className={cn(
                     "px-2.5 py-1 rounded-full text-xs font-medium border transition-all",
                     filters.category === cat.name
-                      ? "bg-[#C8956C] border-[#C8956C] text-white"
-                      : "bg-[#FAFAF8] border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] hover:text-[#C8956C]"
+                      ? "bg-[#1A1A1A] border-[#A68B67] text-white"
+                      : "bg-[#F9F7F2] border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] hover:text-[#A68B67]"
                   )}
                 >
                   {cat.name}
@@ -201,9 +201,9 @@ export function ShopContent({ initialFilters = {} }: Props) {
                     name="zone"
                     checked={filters.zone === z.value}
                     onChange={() => update({ zone: filters.zone === z.value ? "" : z.value })}
-                    className="accent-[#C8956C]"
+                    className="accent-[#A68B67]"
                   />
-                  <span className="text-sm text-[#1A1A1A] group-hover:text-[#C8956C] transition-colors">
+                  <span className="text-sm text-[#1A1A1A] group-hover:text-[#A68B67] transition-colors">
                     {z.label}
                   </span>
                 </label>
@@ -220,16 +220,16 @@ export function ShopContent({ initialFilters = {} }: Props) {
                 min={0}
                 value={filters.minPrice ?? ""}
                 onChange={(e) => update({ minPrice: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full h-8 px-2 rounded-md border border-[#E8E0D8] text-xs focus:outline-none focus:border-[#C8956C]"
+                className="w-full h-8 px-2 rounded-md border border-[#E5E1D8] text-xs focus:outline-none focus:border-[#A68B67]"
               />
-              <span className="text-[#6B6056] text-xs shrink-0">–</span>
+              <span className="text-[#444748] text-xs shrink-0">–</span>
               <input
                 type="number"
                 placeholder="Max"
                 min={0}
                 value={filters.maxPrice ?? ""}
                 onChange={(e) => update({ maxPrice: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full h-8 px-2 rounded-md border border-[#E8E0D8] text-xs focus:outline-none focus:border-[#C8956C]"
+                className="w-full h-8 px-2 rounded-md border border-[#E5E1D8] text-xs focus:outline-none focus:border-[#A68B67]"
               />
             </div>
           </FilterGroup>
@@ -237,7 +237,7 @@ export function ShopContent({ initialFilters = {} }: Props) {
           {mobileFilterOpen && (
             <button
               onClick={() => setMobileFilterOpen(false)}
-              className="w-full h-10 rounded-lg bg-[#C8956C] text-white text-sm font-medium lg:hidden"
+              className="w-full h-10 rounded-lg bg-[#1A1A1A] text-white text-sm font-medium lg:hidden"
             >
               Show {data?.total ?? 0} results
             </button>
@@ -248,15 +248,15 @@ export function ShopContent({ initialFilters = {} }: Props) {
         <div className="flex-1 min-w-0">
           {/* Results count */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-[#6B6056]">
+            <p className="text-sm text-[#444748]">
               {isLoading ? (
-                <span className="inline-block w-24 h-4 bg-[#F5EDE6] rounded animate-pulse" />
+                <span className="inline-block w-24 h-4 bg-[#F5F0E8] rounded animate-pulse" />
               ) : (
                 <>{data?.total ?? 0} products</>
               )}
             </p>
             {isFetching && !isLoading && (
-              <Loader2 className="h-4 w-4 animate-spin text-[#C8956C]" />
+              <Loader2 className="h-4 w-4 animate-spin text-[#A68B67]" />
             )}
           </div>
 
@@ -303,9 +303,9 @@ function FilterGroup({ title, children }: { title: string; children: React.React
 
 function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F5EDE6] border border-[#E8C4A2] text-xs font-medium text-[#92400E]">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#F5F0E8] border border-[#DDD0BA] text-xs font-medium text-[#6B4E2A]">
       {label}
-      <button onClick={onRemove} className="hover:text-[#C8956C] transition-colors">
+      <button onClick={onRemove} className="hover:text-[#A68B67] transition-colors">
         <X className="h-3 w-3" />
       </button>
     </span>
@@ -316,12 +316,12 @@ function ProductSkeleton() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
       {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-[#E8E0D8] overflow-hidden bg-white">
-          <div className="aspect-square bg-[#F5EDE6] animate-pulse" />
+        <div key={i} className="rounded-lg border border-[#E5E1D8] overflow-hidden bg-white">
+          <div className="aspect-square bg-[#F5F0E8] animate-pulse" />
           <div className="p-3 space-y-2">
-            <div className="h-3 bg-[#F5EDE6] rounded animate-pulse w-3/4" />
-            <div className="h-4 bg-[#F5EDE6] rounded animate-pulse" />
-            <div className="h-3 bg-[#F5EDE6] rounded animate-pulse w-1/2" />
+            <div className="h-3 bg-[#F5F0E8] rounded animate-pulse w-3/4" />
+            <div className="h-4 bg-[#F5F0E8] rounded animate-pulse" />
+            <div className="h-3 bg-[#F5F0E8] rounded animate-pulse w-1/2" />
           </div>
         </div>
       ))}
@@ -336,7 +336,7 @@ function EmptyState({ onClear, hasFilters }: { onClear: () => void; hasFilters: 
       <h3 className="font-heading text-xl font-semibold text-[#1A1A1A] mb-2">
         No products found
       </h3>
-      <p className="text-sm text-[#6B6056] mb-6 max-w-xs">
+      <p className="text-sm text-[#444748] mb-6 max-w-xs">
         {hasFilters
           ? "Try adjusting your filters or search term."
           : "Products are coming soon."}
@@ -344,7 +344,7 @@ function EmptyState({ onClear, hasFilters }: { onClear: () => void; hasFilters: 
       {hasFilters && (
         <button
           onClick={onClear}
-          className="text-sm font-medium text-[#C8956C] hover:text-[#B07D57] underline underline-offset-4"
+          className="text-sm font-medium text-[#A68B67] hover:text-[#8B7055] underline underline-offset-4"
         >
           Clear all filters
         </button>
@@ -396,8 +396,8 @@ function PaginationBtn({
       className={cn(
         "h-9 w-9 rounded-lg text-sm font-medium transition-all",
         active
-          ? "bg-[#C8956C] text-white"
-          : "bg-white border border-[#E8E0D8] text-[#6B6056] hover:border-[#C8956C] hover:text-[#C8956C]",
+          ? "bg-[#1A1A1A] text-white"
+          : "bg-white border border-[#E5E1D8] text-[#444748] hover:border-[#A68B67] hover:text-[#A68B67]",
         disabled && "opacity-40 pointer-events-none"
       )}
     >

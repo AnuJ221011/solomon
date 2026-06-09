@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { BrandStorefront } from "./BrandStorefront";
 
 interface Props { params: Promise<{ slug: string }>; }
