@@ -1,34 +1,56 @@
-﻿import { cn } from "@/lib/utils";
-import type { AchievementLevel } from "@/lib/types";
+import { cn } from '@/lib/utils'
 
-const LEVEL_CONFIG: Record<AchievementLevel, { label: string; className: string }> = {
-  L1_SPROUT:  { label: "Sprout",  className: "badge-sprout"  },
-  L2_RISING:  { label: "Rising",  className: "badge-rising"  },
-  L3_TRUSTED: { label: "Trusted", className: "badge-trusted" },
-  L4_ELITE:   { label: "Elite",   className: "badge-elite"   },
-  L5_LEGEND:  { label: "Legend",  className: "badge-legend"  },
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Props {
-  level: AchievementLevel;
-  size?: "sm" | "md";
-  className?: string;
+interface AchievementBadgeProps {
+  level: 1 | 2 | 3 | 4 | 5
+  className?: string
 }
 
-export function AchievementBadge({ level, size = "sm", className }: Props) {
-  const config = LEVEL_CONFIG[level];
-  if (!config) return null;
+// ─── Level config ─────────────────────────────────────────────────────────────
+
+const LEVEL_CONFIG: Record<
+  1 | 2 | 3 | 4 | 5,
+  { label: string; className: string }
+> = {
+  1: {
+    label: 'Sprout',
+    className: 'bg-muted-bg text-muted-text',
+  },
+  2: {
+    label: 'Rising Brand',
+    className: 'bg-accent/[15%] text-accent-hover',
+  },
+  3: {
+    label: 'Trusted',
+    className: 'bg-accent/[25%] text-accent-hover',
+  },
+  4: {
+    label: 'Elite',
+    className: 'bg-primary/[8%] text-primary',
+  },
+  5: {
+    label: 'Legend',
+    className: 'bg-primary text-white',
+  },
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function AchievementBadge({ level, className }: AchievementBadgeProps) {
+  const config = LEVEL_CONFIG[level] ?? LEVEL_CONFIG[1]
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border font-medium",
-        size === "sm" ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm",
+        'inline-flex items-center rounded',
+        'text-[11px] font-[600] font-public-sans',
+        'px-2 py-0.5',
         config.className,
         className
       )}
     >
       {config.label}
     </span>
-  );
+  )
 }

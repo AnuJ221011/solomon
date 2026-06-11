@@ -1,158 +1,72 @@
-﻿@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
-/* ─────────────────────────────────────────────────────────────────
-   Solomon Bharat — Warm Minimal Design System
-   ───────────────────────────────────────────────────────────────── */
-
-@theme inline {
-  /* Typography */
-  --font-sans:    var(--font-public-sans);
-  --font-heading: var(--font-playfair);
-  --font-mono:    var(--font-geist-mono);
-
-  /* Solomon Bharat brand tokens → exposed as Tailwind utilities */
-  --color-bg:           var(--bg);
-  --color-surface:      var(--surface);
-  --color-primary:      var(--primary);
-  --color-accent:       var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-muted-bg:     var(--muted-bg);
-  --color-muted-text:   var(--muted-text);
-  --color-border-warm:  var(--border-warm);
-  --color-success:      var(--success);
-  --color-error:        var(--error);
-
-  /* shadcn semantic layer (maps to our palette) */
-  --color-background:           var(--bg);
-  --color-foreground:           var(--primary);
-  --color-card:                 var(--surface);
-  --color-card-foreground:      var(--primary);
-  --color-popover:              var(--surface);
-  --color-popover-foreground:   var(--primary);
-  --color-secondary:            var(--muted-bg);
-  --color-secondary-foreground: var(--primary);
-  --color-muted:                var(--muted-bg);
-  --color-muted-foreground:     var(--muted-text);
-  --color-destructive:          var(--error);
-  --color-border:               var(--border-warm);
-  --color-input:                var(--border-warm);
-  --color-ring:                 var(--accent);
-
-  /* Radius — 4px base per DESIGN.md */
-  --radius:     0.25rem;
-  --radius-sm:  0.125rem;
-  --radius-md:  0.375rem;
-  --radius-lg:  0.5rem;
-  --radius-xl:  0.75rem;
-  --radius-2xl: 1rem;
-}
-
-/* ── Design token values ─────────────────────────────────────────── */
 :root {
-  --bg:           #F9F7F2;   /* handmade-paper — page bg          */
-  --surface:      #FCFAFA;   /* raw-linen — cards, modals         */
-  --primary:      #1A1A1A;   /* charcoal — headings, body text    */
-  --accent:       #A68B67;   /* aged-brass — active states, links */
-  --accent-hover: #8B7055;   /* darker brass — hover              */
-  --muted-bg:     #F5F0E8;   /* warm nude — section fills, tags   */
-  --muted-text:   #444748;   /* on-surface-variant — secondary    */
-  --border-warm:  #E5E1D8;   /* subtle-border — borders, dividers */
-  --success:      #6B7E6B;   /* success-muted — badges, confirmed */
-  --error:        #BA1A1A;   /* error — errors, disputes          */
+  --bg: #F9F7F2;
+  --surface: #FCFAFA;
+  --primary: #1A1A1A;
+  --accent: #A68B67;
+  --accent-hover: #8B7055;
+  --muted-bg: #F5F0E8;
+  --muted-text: #444748;
+  --border-warm: #E5E1D8;
+  --success: #6B7E6B;
+  --error: #BA1A1A;
+  --warning: #C29D72;
 }
 
-/* ── Base layer ─────────────────────────────────────────────────── */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-muted-bg: var(--muted-bg);
+  --color-muted-text: var(--muted-text);
+  --color-border-warm: var(--border-warm);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --font-family-playfair: var(--font-playfair);
+  --font-family-public-sans: var(--font-public-sans);
+}
+
 @layer base {
-  * { box-sizing: border-box; }
-
-  html {
-    @apply antialiased;
-    font-family: var(--font-public-sans), system-ui, sans-serif;
-    scroll-behavior: smooth;
-    color-scheme: light;
-  }
-
   body {
+    font-family: var(--font-public-sans), system-ui, sans-serif;
     background: var(--bg);
     color: var(--primary);
-    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair), Georgia, serif;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
-  *:focus:not(:focus-visible) { outline: none; }
-  *:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-    border-radius: 2px;
+  /* Scrollbar styling — thin, warm */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--muted-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-warm);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-text);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-warm) var(--muted-bg);
   }
 }
-
-/* ── Keyframe animations ────────────────────────────────────────── */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes countUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Utility classes ────────────────────────────────────────────── */
-@layer utilities {
-  .text-balance { text-wrap: balance; }
-
-  .animate-marquee { animation: marquee 30s linear infinite; }
-  .animate-marquee-slow { animation: marquee 50s linear infinite; }
-  .animate-fade-in-up { animation: fadeInUp 0.6s ease-out both; }
-  .animation-delay-100 { animation-delay: 0.1s; }
-  .animation-delay-200 { animation-delay: 0.2s; }
-  .animation-delay-300 { animation-delay: 0.3s; }
-  .animation-delay-400 { animation-delay: 0.4s; }
-
-  /* Elevation via diffused shadow — DESIGN.md spec */
-  .shadow-warm {
-    box-shadow: 0 1px 3px 0 rgba(26, 26, 26, 0.04);
-  }
-  .shadow-warm-md {
-    box-shadow: 0 4px 20px 0 rgba(26, 26, 26, 0.04);
-  }
-  .shadow-warm-lg {
-    box-shadow: 0 8px 30px 0 rgba(26, 26, 26, 0.06);
-  }
-
-  /* Brass gradient — level-up cards, hero accents */
-  .gradient-brass {
-    background: linear-gradient(135deg, #A68B67 0%, #8B7055 100%);
-  }
-  /* keep alias for any legacy usage */
-  .gradient-copper { background: linear-gradient(135deg, #A68B67 0%, #8B7055 100%); }
-
-  /* Hide scrollbar, keep scrollable */
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* Line clamp helpers */
-  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-}
-
-/* ── Achievement level badge colours ───────────────────────────── */
-.badge-sprout  { background: #F0F4F0; color: #4A6B4A; border-color: #C8D8C8; }
-.badge-rising  { background: #FBF5E8; color: #7A6040; border-color: #E0C99A; }
-.badge-trusted { background: #F5F0E8; color: #6B4E2A; border-color: #DDD0BA; }
-.badge-elite   { background: #F0F2F5; color: #2A3F5F; border-color: #C0CDD8; }
-.badge-legend  { background: #F2F0F5; color: #4A3A6B; border-color: #CEC8D8; }

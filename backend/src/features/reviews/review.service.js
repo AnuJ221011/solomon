@@ -4,7 +4,7 @@ import { createError } from '../../shared/utils/createError.js';
 export const createReview = async (buyerUserId, { orderId, productId, rating, comment }) => {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw createError('Order not found', 404);
-  if (order.buyerUserId !== buyerUserId) throw createError('Access denied', 403);
+  if (order.buyerUserId !== buyerUserId) throw createError('You can only review products from orders you placed.', 403);
   if (order.status !== 'DELIVERED') throw createError('Can only review delivered orders', 400);
 
   const existing = await prisma.productReview.findUnique({
@@ -31,7 +31,7 @@ export const respondToReview = async (brandUserId, reviewId, brandResponse) => {
     include: { product: { select: { brandProfileId: true } } },
   });
   if (!review) throw createError('Review not found', 404);
-  if (review.product.brandProfileId !== brand.id) throw createError('Access denied', 403);
+  if (review.product.brandProfileId !== brand.id) throw createError('Only the brand that sold this product can respond to its reviews.', 403);
 
   return prisma.productReview.update({
     where: { id: reviewId },
@@ -42,7 +42,7 @@ export const respondToReview = async (brandUserId, reviewId, brandResponse) => {
 export const editReview = async (buyerUserId, reviewId, { rating, comment }) => {
   const review = await prisma.productReview.findUnique({ where: { id: reviewId } });
   if (!review) throw createError('Review not found', 404);
-  if (review.reviewerUserId !== buyerUserId) throw createError('Access denied', 403);
+  if (review.reviewerUserId !== buyerUserId) throw createError('You can only edit your own reviews.', 403);
 
   const updated = await prisma.productReview.update({
     where: { id: reviewId },

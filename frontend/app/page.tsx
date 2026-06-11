@@ -1,61 +1,35 @@
-﻿import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { NavBar } from '@/components/shared/NavBar'
+import { Footer } from '@/components/shared/Footer'
+import { HeroSection } from '@/components/homepage/HeroSection'
+import { TrustStrip } from '@/components/homepage/TrustStrip'
+import { CategorySection } from '@/components/homepage/CategorySection'
+import { TrendingProductsSection } from '@/components/homepage/TrendingProductsSection'
+import { FeaturedBrandsSection } from '@/components/homepage/FeaturedBrandsSection'
+import { HowItWorksSection } from '@/components/homepage/HowItWorksSection'
+import { WhyChooseSection } from '@/components/homepage/WhyChooseSection'
+import { TestimonialsSection } from '@/components/homepage/TestimonialsSection'
+import { SupplierCTASection } from '@/components/homepage/SupplierCTASection'
 
-import { HeroSection }        from "@/components/home/HeroSection";
-import { TrustStrip }         from "@/components/home/TrustStrip";
-import { CategoryGrid }       from "@/components/home/CategoryGrid";
-import { FeaturedProducts }   from "@/components/home/FeaturedProducts";
-import { TrustBadges }        from "@/components/home/TrustBadges";
-import { TrendingProducts }   from "@/components/home/TrendingProducts";
-import { MadeInIndiaSection } from "@/components/home/MadeInIndiaSection";
-import { BrandsSection }      from "@/components/home/BrandsSection";
-import { RegionalSpotlight }  from "@/components/home/RegionalSpotlight";
-import { WhySection }         from "@/components/home/WhySection";
-import { SellerCTA }          from "@/components/home/SellerCTA";
-import { NewsletterSection }  from "@/components/home/NewsletterSection";
+// ─── Homepage ─────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="min-h-screen bg-bg flex flex-col">
+      <NavBar />
+
       <main className="flex-1">
-        {/* 1 — Hero with background image/video */}
         <HeroSection />
-
-        {/* 2 — Animated trust strip */}
         <TrustStrip />
-
-        {/* 3 — Visual category grid (bento) */}
-        <CategoryGrid />
-
-        {/* 4 — Featured / ranked products */}
-        <FeaturedProducts />
-
-        {/* 5 — Buyer trust badges */}
-        <TrustBadges />
-
-        {/* 6 — Trending / new this week */}
-        <TrendingProducts />
-
-        {/* 7 — Made in India editorial */}
-        <MadeInIndiaSection />
-
-        {/* 8 — Featured brands */}
-        <BrandsSection />
-
-        {/* 9 — Regional spotlight */}
-        <RegionalSpotlight />
-
-        {/* 10 — Why Solomon Bharat */}
-        <WhySection />
-
-        {/* 11 — Seller acquisition CTA */}
-        <SellerCTA />
-
-        {/* 12 — Newsletter */}
-        <NewsletterSection />
+        <CategorySection />
+        <TrendingProductsSection />
+        <FeaturedBrandsSection />
+        <HowItWorksSection />
+        <WhyChooseSection />
+        <TestimonialsSection />
+        <SupplierCTASection />
       </main>
+
       <Footer />
     </div>
-  );
+  )
 }

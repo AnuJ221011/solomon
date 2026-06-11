@@ -7,7 +7,7 @@ import { sendError } from '../utils/response.js';
  */
 export const authorize = (...roles) =>
   (req, res, next) => {
-    if (!req.user) return sendError(res, 'Unauthorised', 401);
+    if (!req.user) return sendError(res, 'Authentication required. Please log in.', 401);
     if (!roles.includes(req.user.role)) {
       return sendError(res, 'Forbidden — insufficient permissions', 403);
     }

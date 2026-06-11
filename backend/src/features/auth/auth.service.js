@@ -114,11 +114,11 @@ export const registerBrand = async ({
 
 export const login = async ({ email, password }) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.passwordHash) throw createError('Invalid credentials', 401);
-  if (!user.isActive) throw createError('Account suspended', 403);
+  if (!user || !user.passwordHash) throw createError('No account found with this email.', 401);
+  if (!user.isActive) throw createError('Your account has been suspended.', 403);
 
   const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) throw createError('Invalid credentials', 401);
+  if (!valid) throw createError('Incorrect password.', 401);
 
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = await generateRefreshToken(user.id);
@@ -144,7 +144,7 @@ export const confirmEmailOtp = async ({ email, otp }) => {
 
 export const resendOtp = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw createError('User not found', 404);
+  if (!user) throw createError('No account found with this email address.', 404);
   if (user.isEmailVerified) throw createError('Email already verified', 400);
 
   const otp = generateOtp();

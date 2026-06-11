@@ -7,7 +7,7 @@ import { sendError } from '../utils/response.js';
 export const authenticate = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => {
     if (err) return next(err);
-    if (!user) return sendError(res, 'Unauthorised', 401);
+    if (!user) return sendError(res, 'Authentication required. Please log in.', 401);
     req.user = user;
     next();
   })(req, res, next);

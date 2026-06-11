@@ -9,7 +9,7 @@ export const requestReturn = async (buyerUserId, orderId, { reason, photoUrls })
     include: { brand: { select: { brandName: true, user: { select: { email: true } } } } },
   });
   if (!order) throw createError('Order not found', 404);
-  if (order.buyerUserId !== buyerUserId) throw createError('Access denied', 403);
+  if (order.buyerUserId !== buyerUserId) throw createError('You can only request returns for orders you placed.', 403);
   if (order.status !== 'DELIVERED') throw createError('Only delivered orders can be returned', 400);
 
   const existingReturn = await prisma.return.findFirst({ where: { orderId } });

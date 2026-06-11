@@ -513,10 +513,10 @@ export const getOrderById = async (userId, orderId, role) => {
 
   if (!order) throw createError('Order not found', 404);
 
-  if (role === 'BUYER' && order.buyerUserId !== userId) throw createError('Access denied', 403);
+  if (role === 'BUYER' && order.buyerUserId !== userId) throw createError('You can only view orders you placed.', 403);
   if (role === 'BRAND') {
     const brand = await prisma.brandProfile.findUnique({ where: { userId } });
-    if (!brand || order.brandProfileId !== brand.id) throw createError('Access denied', 403);
+    if (!brand || order.brandProfileId !== brand.id) throw createError('You can only access orders belonging to your brand.', 403);
   }
 
   return order;

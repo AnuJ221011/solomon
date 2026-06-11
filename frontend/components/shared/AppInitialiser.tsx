@@ -1,71 +1,95 @@
-﻿"use client";
+'use client'
 
-import { useEffect } from "react";
-import api from "@/lib/api";
-import { useAuthStore } from "@/lib/stores/authStore";
-import { useCartStore } from "@/lib/stores/cartStore";
-import { useCurrencyStore } from "@/lib/stores/currencyStore";
+import { useEffect } from 'react'
+import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
+
+interface IpapiResponse {
+  currency?: string
+}
+
+interface FrankfurterResponse {
+  rates?: Record<string, number>
+}
 
 /**
- * Mounts once at the root. Handles:
- *  1. FX rate load + auto-currency from geo-detect
- *  2. Session restore (validate stored JWT)
- *  3. Cart item count sync for authenticated users
+ * AppInitialiser
+ *
+ * Runs once on client mount to:
+ *  1. Detect the visitor's local currency via ipapi.co (2 s timeout, silent on error).
+ *  2. Fetch live FX rates from Frankfurter (base=INR) and store them.
+ *
+ * Renders nothing — purely a side-effect component placed in <Providers>.
  */
 export function AppInitialiser() {
-  const { user, accessToken, setAuth, logout } = useAuthStore();
-  const { setItemCount } = useCartStore();
-  const { currency, setCurrency, setRates } = useCurrencyStore();
+  const setCurrency = useCurrencyStore((s) => s.setCurrency)
+  const setRates = useCurrencyStore((s) => s.setRates)
+  const lastFetched = useCurrencyStore((s) => s.lastFetched)
 
-  // ── 1. FX rates + geo-detect ──────────────────────────────
   useEffect(() => {
-    const loadFx = async () => {
-      try {
-        const { data } = await api.get("/fx/rates");
-        if (data.data?.rates) setRates(data.data.rates);
-      } catch {}
-    };
+    let cancelled = false
 
-    const detectGeo = async () => {
-      // Only run if user hasn't manually chosen a currency
-      const stored = localStorage.getItem("sb-currency");
-      if (stored) return; // user set it manually → don't override
-      try {
-        const { data } = await api.get("/geo/detect");
-        if (data.data?.currency) setCurrency(data.data.currency);
-      } catch {}
-    };
+    async function init() {
+      // ── Step 1: geo-detect currency on first-ever visit ───────────────────
+      // Skip if user already has a persisted preference (sb_currency in localStorage)
+      const hasPersistedCurrency =
+        typeof window !== 'undefined' &&
+        (() => {
+          try {
+            const stored = localStorage.getItem('sb_currency')
+            if (!stored) return false
+            const parsed = JSON.parse(stored)
+            return Boolean(parsed?.state?.currency)
+          } catch {
+            return false
+          }
+        })()
 
-    loadFx();
-    detectGeo();
-  }, [setRates, setCurrency]);
+      if (!hasPersistedCurrency) {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 2000)
 
-  // ── 2. Session restore ────────────────────────────────────
-  useEffect(() => {
-    if (!accessToken) return;
-    const validateSession = async () => {
-      try {
-        const { data } = await api.get("/auth/me");
-        setAuth(data.data, accessToken);
-      } catch {
-        logout();
+          const res = await fetch('https://ipapi.co/json', {
+            signal: controller.signal,
+          })
+          clearTimeout(timeoutId)
+
+          if (res.ok) {
+            const data: IpapiResponse = await res.json()
+            if (data.currency && typeof data.currency === 'string') {
+              if (!cancelled) setCurrency(data.currency)
+            }
+          }
+        } catch {
+          // Network error or timeout — silently ignore, keep default
+        }
       }
-    };
-    validateSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount only
 
-  // ── 3. Cart sync ──────────────────────────────────────────
-  useEffect(() => {
-    if (!user) { setItemCount(0); return; }
-    const syncCart = async () => {
+      if (cancelled) return
+
+      // ── Step 2: fetch FX rates base=INR from Frankfurter (once per session) ─
+      const RATES_TTL = 6 * 60 * 60 * 1000
+      if (lastFetched && Date.now() - lastFetched < RATES_TTL) return
       try {
-        const { data } = await api.get("/buyer/cart");
-        setItemCount(data.data?.items?.length ?? 0);
-      } catch {}
-    };
-    syncCart();
-  }, [user, setItemCount]);
+        const res = await fetch('https://api.frankfurter.app/latest?base=INR')
 
-  return null;
+        if (res.ok) {
+          const data: FrankfurterResponse = await res.json()
+          if (data.rates && typeof data.rates === 'object') {
+            setRates(data.rates)
+          }
+        }
+      } catch {
+        // Network error — silently ignore, app will display INR amounts
+      }
+    }
+
+    init()
+
+    return () => {
+      cancelled = true
+    }
+  }, [setCurrency, setRates, lastFetched])
+
+  return null
 }

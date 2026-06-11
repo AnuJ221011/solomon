@@ -68,7 +68,12 @@ export const listProducts = async ({
   where.availability = availability ?? 'ACTIVE';
 
   if (brandId) where.brandProfileId = brandId;
-  if (category) where.categories = { has: category };
+  if (category) {
+    const cats = Array.isArray(category)
+      ? category
+      : String(category).split(',').map((s) => s.trim()).filter(Boolean);
+    where.categories = cats.length === 1 ? { has: cats[0] } : { hasSome: cats };
+  }
   if (zone) where.enabledZones = { has: zone };
 
   if (minPrice || maxPrice) {
