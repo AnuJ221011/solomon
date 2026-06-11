@@ -116,6 +116,13 @@ export default function CataloguePage() {
   }, [query])
 
   // ── Data fetching ─────────────────────────────────────────────────────────────
+  // Prefer sidebar-driven categories; fall back to the URL-resolved name so the
+  // first render already sends the correct filter (before the useEffect fires).
+  const activeCategory =
+    filters.categories.length > 0
+      ? filters.categories.join(',')
+      : resolvedCategoryName ?? undefined
+
   const {
     data: productsData,
     isLoading: productsLoading,
@@ -123,7 +130,7 @@ export default function CataloguePage() {
   } = useProducts({
     page,
     limit: PAGE_SIZE,
-    category: filters.categories.length > 0 ? filters.categories.join(',') : undefined,
+    category: activeCategory,
     search: debouncedQuery || undefined,
     sort: sort === 'featured' ? undefined : sort,
   })
@@ -183,11 +190,13 @@ export default function CataloguePage() {
             </SheetHeader>
             <div className="px-5 py-5">
               <MobileFilterSidebar
+                key={resolvedCategoryName ?? 'all'}
                 onFilterChange={(f) => {
                   handleFilterChange(f)
                   setMobileFiltersOpen(false)
                 }}
                 categories={categoryNames}
+                initialCategories={resolvedCategoryName ? [resolvedCategoryName] : []}
               />
             </div>
           </SheetContent>
@@ -314,11 +323,13 @@ export default function CataloguePage() {
 function MobileFilterSidebar({
   onFilterChange,
   categories,
+  initialCategories = [],
 }: {
   onFilterChange: (f: CatalogueFilters) => void
   categories: string[]
+  initialCategories?: string[]
 }) {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories)
   const [shipsTo, setShipsTo] = useState('all')
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')

@@ -49,7 +49,7 @@ function StarRating({ count }: { count: number }) {
 
 export function TestimonialsSection() {
   return (
-    <section className="py-24 bg-surface">
+    <section className="py-12 bg-surface">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
 
         {/* Header */}

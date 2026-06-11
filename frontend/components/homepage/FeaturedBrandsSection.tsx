@@ -89,7 +89,7 @@ export function FeaturedBrandsSection() {
   const brands = data?.brands ?? []
 
   return (
-    <section className="py-24 bg-bg">
+    <section className="py-12 bg-bg">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
 
         {/* Header */}

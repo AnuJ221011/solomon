@@ -32,7 +32,7 @@ export const listCategoriesFlat = async ({ includeInactive = false } = {}) => {
   return prisma.category.findMany({
     where: includeInactive ? undefined : { isActive: true },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    select: { id: true, name: true, slug: true, parentId: true, sortOrder: true },
+    select: { id: true, name: true, slug: true, imageUrl: true, parentId: true, sortOrder: true },
   });
 };
 
