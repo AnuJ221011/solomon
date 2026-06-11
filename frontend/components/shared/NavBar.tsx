@@ -420,7 +420,8 @@ export function NavBar({ transparent = false }: NavBarProps) {
 
   return (
     <>
-      <div className="h-16 shrink-0" aria-hidden="true" />
+      {/* Only add spacing when not in transparent/overlay mode */}
+      {!transparent && <div className="h-16 shrink-0" aria-hidden="true" />}
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-300',
