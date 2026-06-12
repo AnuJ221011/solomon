@@ -8,6 +8,7 @@ import { PhotoGallery } from '@/components/pdp/PhotoGallery'
 import { ProductInfo } from '@/components/pdp/ProductInfo'
 import { ProductCard } from '@/components/shared/ProductCard'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useProduct, useProducts } from '@/hooks/queries/useProducts'
 import type { Product as HookProduct } from '@/hooks/queries/useProducts'
 import type { Product } from '@/types'
@@ -43,7 +44,7 @@ interface ApiProduct {
   brandName: string; brandSlug: string; shortDescription: string
   description?: string; photos?: Array<{ id: string; url: string; position: number }>
   wholesalePrice: number; moq: number; leadTime: string; weight: number
-  category: string; tags: string[]; brand?: { achievementLevel: number }; inStock: boolean
+  category: string; tags: string[]; brand?: { achievementLevel: number; minimumOrderValue?: number }; inStock: boolean
 }
 
 function toTypedFromApi(p: ApiProduct): Product {
@@ -56,6 +57,7 @@ function toTypedFromApi(p: ApiProduct): Product {
     leadTime: p.leadTime as Product['leadTime'],
     weight: p.weight, category: p.category, tags: p.tags ?? [],
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
+    brandMinimumOrderValue: p.brand?.minimumOrderValue,
     inStock: p.inStock,
   }
 }
@@ -107,18 +109,21 @@ function PDPSkeleton() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-        {/* Left: gallery skeleton — thumbnail strip + main image */}
-        <div className="w-full lg:w-1/2 flex gap-3">
-          <div className="flex flex-col gap-2 flex-shrink-0">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="w-[68px] aspect-square bg-muted-bg rounded animate-pulse" />
-            ))}
+        {/* Left: gallery skeleton — mosaic layout */}
+        <div className="w-full lg:w-[60%] flex flex-col gap-2">
+          <div className="h-8 w-40 bg-muted-bg rounded animate-pulse mb-2" />
+          <div className="flex gap-2 h-[340px]">
+            <div className="flex-[2] bg-muted-bg rounded animate-pulse" />
+            <div className="flex-[3] bg-muted-bg rounded animate-pulse" />
           </div>
-          <div className="flex-1 aspect-square bg-muted-bg rounded animate-pulse" />
+          <div className="flex gap-2 h-[200px]">
+            <div className="flex-1 bg-muted-bg rounded animate-pulse" />
+            <div className="flex-1 bg-muted-bg rounded animate-pulse" />
+          </div>
         </div>
 
         {/* Right: info skeleton */}
-        <div className="w-full lg:w-1/2 flex flex-col gap-4">
+        <div className="w-full lg:w-[40%] flex flex-col gap-4">
           <div className="h-4 bg-muted-bg rounded w-32 animate-pulse" />
           <div className="h-7 bg-muted-bg rounded w-3/4 animate-pulse" />
           <div className="h-10 bg-muted-bg rounded w-1/2 animate-pulse" />
@@ -193,14 +198,36 @@ function ProductDetailInner({ slug }: { slug: string }) {
           </nav>
 
           {/* Two-column layout */}
-          <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
-            {/* Left: Gallery — sticky on desktop */}
-            <div className="w-full lg:w-[52%] lg:sticky lg:top-20 lg:self-start">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 lg:items-start">
+            {/* Left: Brand + Gallery — sticky; right panel scrolls past it */}
+            <div className="w-full lg:w-[60%] lg:sticky lg:top-[88px] lg:self-start">
+
+              {/* Brand row above gallery */}
+              <Link
+                href={`/brands/${product.brandSlug}`}
+                className="inline-flex items-center gap-2.5 mb-4 group"
+                aria-label={`Visit ${product.brandName} storefront`}
+              >
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
+                  <img
+                    src={`https://picsum.photos/seed/${product.brandSlug}-logo/64/64`}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-public-sans text-[13px] font-[600] text-primary group-hover:text-accent transition-colors">
+                  {product.brandName}
+                </span>
+                {product.achievementLevel && <AchievementBadge level={product.achievementLevel} />}
+              </Link>
+
               <PhotoGallery images={product.images} productName={product.name} />
             </div>
 
-            {/* Right: Info */}
-            <div className="w-full lg:w-[48%]">
+            {/* Right: Info (scrolls while gallery stays fixed) */}
+            <div className="w-full lg:w-[40%]">
               <ProductInfo product={product} />
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CartItem } from '@/types'
 
 interface CartState {
@@ -17,7 +18,9 @@ interface CartActions {
 
 type CartStore = CartState & CartActions
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
   // ─── State ──────────────────────────────────────────────────────────────────
   items: [],
 
@@ -90,4 +93,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
       0
     )
   },
-}))
+}),
+    {
+      name: 'sb_cart',
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? localStorage : (null as never)
+      ),
+    }
+  )
+)

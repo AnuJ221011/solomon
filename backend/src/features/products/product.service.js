@@ -38,7 +38,7 @@ export const getProductById = async (id) => {
     include: {
       photos: { orderBy: { position: 'asc' } },
       variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
-      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
+      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true } },
     },
   });
   if (!product) throw createError('Product not found', 404);
@@ -51,7 +51,7 @@ export const getProductBySlug = async (slug) => {
     include: {
       photos: { orderBy: { position: 'asc' } },
       variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
-      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
+      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true } },
     },
   });
   if (!product) throw createError('Product not found', 404);

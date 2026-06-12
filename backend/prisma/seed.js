@@ -49,6 +49,7 @@ const BRANDS = [
     achievementLevel: 'L4_ELITE',
     confirmedOrderCount: 340,
     avgRating: 4.8,
+    minimumOrderValue: 10000,
     products: [
       {
         name: 'Sanganeri Block-Print Cushion Covers',
@@ -153,6 +154,7 @@ const BRANDS = [
     achievementLevel: 'L3_TRUSTED',
     confirmedOrderCount: 180,
     avgRating: 4.6,
+    minimumOrderValue: 8000,
     products: [
       {
         name: 'Jaipur Blue Pottery Dinner Plate',
@@ -254,6 +256,7 @@ const BRANDS = [
     achievementLevel: 'L4_ELITE',
     confirmedOrderCount: 520,
     avgRating: 4.9,
+    minimumOrderValue: 25000,
     products: [
       {
         name: 'Sheesham Wood Side Table',
@@ -357,6 +360,7 @@ const BRANDS = [
     achievementLevel: 'L3_TRUSTED',
     confirmedOrderCount: 290,
     avgRating: 4.7,
+    minimumOrderValue: 15000,
     products: [
       {
         name: 'Full-Grain Leather Tote Bag',
@@ -463,6 +467,7 @@ const BRANDS = [
     achievementLevel: 'L3_TRUSTED',
     confirmedOrderCount: 210,
     avgRating: 4.5,
+    minimumOrderValue: 12000,
     products: [
       {
         name: 'Ajrakh Block-Print Stole',
@@ -565,6 +570,7 @@ const BRANDS = [
     achievementLevel: 'L2_RISING',
     confirmedOrderCount: 95,
     avgRating: 4.6,
+    minimumOrderValue: 5000,
     products: [
       {
         name: 'Organic Spice Gift Box — 12 Jars',
@@ -667,6 +673,7 @@ const BRANDS = [
     achievementLevel: 'L5_LEGEND',
     confirmedOrderCount: 780,
     avgRating: 4.9,
+    minimumOrderValue: 20000,
     products: [
       {
         name: 'Kutchi Tribal Silver Cuff Bracelet',
@@ -771,6 +778,7 @@ const BRANDS = [
     achievementLevel: 'L2_RISING',
     confirmedOrderCount: 75,
     avgRating: 4.4,
+    minimumOrderValue: 8000,
     products: [
       {
         name: 'Recycled Cotton Yoga Mat Bag',
@@ -872,6 +880,7 @@ const BRANDS = [
     achievementLevel: 'L4_ELITE',
     confirmedOrderCount: 460,
     avgRating: 4.7,
+    minimumOrderValue: 15000,
     products: [
       {
         name: 'Handcrafted Brass Candle Holders',
@@ -974,6 +983,7 @@ const BRANDS = [
     achievementLevel: 'L3_TRUSTED',
     confirmedOrderCount: 230,
     avgRating: 4.8,
+    minimumOrderValue: 5000,
     products: [
       {
         name: 'Single-Origin Kerala Black Pepper',

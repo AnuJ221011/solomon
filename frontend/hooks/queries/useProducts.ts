@@ -21,6 +21,7 @@ export interface ProductVariant {
 
 export interface ProductBrandInfo {
   achievementLevel: number
+  minimumOrderValue: number
 }
 
 export interface Product {
@@ -105,6 +106,7 @@ function mapProduct(raw: Record<string, any>): Product {
     tags: raw.tags ?? [],
     brand: {
       achievementLevel: ACHIEVEMENT_LEVEL[(bp.achievementLevel as string)] ?? 1,
+      minimumOrderValue: (bp.minimumOrderValue as number) ?? 0,
     },
     variants: raw.variants ?? [],
     inStock: raw.availability === 'ACTIVE',

@@ -108,14 +108,16 @@ export default function CheckoutPage() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const hasHydrated     = useAuthStore((s) => s._hasHydrated)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
 
   useEffect(() => {
+    if (!hasHydrated) return
     if (!isAuthenticated) {
       router.replace('/')
       openAuthModal('signup')
     }
-  }, [isAuthenticated, router, openAuthModal])
+  }, [hasHydrated, isAuthenticated, router, openAuthModal])
   const items = useCartStore((s) => s.items)
   const getTotalValue = useCartStore((s) => s.getTotalValue)
   const clearCart = useCartStore((s) => s.clearCart)

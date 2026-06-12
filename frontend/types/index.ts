@@ -43,6 +43,7 @@ export interface Product {
   category: string
   tags: string[]
   achievementLevel?: 1 | 2 | 3 | 4 | 5
+  brandMinimumOrderValue?: number
   inStock: boolean
 }
 
@@ -83,10 +84,14 @@ export interface CartItem {
   productName: string
   brandId: string
   brandName: string
+  brandSlug: string
   image: string
   quantity: number
   wholesalePrice: number
   moq: number
+  leadTime?: string
+  achievementLevel?: number
+  brandMinimumOrderValue?: number
 }
 
 // ─── Share Links ──────────────────────────────────────────────────────────────

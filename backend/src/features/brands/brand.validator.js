@@ -29,4 +29,5 @@ export const brandQuerySchema = z.object({
   level: z.enum(['L1_SPROUT', 'L2_RISING', 'L3_TRUSTED', 'L4_ELITE', 'L5_LEGEND']).optional(),
   category: z.string().optional(),
   search: z.string().optional(),
+  slugs: z.string().optional(),
 });

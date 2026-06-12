@@ -197,6 +197,7 @@ model BrandProfile {
   totalGmvInr          Decimal         @default(0) @db.Decimal(15, 2)
   avgDispatchDays      Float           @default(0)
   payoutSpeed          PayoutSpeed     @default(NET_30)
+  minimumOrderValue    Int             @default(0)
   approvedAt           DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt

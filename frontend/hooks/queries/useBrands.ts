@@ -24,6 +24,7 @@ export interface Brand {
   achievementLevel: number
   tagline?: string
   productCount: number
+  minimumOrderValue: number
   collections?: BrandCollection[]
 }
 
@@ -87,6 +88,7 @@ function normaliseBrand(raw: any): Brand {
     achievementLevel: ACHIEVEMENT_MAP[raw.achievementLevel] ?? (typeof raw.achievementLevel === 'number' ? raw.achievementLevel : 1),
     tagline: raw.tagline,
     productCount: raw.productCount ?? 0,
+    minimumOrderValue: raw.minimumOrderValue ?? 0,
     collections: raw.collections,
   }
 }
@@ -138,6 +140,29 @@ export function useMyBrandProfile() {
       return response.data.data
     },
   })
+}
+
+/**
+ * Fetch minimum order values for a list of brand slugs in a single request.
+ * Returns a map of slug → minimumOrderValue (INR).
+ */
+export function useBrandMinimums(slugs: string[]): Record<string, number> {
+  const key = [...slugs].sort().join(',')
+  const { data } = useQuery({
+    queryKey: ['brand-minimums', key],
+    queryFn: async () => {
+      const response = await api.get('/brands', {
+        params: { slugs: key, limit: Math.max(slugs.length, 1) },
+      })
+      const payload = response.data.data
+      const rawBrands: Array<{ slug: string; minimumOrderValue?: number }> =
+        payload.brands ?? payload ?? []
+      return Object.fromEntries(rawBrands.map((b) => [b.slug, b.minimumOrderValue ?? 0]))
+    },
+    enabled: slugs.length > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+  return data ?? {}
 }
 
 /**

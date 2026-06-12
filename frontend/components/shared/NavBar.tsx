@@ -98,7 +98,7 @@ function CategoriesMenu({ ghost }: { ghost: boolean }) {
                       className="group flex items-center justify-between py-2 px-2 rounded text-[13px] font-[500] font-public-sans text-primary hover:bg-muted-bg hover:text-accent transition-colors"
                     >
                       <span>{cat.name}</span>
-                      {cat.productCount > 0 && (
+                      {(cat.productCount ?? 0) > 0 && (
                         <span className="text-[11px] font-public-sans text-muted-text group-hover:text-accent/60 tabular-nums ml-2">
                           {cat.productCount}
                         </span>
@@ -175,14 +175,18 @@ function CurrencySelector({ ghost }: { ghost: boolean }) {
 // ─── Cart button ──────────────────────────────────────────────────────────────
 
 function CartButton({ ghost }: { ghost: boolean }) {
-  const totalItems = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0))
+  const items = useCartStore((s) => s.items)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   if (!isAuthenticated) return null
 
+  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
+  const brandIds = [...new Set(items.map((i) => i.brandId))]
+  const cartHref = brandIds.length === 1 ? `/cart/${brandIds[0]}` : '/cart'
+
   return (
     <Link
-      href="/cart"
+      href={cartHref}
       aria-label={`Cart — ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
       className={cn(
         'relative inline-flex items-center justify-center w-10 h-10 rounded transition-colors',

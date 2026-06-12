@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, Minus, Plus, Package, RotateCcw } from 'lucide-react'
+import { ChevronDown, Minus, Plus, Package, RotateCcw, CalendarDays, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatINR } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { Button } from '@/components/ui/button'
-import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import type { Product } from '@/types'
 
 // ─── Trust badge map ──────────────────────────────────────────────────────────
@@ -32,6 +31,31 @@ const BADGE_MAP: Record<string, string> = {
   'not-on-amazon':  'Not on Amazon',
   'fair-trade':     'Fair Trade',
   'upcycled':       'Upcycled',
+}
+
+// ─── Free-shipping thresholds by currency ─────────────────────────────────────
+
+const FREE_SHIP: Record<string, number> = {
+  INR: 15000, USD: 200, EUR: 180, GBP: 150, AED: 750, SGD: 270, AUD: 300,
+}
+
+// ─── Delivery range from lead time ───────────────────────────────────────────
+
+function getDeliveryRange(leadTime: string): string {
+  const lt = leadTime.toUpperCase()
+  let minDays = 9, maxDays = 16
+  if (lt.includes('THREE_DAYS') || lt.includes('1-3')) { minDays = 4; maxDays = 8 }
+  else if (lt.includes('FOUR_WEEKS') || lt.includes('4 WEEKS')) { minDays = 18; maxDays = 32 }
+
+  const now = Date.now()
+  const min = new Date(now + minDays * 86_400_000)
+  const max = new Date(now + maxDays * 86_400_000)
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+  if (min.getMonth() === max.getMonth()) {
+    return `${min.toLocaleDateString('en-US', { month: 'short' })} ${min.getDate()}–${max.getDate()}`
+  }
+  return `${fmt(min)} – ${fmt(max)}`
 }
 
 function getBadges(tags: string[]): string[] {
@@ -124,7 +148,6 @@ export function ProductInfo({ product }: { product: Product }) {
     shortDescription, description,
     wholesalePrice, displayPrice, currency,
     moq, leadTime, weight, category, tags, images, inStock,
-    achievementLevel,
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -148,10 +171,14 @@ export function ProductInfo({ product }: { product: Product }) {
         productName: name,
         brandId: product.brandId,
         brandName,
+        brandSlug,
         image: images?.[0] ?? '',
         quantity,
         wholesalePrice,
         moq,
+        leadTime,
+        achievementLevel: product.achievementLevel,
+        brandMinimumOrderValue: product.brandMinimumOrderValue,
       })
       setAddedFeedback(true)
       setTimeout(() => setAddedFeedback(false), 2000)
@@ -164,31 +191,13 @@ export function ProductInfo({ product }: { product: Product }) {
     }, 'request_samples')
   }
 
+  const freeShipThreshold = FREE_SHIP[priceCurrency] ?? 200
+  const deliveryRange = getDeliveryRange(leadTime)
+
   return (
     <div className="flex flex-col">
 
-      {/* 1. Brand row */}
-      <Link
-        href={`/brands/${brandSlug}`}
-        className="inline-flex items-center gap-2.5 mb-4 group w-fit"
-        aria-label={`View ${brandName} storefront`}
-      >
-        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
-          <img
-            src={`https://picsum.photos/seed/${brandSlug}-logo/64/64`}
-            alt={`${brandName} logo`}
-            width={32}
-            height={32}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <span className="font-public-sans text-[13px] font-[600] text-primary group-hover:text-accent transition-colors">
-          {brandName}
-        </span>
-        {achievementLevel && <AchievementBadge level={achievementLevel} />}
-      </Link>
-
-      {/* 2. Product name */}
+      {/* 1. Product name */}
       <h1 className="font-playfair font-[500] text-primary text-[22px] sm:text-[26px] leading-[1.2] mb-5">
         {name}
       </h1>
@@ -267,7 +276,7 @@ export function ProductInfo({ product }: { product: Product }) {
           {addedFeedback ? 'Added to order ✓' : inStock ? 'Add to order' : 'Out of Stock'}
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           size="lg"
           onClick={handleRequestSamples}
           className="w-full h-12 text-[14px] font-[600]"
@@ -276,15 +285,45 @@ export function ProductInfo({ product }: { product: Product }) {
         </Button>
       </div>
 
-      {/* 8. Delivery + returns */}
-      <div className="mt-4 flex flex-col gap-2">
-        <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
-          <Package size={14} className="flex-shrink-0" aria-hidden="true" />
-          Estimated delivery:&nbsp;<span className="text-primary font-[500]">{leadTime}</span>
-        </div>
-        <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
-          <RotateCcw size={14} className="flex-shrink-0" aria-hidden="true" />
-          Free returns on first-time orders within 60 days
+      {/* 8. Shipping & policies */}
+      <div className="mt-5 pt-5 border-t border-border-warm">
+        <p className="font-public-sans text-[14px] font-[700] text-primary mb-3.5">
+          Shipping &amp; policies
+        </p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <Package size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <span className="font-public-sans text-[13px] text-muted-text leading-snug">
+              Free shipping on orders{' '}
+              <span className="border-b border-dotted border-muted-text/60 cursor-default">
+                {formatCurrency(freeShipThreshold, priceCurrency)}+
+              </span>
+            </span>
+          </div>
+          <div className="flex items-start gap-3">
+            <CalendarDays size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <span className="font-public-sans text-[13px] text-muted-text leading-snug">
+              Estimated delivery{' '}
+              <span className="border-b border-dotted border-muted-text/60 cursor-default">
+                {deliveryRange}
+              </span>
+            </span>
+          </div>
+          <div className="flex items-start gap-3">
+            <Globe size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <span className="font-public-sans text-[13px] text-muted-text leading-snug">
+              Ships from{' '}
+              <span className="border-b border-dotted border-muted-text/60 cursor-default">India</span>
+            </span>
+          </div>
+          <div className="flex items-start gap-3">
+            <RotateCcw size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <span className="font-public-sans text-[13px] text-muted-text leading-snug">
+              Eligible for{' '}
+              <span className="border-b border-dotted border-muted-text/60 cursor-default">free returns</span>
+              {' '}on first-time orders within 60 days
+            </span>
+          </div>
         </div>
       </div>
 

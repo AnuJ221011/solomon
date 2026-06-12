@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { X, ChevronLeft, ChevronRight, Images } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,7 +56,6 @@ function Lightbox({
         className="relative w-full h-full flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close */}
         <button
           type="button"
           onClick={onClose}
@@ -67,7 +65,6 @@ function Lightbox({
           <X size={18} aria-hidden="true" />
         </button>
 
-        {/* Prev */}
         {images.length > 1 && (
           <button
             type="button"
@@ -79,7 +76,6 @@ function Lightbox({
           </button>
         )}
 
-        {/* Image */}
         <div className="relative max-h-[90vh] max-w-[90vw] w-full h-full flex items-center justify-center px-16">
           <Image
             src={images[index]}
@@ -91,7 +87,6 @@ function Lightbox({
           />
         </div>
 
-        {/* Next */}
         {images.length > 1 && (
           <button
             type="button"
@@ -103,7 +98,6 @@ function Lightbox({
           </button>
         )}
 
-        {/* Counter */}
         {images.length > 1 && (
           <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 font-public-sans text-[13px]">
             {index + 1} / {images.length}
@@ -131,62 +125,152 @@ function EmptyPlaceholder() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function PhotoGallery({ images, productName }: PhotoGalleryProps) {
-  const [active, setActive] = useState(0)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   if (!images || images.length === 0) return <EmptyPlaceholder />
 
-  const thumbs = images.slice(0, 6)
+  // Single image
+  if (images.length === 1) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setLightboxIndex(0)}
+          className="w-full aspect-[4/3] rounded overflow-hidden relative cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label={`Enlarge ${productName} image`}
+        >
+          <Image src={images[0]} alt={productName} fill className="object-cover" priority sizes="(max-width: 1024px) 100vw, 55vw" />
+        </button>
+        {lightboxIndex !== null && (
+          <Lightbox images={images} initialIndex={lightboxIndex} productName={productName} onClose={() => setLightboxIndex(null)} />
+        )}
+      </>
+    )
+  }
+
+  // 2–3 images: row 1 only (portrait left + landscape right)
+  if (images.length < 4) {
+    return (
+      <>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2 h-[340px]">
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(0)}
+              className="flex-[2] relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label={`View ${productName} image 1`}
+            >
+              <Image src={images[0]} alt={`${productName} — 1`} fill className="object-cover" priority sizes="(max-width: 1024px) 40vw, 22vw" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(1)}
+              className="flex-[3] relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label={`View ${productName} image 2`}
+            >
+              <Image src={images[1]} alt={`${productName} — 2`} fill className="object-cover" priority sizes="(max-width: 1024px) 60vw, 33vw" />
+            </button>
+          </div>
+
+          {images.length === 3 && (
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(2)}
+              className="w-full h-[180px] relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label={`View ${productName} image 3`}
+            >
+              <Image src={images[2]} alt={`${productName} — 3`} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 55vw" />
+            </button>
+          )}
+        </div>
+
+        {lightboxIndex !== null && (
+          <Lightbox images={images} initialIndex={lightboxIndex} productName={productName} onClose={() => setLightboxIndex(null)} />
+        )}
+      </>
+    )
+  }
+
+  // 4+ images: Faire-style mosaic
+  const remaining = images.length - 4
 
   return (
     <>
-      <div className="flex gap-3">
-        {/* Vertical thumbnail strip — left side */}
-        {images.length > 1 && (
-          <div className="flex flex-col gap-2 flex-shrink-0" role="list" aria-label="Product image thumbnails">
-            {thumbs.map((src, i) => (
-              <button
-                key={i}
-                type="button"
-                role="listitem"
-                onClick={() => setActive(i)}
-                className={cn(
-                  'w-[68px] aspect-square rounded overflow-hidden border-2 transition-all duration-150 flex-shrink-0',
-                  i === active
-                    ? 'border-accent'
-                    : 'border-border-warm hover:border-primary/40 opacity-70 hover:opacity-100'
-                )}
-                aria-label={`View image ${i + 1}`}
-                aria-pressed={i === active}
-              >
-                <Image
-                  src={src}
-                  alt={`${productName} — thumbnail ${i + 1}`}
-                  width={68}
-                  height={68}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="flex flex-col gap-2">
 
-        {/* Large main image */}
-        <button
-          type="button"
-          onClick={() => setLightboxIndex(active)}
-          className="flex-1 aspect-square rounded overflow-hidden bg-muted-bg relative cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          aria-label={`Enlarge ${productName} image`}
-        >
-          <Image
-            src={images[active]}
-            alt={`${productName} — main view`}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover transition-transform duration-500 hover:scale-[1.03]"
-            priority
-          />
-        </button>
+        {/* Row 1: portrait left (flex-2) + landscape right (flex-3) */}
+        <div className="flex gap-2 h-[340px] md:h-[370px]">
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(0)}
+            className="flex-[2] relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label={`View ${productName} image 1`}
+          >
+            <Image
+              src={images[0]}
+              alt={`${productName} — 1`}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+              priority
+              sizes="(max-width: 1024px) 40vw, 22vw"
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(1)}
+            className="flex-[3] relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label={`View ${productName} image 2`}
+          >
+            <Image
+              src={images[1]}
+              alt={`${productName} — 2`}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+              priority
+              sizes="(max-width: 1024px) 60vw, 33vw"
+            />
+          </button>
+        </div>
+
+        {/* Row 2: two equal images, last has "Show all" overlay */}
+        <div className="flex gap-2 h-[200px] md:h-[220px]">
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(2)}
+            className="flex-1 relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label={`View ${productName} image 3`}
+          >
+            <Image
+              src={images[2]}
+              alt={`${productName} — 3`}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+              sizes="(max-width: 1024px) 50vw, 27vw"
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(3)}
+            className="flex-1 relative rounded overflow-hidden cursor-zoom-in bg-muted-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label={remaining > 0 ? `Show all ${images.length} photos` : `View ${productName} image 4`}
+          >
+            <Image
+              src={images[3]}
+              alt={`${productName} — 4`}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+              sizes="(max-width: 1024px) 50vw, 27vw"
+            />
+            {remaining > 0 && (
+              <div className="absolute inset-0 bg-primary/45 flex items-center justify-center rounded">
+                <span className="inline-flex items-center gap-2 bg-white text-primary font-public-sans text-[13px] font-[600] px-4 py-2 rounded-sm shadow">
+                  <Images size={14} aria-hidden="true" />
+                  Show all {images.length} photos
+                </span>
+              </div>
+            )}
+          </button>
+        </div>
       </div>
 
       {lightboxIndex !== null && (

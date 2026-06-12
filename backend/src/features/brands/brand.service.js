@@ -65,11 +65,12 @@ export const updateBrandProfile = async (userId, updates) => {
   return prisma.brandProfile.update({ where: { userId }, data: updates });
 };
 
-export const listBrands = async ({ page, limit, status, level, category, search }) => {
+export const listBrands = async ({ page, limit, status, level, category, search, slugs }) => {
   const where = { status: status ?? 'APPROVED' };
   if (level) where.achievementLevel = level;
   if (category) where.category = { has: category };
   if (search) where.brandName = { contains: search, mode: 'insensitive' };
+  if (slugs) where.slug = { in: slugs.split(',').map((s) => s.trim()).filter(Boolean) };
 
   const [brands, total] = await Promise.all([
     prisma.brandProfile.findMany({
@@ -80,7 +81,7 @@ export const listBrands = async ({ page, limit, status, level, category, search 
       select: {
         id: true, brandName: true, slug: true, category: true,
         achievementLevel: true, avgRating: true, logoUrl: true,
-        description: true, countryOfOrigin: true,
+        description: true, countryOfOrigin: true, minimumOrderValue: true,
       },
     }),
     prisma.brandProfile.count({ where }),

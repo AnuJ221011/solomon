@@ -10,6 +10,7 @@ interface AuthState {
   isAuthModalOpen: boolean
   authModalTab: 'login' | 'signup'
   pendingAction: string | null
+  _hasHydrated: boolean
 }
 
 interface AuthActions {
@@ -17,6 +18,7 @@ interface AuthActions {
   logout: () => void
   openAuthModal: (tab?: 'login' | 'signup', pendingAction?: string) => void
   closeAuthModal: () => void
+  _setHasHydrated: (v: boolean) => void
 }
 
 type AuthStore = AuthState & AuthActions
@@ -30,8 +32,11 @@ export const useAuthStore = create<AuthStore>()(
       isAuthModalOpen: false,
       authModalTab: 'login',
       pendingAction: null,
+      _hasHydrated: false,
 
       // ─── Actions ──────────────────────────────────────────────────────────
+      _setHasHydrated: (v) => set({ _hasHydrated: v }),
+
       setUser: (user: User) =>
         set({
           user,
@@ -70,8 +75,11 @@ export const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() =>
         typeof window !== 'undefined' ? localStorage : (null as never)
       ),
-      // Only persist the user field; modal/UI state is ephemeral
+      // Only persist user/auth; modal/UI state is ephemeral
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state) => {
+        state?._setHasHydrated(true)
+      },
     }
   )
 )
