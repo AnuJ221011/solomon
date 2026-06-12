@@ -1059,6 +1059,96 @@ const BRANDS = [
   },
 ];
 
+// ─── Extra photos for padding products to minimum 4 ──────────────────────────
+
+const EXTRA_PHOTOS = {
+  'Home Decor': [
+    'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800',
+    'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800',
+    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800',
+  ],
+  'Kitchen & Dining': [
+    'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800',
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+    'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800',
+    'https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=800',
+  ],
+  'Handmade Textiles': [
+    'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800',
+    'https://images.unsplash.com/photo-1594938298603-c8148c4b2afa?w=800',
+    'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
+  ],
+  'Handcrafted Furniture': [
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
+    'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800',
+    'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800',
+    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800',
+  ],
+  'Jewelry & Accessories': [
+    'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800',
+    'https://images.unsplash.com/photo-1573408301185-9519f94697c2?w=800',
+    'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800',
+    'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800',
+  ],
+  'Leather Goods': [
+    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800',
+    'https://images.unsplash.com/photo-1611010344444-5f9e4d86a6e1?w=800',
+    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800',
+    'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800',
+  ],
+  'Organic Foods': [
+    'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800',
+    'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800',
+    'https://images.unsplash.com/photo-1506484381205-f7945653044d?w=800',
+    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800',
+  ],
+  'Wellness & Ayurveda': [
+    'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800',
+    'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=800',
+    'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=800',
+    'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?w=800',
+  ],
+  'Gifts & Souvenirs': [
+    'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=800',
+    'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=800',
+    'https://images.unsplash.com/photo-1513201099705-a9746072228c?w=800',
+    'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800',
+  ],
+  'Sustainable Products': [
+    'https://images.unsplash.com/photo-1542601906897-ecd68e87f3f0?w=800',
+    'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
+    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800',
+    'https://images.unsplash.com/photo-1567761609153-87e6b28ed700?w=800',
+  ],
+}
+
+const FALLBACK_EXTRAS = [
+  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
+  'https://images.unsplash.com/photo-1504274066651-8d31a536b11a?w=800',
+  'https://images.unsplash.com/photo-1467043198406-dc953a3defa0?w=800',
+  'https://images.unsplash.com/photo-1535913989690-f90e1c2d4cfa?w=800',
+]
+
+function padPhotos(photos, categories = []) {
+  if (photos.length >= 4) return photos
+  const result = [...photos]
+  const pool = categories.flatMap((cat) => EXTRA_PHOTOS[cat] ?? [])
+  const finalPool = pool.length > 0 ? pool : FALLBACK_EXTRAS
+  let i = 0
+  while (result.length < 4) {
+    const pos = result.length
+    result.push({
+      url: finalPool[i % finalPool.length],
+      publicId: `auto-pad-${pos}-${i}`,
+      position: pos,
+    })
+    i++
+  }
+  return result
+}
+
 // ─── Main seed function ────────────────────────────────────────────────────────
 
 async function main() {
@@ -1196,14 +1286,13 @@ async function main() {
 
       totalProducts++;
 
-      // Photos — delete and recreate for idempotency
-      if (photos && photos.length > 0) {
-        await prisma.productPhoto.deleteMany({ where: { productId: product.id } });
-        await prisma.productPhoto.createMany({
-          data: photos.map((p) => ({ productId: product.id, url: p.url, publicId: p.publicId, position: p.position })),
-        });
-        totalPhotos += photos.length;
-      }
+      // Photos — pad to minimum 4, delete and recreate for idempotency
+      const paddedPhotos = padPhotos(photos ?? [], productData.categories ?? []);
+      await prisma.productPhoto.deleteMany({ where: { productId: product.id } });
+      await prisma.productPhoto.createMany({
+        data: paddedPhotos.map((p) => ({ productId: product.id, url: p.url, publicId: p.publicId, position: p.position })),
+      });
+      totalPhotos += paddedPhotos.length;
 
       // Variants + VariantAttributes
       if (variantDefs && variantDefs.length > 0) {
