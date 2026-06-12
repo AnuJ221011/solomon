@@ -140,6 +140,19 @@ function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v
   )
 }
 
+// ─── Variant selector helpers ─────────────────────────────────────────────────
+
+function buildAxes(variants: NonNullable<Product['variants']>) {
+  const map = new Map<string, string[]>()
+  for (const v of variants) {
+    for (const a of v.attributes) {
+      if (!map.has(a.name)) map.set(a.name, [])
+      if (!map.get(a.name)!.includes(a.value)) map.get(a.name)!.push(a.value)
+    }
+  }
+  return Array.from(map.entries()).map(([name, values]) => ({ name, values }))
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProductInfo({ product }: { product: Product }) {
@@ -148,21 +161,47 @@ export function ProductInfo({ product }: { product: Product }) {
     shortDescription, description,
     wholesalePrice, displayPrice, currency,
     moq, leadTime, weight, category, tags, images, inStock,
+    variants = [],
   } = product
 
   const [quantity, setQuantity] = useState(moq)
   const [addedFeedback, setAddedFeedback] = useState(false)
 
+  // ── Variant state ──────────────────────────────────────────────────────────
+  const axes = buildAxes(variants)
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({})
+
+  const selectedVariant = variants.find((v) =>
+    axes.length > 0 &&
+    v.attributes.every((a) => selectedAttrs[a.name] === a.value) &&
+    v.attributes.length === axes.length
+  ) ?? null
+
+  function selectAttr(axisName: string, value: string) {
+    setSelectedAttrs((prev) => ({ ...prev, [axisName]: value }))
+  }
+
+  function isValueAvailable(axisName: string, val: string) {
+    return variants.some(
+      (v) => v.stock > 0 && v.attributes.some((a) => a.name === axisName && a.value === val)
+    )
+  }
+
   const { requireAuth } = useAuth()
   const addItem = useCartStore((s) => s.addItem)
 
-  const priceAmount = displayPrice ?? wholesalePrice
+  const basePrice = displayPrice ?? wholesalePrice
+  const activePrice = selectedVariant ? selectedVariant.priceInr : basePrice
   const priceCurrency = currency ?? 'INR'
   const showINREquiv = priceCurrency !== 'INR'
-  const suggestedRetail = priceAmount * 2
-  const minOrderValue = priceAmount * moq
+  const suggestedRetail = activePrice * 2
+  const minOrderValue = activePrice * moq
 
   const badges = getBadges(tags ?? [])
+
+  const effectiveInStock = variants.length > 0
+    ? (selectedVariant ? selectedVariant.stock > 0 : variants.some((v) => v.stock > 0))
+    : inStock
 
   function handleAddToCart() {
     requireAuth(() => {
@@ -208,7 +247,10 @@ export function ProductInfo({ product }: { product: Product }) {
           Wholesale price
         </p>
         <p className="font-public-sans text-[38px] font-[700] text-primary tracking-[-0.025em] leading-none">
-          {formatCurrency(priceAmount, priceCurrency)}
+          {formatCurrency(activePrice, priceCurrency)}
+          {variants.length > 0 && !selectedVariant && (
+            <span className="text-[14px] font-[400] text-muted-text ml-2 tracking-normal">from</span>
+          )}
         </p>
         <p className="font-public-sans text-[13px] text-muted-text mt-1.5">
           Suggested retail:&nbsp;
@@ -221,6 +263,66 @@ export function ProductInfo({ product }: { product: Product }) {
           </p>
         )}
       </div>
+
+      {/* Variant selector */}
+      {axes.length > 0 && (
+        <div className="mb-5 space-y-4">
+          {axes.map((axis) => (
+            <div key={axis.name}>
+              <p className="font-public-sans text-[12px] font-[600] text-muted-text uppercase tracking-[0.05em] mb-2">
+                {axis.name}
+                {selectedAttrs[axis.name] && (
+                  <span className="ml-1.5 text-primary normal-case font-[500] tracking-normal">
+                    — {selectedAttrs[axis.name]}
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {axis.values.map((val) => {
+                  const available = isValueAvailable(axis.name, val)
+                  const selected = selectedAttrs[axis.name] === val
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => available && selectAttr(axis.name, val)}
+                      className={cn(
+                        'h-9 px-4 rounded border text-[13px] font-[500] font-public-sans transition-colors relative',
+                        selected
+                          ? 'border-primary bg-primary text-white'
+                          : available
+                          ? 'border-border-warm text-primary hover:border-primary'
+                          : 'border-border-warm text-muted-text opacity-40 cursor-not-allowed',
+                      )}
+                      aria-pressed={selected}
+                    >
+                      {val}
+                      {!available && (
+                        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="absolute w-full h-px bg-muted-text/40 rotate-[-20deg]" />
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          {selectedVariant && (
+            <p className="text-[12px] font-public-sans text-muted-text">
+              SKU: <span className="text-primary font-[500]">{selectedVariant.sku}</span>
+              {selectedVariant.stock > 0 && (
+                <> &nbsp;·&nbsp; <span className="text-green-600">{selectedVariant.stock} in stock</span></>
+              )}
+            </p>
+          )}
+          {axes.length > 0 && Object.keys(selectedAttrs).length < axes.length && (
+            <p className="text-[12px] font-public-sans text-muted-text italic">
+              Select {axes.filter((a) => !selectedAttrs[a.name]).map((a) => a.name.toLowerCase()).join(' and ')} to continue
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 4. Min. order */}
       <p className="font-public-sans text-[13px] text-muted-text mb-4">
@@ -247,7 +349,7 @@ export function ProductInfo({ product }: { product: Product }) {
       <div className="border-t border-border-warm mb-5" />
 
       {/* 6. Quantity stepper */}
-      {inStock && (
+      {effectiveInStock && (
         <div className="mb-4">
           <p className="font-public-sans text-[12px] font-[500] text-muted-text mb-2">
             Quantity&nbsp;<span className="text-primary">(min. {moq})</span>
@@ -256,7 +358,7 @@ export function ProductInfo({ product }: { product: Product }) {
         </div>
       )}
 
-      {!inStock && (
+      {!effectiveInStock && (
         <div className="mb-4 inline-flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" aria-hidden="true" />
           <span className="font-public-sans text-[14px] font-[500] text-red-500">Out of stock</span>
@@ -269,11 +371,15 @@ export function ProductInfo({ product }: { product: Product }) {
           variant="primary"
           size="lg"
           onClick={handleAddToCart}
-          disabled={!inStock}
+          disabled={!effectiveInStock || (axes.length > 0 && !selectedVariant)}
           className={cn('w-full h-12 text-[14px] font-[600] transition-all', addedFeedback && 'bg-success hover:bg-success')}
-          aria-label={inStock ? `Add ${quantity} units to order` : 'Out of stock'}
+          aria-label={effectiveInStock ? `Add ${quantity} units to order` : 'Out of stock'}
         >
-          {addedFeedback ? 'Added to order ✓' : inStock ? 'Add to order' : 'Out of Stock'}
+          {addedFeedback
+            ? 'Added to order ✓'
+            : axes.length > 0 && !selectedVariant
+            ? 'Select options to continue'
+            : effectiveInStock ? 'Add to order' : 'Out of Stock'}
         </Button>
         <Button
           variant="ghost"

@@ -2,7 +2,10 @@
 
 import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Trash2, Upload, ImageIcon, ChevronDown } from 'lucide-react'
+import {
+  ArrowLeft, Trash2, Upload, ImageIcon, ChevronDown,
+  Plus, RefreshCw, Loader2, X,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -39,6 +42,53 @@ interface ProductForm {
   tags: string
   availability: 'ACTIVE' | 'INACTIVE' | 'COMING_SOON'
 }
+
+interface AttributeAxis {
+  id: string
+  name: string
+  values: string[]
+}
+
+interface VariantRow {
+  id: string
+  attributes: { name: string; value: string }[]
+  label: string
+  sku: string
+  priceInr: string
+  stock: string
+}
+
+interface ExistingVariant {
+  id: string
+  sku: string
+  priceInr: number
+  stock: number
+  status: string
+  attributes: { id: string; name: string; value: string }[]
+}
+
+interface EditableVariant {
+  id: string
+  label: string
+  editSku: string
+  editPrice: string
+  editStock: string
+  dirty: boolean
+  attributes: { id: string; name: string; value: string }[]
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function cartesian<T>(arrays: T[][]): T[][] {
+  if (!arrays.length) return []
+  return arrays.reduce<T[][]>(
+    (acc, arr) => acc.flatMap((combo) => arr.map((val) => [...combo, val])),
+    [[]]
+  )
+}
+
+let _id = 0
+function uid() { return String(++_id) }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -223,6 +273,488 @@ function PhotosSection({ productId, photos: initialPhotos }: { productId: string
   )
 }
 
+// ─── Variants management section ──────────────────────────────────────────────
+
+function VariantsSection({ productId, defaultPrice }: { productId: string; defaultPrice: string }) {
+  const queryClient = useQueryClient()
+
+  // ── Fetch existing variants ──────────────────────────────────────────────
+  const { data: existingRaw = [], isLoading } = useQuery<ExistingVariant[]>({
+    queryKey: ['product-variants', productId],
+    queryFn: () => api.get(`/products/${productId}/variants`).then((r) => r.data.data ?? []),
+  })
+
+  // ── Editable state for existing variants ──────────────────────────────────
+  const [editRows, setEditRows] = useState<EditableVariant[]>([])
+
+  useEffect(() => {
+    setEditRows(
+      existingRaw.map((v) => ({
+        id: v.id,
+        label: v.attributes.map((a) => a.value).join(' / '),
+        editSku: v.sku,
+        editPrice: String(v.priceInr),
+        editStock: String(v.stock),
+        dirty: false,
+        attributes: v.attributes,
+      }))
+    )
+  }, [existingRaw])
+
+  function updateEditRow(id: string, field: 'editSku' | 'editPrice' | 'editStock', value: string) {
+    setEditRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value, dirty: true } : r))
+    )
+  }
+
+  function discardChanges() {
+    setEditRows(
+      existingRaw.map((v) => ({
+        id: v.id,
+        label: v.attributes.map((a) => a.value).join(' / '),
+        editSku: v.sku,
+        editPrice: String(v.priceInr),
+        editStock: String(v.stock),
+        dirty: false,
+        attributes: v.attributes,
+      }))
+    )
+  }
+
+  const [savingAll, setSavingAll] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function saveChanges() {
+    const dirty = editRows.filter((r) => r.dirty)
+    if (!dirty.length) { toast.info('No changes to save.'); return }
+    setSavingAll(true)
+    try {
+      await Promise.all(
+        dirty.map((r) =>
+          api.patch(`/products/${productId}/variants/${r.id}`, {
+            sku: r.editSku.trim(),
+            priceInr: Number(r.editPrice),
+            stock: Number(r.editStock),
+          })
+        )
+      )
+      queryClient.invalidateQueries({ queryKey: ['product-variants', productId] })
+      toast.success(`${dirty.length} variant${dirty.length !== 1 ? 's' : ''} saved.`)
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setSavingAll(false)
+    }
+  }
+
+  async function handleDelete(variantId: string) {
+    setDeletingId(variantId)
+    try {
+      await api.delete(`/products/${productId}/variants/${variantId}`)
+      queryClient.invalidateQueries({ queryKey: ['product-variants', productId] })
+      toast.success('Variant deleted.')
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  // ── Add new variants ────────────────────────────────────────────────────
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [axes, setAxes] = useState<AttributeAxis[]>([{ id: uid(), name: '', values: [] }])
+  const [axisInputs, setAxisInputs] = useState<Record<string, string>>({})
+  const [newRows, setNewRows] = useState<VariantRow[]>([])
+  const [addingVariants, setAddingVariants] = useState(false)
+
+  function addAxis() {
+    setAxes((prev) => [...prev, { id: uid(), name: '', values: [] }])
+  }
+
+  function removeAxis(id: string) {
+    setAxes((prev) => prev.filter((a) => a.id !== id))
+  }
+
+  function updateAxisName(id: string, name: string) {
+    setAxes((prev) => prev.map((a) => (a.id === id ? { ...a, name } : a)))
+  }
+
+  function addValueToAxis(id: string) {
+    const val = (axisInputs[id] ?? '').trim()
+    if (!val) return
+    setAxes((prev) =>
+      prev.map((a) =>
+        a.id === id && !a.values.includes(val) ? { ...a, values: [...a.values, val] } : a
+      )
+    )
+    setAxisInputs((prev) => ({ ...prev, [id]: '' }))
+  }
+
+  function removeValueFromAxis(id: string, value: string) {
+    setAxes((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, values: a.values.filter((v) => v !== value) } : a))
+    )
+  }
+
+  function generateVariants() {
+    const complete = axes.filter((a) => a.name.trim() && a.values.length > 0)
+    if (!complete.length) {
+      toast.error('Add at least one attribute with values before generating.')
+      return
+    }
+    const combos = cartesian(complete.map((a) => a.values.map((v) => ({ name: a.name.trim(), value: v }))))
+    const rows: VariantRow[] = combos.map((combo) => {
+      const slug = combo.map((a) => a.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()).join('-')
+      return {
+        id: uid(),
+        attributes: combo,
+        label: combo.map((a) => a.value).join(' / '),
+        sku: `PROD-${slug}`,
+        priceInr: defaultPrice || '',
+        stock: '0',
+      }
+    })
+    setNewRows(rows)
+    toast.success(`${rows.length} variant${rows.length !== 1 ? 's' : ''} generated.`)
+  }
+
+  function updateNewRow(id: string, field: 'sku' | 'priceInr' | 'stock', value: string) {
+    setNewRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)))
+  }
+
+  function removeNewRow(id: string) {
+    setNewRows((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  async function handleAddVariants() {
+    if (!newRows.length) return
+    const invalid = newRows.find((r) => !r.sku.trim() || !r.priceInr || Number(r.priceInr) <= 0)
+    if (invalid) {
+      toast.error(`Variant "${invalid.label}" is missing a SKU or valid price.`)
+      return
+    }
+    setAddingVariants(true)
+    try {
+      await api.post(`/products/${productId}/variants/bulk`, {
+        variants: newRows.map((r) => ({
+          sku: r.sku.trim(),
+          priceInr: Number(r.priceInr),
+          stock: Number(r.stock) || 0,
+          status: 'ACTIVE',
+          attributes: r.attributes,
+        })),
+      })
+      queryClient.invalidateQueries({ queryKey: ['product-variants', productId] })
+      setNewRows([])
+      setAxes([{ id: uid(), name: '', values: [] }])
+      setAxisInputs({})
+      setShowAddForm(false)
+      toast.success(`${newRows.length} variant${newRows.length !== 1 ? 's' : ''} added.`)
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setAddingVariants(false)
+    }
+  }
+
+  const hasDirty = editRows.some((r) => r.dirty)
+
+  return (
+    <div className="bg-surface border border-border-warm rounded p-6 space-y-5">
+      <div className="pb-3 border-b border-border-warm">
+        <h2 className="text-[16px] font-[600] font-public-sans text-primary">Variants</h2>
+        <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
+          {isLoading ? 'Loading…' : `${editRows.length} variant${editRows.length !== 1 ? 's' : ''}`}
+        </p>
+      </div>
+
+      {/* Existing variants */}
+      {isLoading && (
+        <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
+          <Loader2 size={14} className="animate-spin" />
+          Loading variants…
+        </div>
+      )}
+
+      {!isLoading && editRows.length === 0 && !showAddForm && (
+        <p className="text-[13px] font-public-sans text-muted-text">No variants yet.</p>
+      )}
+
+      {!isLoading && editRows.length > 0 && (
+        <div className="space-y-3">
+          <div className="rounded border border-border-warm overflow-hidden">
+            <table className="w-full text-[13px] font-public-sans">
+              <thead>
+                <tr className="bg-muted-bg/40 border-b border-border-warm">
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Variant</th>
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">SKU</th>
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Price (₹)</th>
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Stock</th>
+                  <th className="py-2.5 px-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-warm">
+                {editRows.map((row) => (
+                  <tr key={row.id} className={row.dirty ? 'bg-accent/5' : ''}>
+                    <td className="py-2.5 px-3 text-primary font-[500]">{row.label}</td>
+                    <td className="py-2.5 px-3">
+                      <input
+                        type="text"
+                        value={row.editSku}
+                        onChange={(e) => updateEditRow(row.id, 'editSku', e.target.value)}
+                        className="w-full h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                      />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <input
+                        type="number"
+                        value={row.editPrice}
+                        min={0}
+                        onChange={(e) => updateEditRow(row.id, 'editPrice', e.target.value)}
+                        className="w-24 h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                      />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <input
+                        type="number"
+                        value={row.editStock}
+                        min={0}
+                        onChange={(e) => updateEditRow(row.id, 'editStock', e.target.value)}
+                        className="w-20 h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                      />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(row.id)}
+                        disabled={deletingId === row.id}
+                        className="text-muted-text hover:text-error transition-colors disabled:opacity-40"
+                        aria-label="Delete variant"
+                      >
+                        {deletingId === row.id
+                          ? <Loader2 size={13} className="animate-spin" />
+                          : <Trash2 size={13} />}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {hasDirty && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={saveChanges}
+                disabled={savingAll}
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded border border-primary bg-primary text-white text-[13px] font-[600] font-public-sans hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {savingAll && <Loader2 size={13} className="animate-spin" />}
+                {savingAll ? 'Saving…' : 'Save changes'}
+              </button>
+              <button
+                type="button"
+                onClick={discardChanges}
+                className="text-[13px] font-public-sans text-muted-text hover:text-primary transition-colors"
+              >
+                Discard
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add new variants */}
+      {!showAddForm ? (
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-1.5 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors"
+        >
+          <Plus size={13} />Add variants
+        </button>
+      ) : (
+        <div className="space-y-5 pt-4 border-t border-border-warm">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[14px] font-[600] font-public-sans text-primary">Add new variants</h3>
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(false); setNewRows([]) }}
+              className="text-muted-text hover:text-primary transition-colors"
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Attribute axes */}
+          <div className="space-y-3">
+            {axes.map((axis) => (
+              <div key={axis.id} className="flex flex-col gap-2 p-4 rounded border border-border-warm bg-muted-bg/20">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={axis.name}
+                    onChange={(e) => updateAxisName(axis.id, e.target.value)}
+                    placeholder="Attribute name (e.g. Size, Color)"
+                    className="flex-1 h-9 px-3 rounded border border-border-warm bg-surface text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+                  />
+                  {axes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeAxis(axis.id)}
+                      className="text-muted-text hover:text-error transition-colors p-1.5"
+                      aria-label="Remove attribute"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {axis.values.map((val) => (
+                    <span
+                      key={val}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-border-warm bg-surface text-[12px] font-public-sans text-primary"
+                    >
+                      {val}
+                      <button
+                        type="button"
+                        onClick={() => removeValueFromAxis(axis.id, val)}
+                        className="text-muted-text hover:text-error transition-colors"
+                        aria-label={`Remove ${val}`}
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  ))}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={axisInputs[axis.id] ?? ''}
+                      onChange={(e) => setAxisInputs((prev) => ({ ...prev, [axis.id]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); addValueToAxis(axis.id) }
+                      }}
+                      placeholder="Add value…"
+                      className="h-7 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[12px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addValueToAxis(axis.id)}
+                      className="h-7 px-2 rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg text-[12px] transition-colors"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addAxis}
+              className="flex items-center gap-1.5 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors"
+            >
+              <Plus size={13} />Add attribute
+            </button>
+          </div>
+
+          {/* Generate button */}
+          <div className="flex items-center justify-between pt-1">
+            <p className="text-[12px] font-public-sans text-muted-text">
+              {newRows.length > 0
+                ? `${newRows.length} new variant${newRows.length !== 1 ? 's' : ''} ready to add`
+                : 'Generate combinations from attributes above'}
+            </p>
+            <button
+              type="button"
+              onClick={generateVariants}
+              className="inline-flex items-center gap-1.5 h-8 px-4 rounded border border-accent text-[13px] font-[600] font-public-sans text-accent hover:bg-accent hover:text-white transition-colors"
+            >
+              <RefreshCw size={13} />
+              {newRows.length > 0 ? 'Regenerate' : 'Generate variants'}
+            </button>
+          </div>
+
+          {/* New variant rows table */}
+          {newRows.length > 0 && (
+            <div className="space-y-3">
+              <div className="rounded border border-border-warm overflow-hidden">
+                <table className="w-full text-[13px] font-public-sans">
+                  <thead>
+                    <tr className="bg-muted-bg/40 border-b border-border-warm">
+                      <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Variant</th>
+                      <th className="text-left py-2.5 px-3 font-[600] text-muted-text">SKU</th>
+                      <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Price (₹)</th>
+                      <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Stock</th>
+                      <th className="py-2.5 px-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-warm">
+                    {newRows.map((row) => (
+                      <tr key={row.id}>
+                        <td className="py-2.5 px-3 text-primary font-[500]">{row.label}</td>
+                        <td className="py-2.5 px-3">
+                          <input
+                            type="text"
+                            value={row.sku}
+                            onChange={(e) => updateNewRow(row.id, 'sku', e.target.value)}
+                            className="w-full h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <input
+                            type="number"
+                            value={row.priceInr}
+                            min={0}
+                            onChange={(e) => updateNewRow(row.id, 'priceInr', e.target.value)}
+                            className="w-24 h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <input
+                            type="number"
+                            value={row.stock}
+                            min={0}
+                            onChange={(e) => updateNewRow(row.id, 'stock', e.target.value)}
+                            className="w-20 h-8 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <button
+                            type="button"
+                            onClick={() => removeNewRow(row.id)}
+                            className="text-muted-text hover:text-error transition-colors"
+                            aria-label="Remove variant"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddVariants}
+                disabled={addingVariants}
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded border border-primary bg-primary text-white text-[13px] font-[600] font-public-sans hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {addingVariants && <Loader2 size={13} className="animate-spin" />}
+                {addingVariants
+                  ? 'Adding…'
+                  : `Add ${newRows.length} variant${newRows.length !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EditProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -251,14 +783,12 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
     if (!product) return
     setForm({
       name: product.name ?? '',
-      // backend stores as array `categories`; take first for the single-select
       category: (product.categories ?? [])[0] ?? '',
       shortDescription: product.shortDescription ?? '',
       fullDescription: product.fullDescription ?? '',
       wholesalePriceInr: product.wholesalePriceInr != null ? String(product.wholesalePriceInr) : '',
       moq: product.moq != null ? String(product.moq) : '',
       leadTime: product.leadTime ?? 'ONE_TO_TWO_WEEKS',
-      // backend stores grams; show as kg with up to 3 decimal places
       weightKg: product.weightGrams != null ? String(product.weightGrams / 1000) : '',
       tags: (product.tags ?? []).join(', '),
       availability: product.availability ?? 'ACTIVE',
@@ -415,6 +945,11 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
             </Field>
           </div>
         </div>
+
+        {/* Variants */}
+        {product && (
+          <VariantsSection productId={product.id} defaultPrice={form.wholesalePriceInr} />
+        )}
 
         {/* Availability */}
         <div className="bg-surface border border-border-warm rounded p-6 space-y-4">

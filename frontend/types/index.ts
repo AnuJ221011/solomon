@@ -24,6 +24,21 @@ export interface User {
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
+export interface ProductVariantAttribute {
+  id: string
+  name: string
+  value: string
+}
+
+export interface ProductVariant {
+  id: string
+  sku: string
+  priceInr: number
+  stock: number
+  status: string
+  attributes: ProductVariantAttribute[]
+}
+
 export interface Product {
   id: string
   name: string
@@ -45,6 +60,7 @@ export interface Product {
   achievementLevel?: 1 | 2 | 3 | 4 | 5
   brandMinimumOrderValue?: number
   inStock: boolean
+  variants?: ProductVariant[]
 }
 
 // ─── Brands ───────────────────────────────────────────────────────────────────

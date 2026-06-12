@@ -11,12 +11,19 @@ export interface ProductPhoto {
   position: number
 }
 
-export interface ProductVariant {
+export interface VariantAttribute {
   id: string
   name: string
   value: string
-  price?: number
-  inStock: boolean
+}
+
+export interface ProductVariant {
+  id: string
+  sku: string
+  priceInr: number
+  stock: number
+  status: string
+  attributes: VariantAttribute[]
 }
 
 export interface ProductBrandInfo {
@@ -108,7 +115,16 @@ function mapProduct(raw: Record<string, any>): Product {
       achievementLevel: ACHIEVEMENT_LEVEL[(bp.achievementLevel as string)] ?? 1,
       minimumOrderValue: (bp.minimumOrderValue as number) ?? 0,
     },
-    variants: raw.variants ?? [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    variants: (raw.variants ?? []).map((v: any) => ({
+      id: v.id ?? '',
+      sku: v.sku ?? '',
+      priceInr: Number(v.priceInr ?? 0),
+      stock: v.stock ?? 0,
+      status: v.status ?? 'ACTIVE',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      attributes: (v.attributes ?? []).map((a: any) => ({ id: a.id ?? '', name: a.name ?? '', value: a.value ?? '' })),
+    })),
     inStock: raw.availability === 'ACTIVE',
     availability: raw.availability ?? '',
   }

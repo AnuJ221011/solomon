@@ -39,12 +39,18 @@ function toTypedProduct(p: HookProduct): Product {
 
 // ─── Map raw API product → @/types Product (for detail page) ─────────────────
 
+interface ApiVariantAttribute { id: string; name: string; value: string }
+interface ApiVariant { id: string; sku: string; priceInr: number; stock: number; status: string; attributes: ApiVariantAttribute[] }
+
 interface ApiProduct {
   id: string; name: string; slug: string; brandId: string
   brandName: string; brandSlug: string; shortDescription: string
   description?: string; photos?: Array<{ id: string; url: string; position: number }>
   wholesalePrice: number; moq: number; leadTime: string; weight: number
-  category: string; tags: string[]; brand?: { achievementLevel: number; minimumOrderValue?: number }; inStock: boolean
+  category: string; tags: string[]
+  brand?: { achievementLevel: number; minimumOrderValue?: number }
+  variants?: ApiVariant[]
+  inStock: boolean
 }
 
 function toTypedFromApi(p: ApiProduct): Product {
@@ -59,6 +65,10 @@ function toTypedFromApi(p: ApiProduct): Product {
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
     brandMinimumOrderValue: p.brand?.minimumOrderValue,
     inStock: p.inStock,
+    variants: (p.variants ?? []).map((v) => ({
+      id: v.id, sku: v.sku, priceInr: v.priceInr,
+      stock: v.stock, status: v.status, attributes: v.attributes,
+    })),
   }
 }
 
