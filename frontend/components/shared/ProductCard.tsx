@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,7 +7,7 @@ import type { Product } from '@/types'
 import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ProductCardProps {
   product: Product
@@ -15,7 +15,7 @@ interface ProductCardProps {
   className?: string
 }
 
-// ─── Price formatter ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Price formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatPrice(amount: number, currency = 'INR'): string {
   return new Intl.NumberFormat('en-IN', {
@@ -26,7 +26,7 @@ function formatPrice(amount: number, currency = 'INR'): string {
   }).format(amount)
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function ProductCard({ product, onAddToCart, className }: ProductCardProps) {
   const {
@@ -126,13 +126,13 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
 
         {/* Price row */}
         <div className="mt-auto flex items-baseline gap-1">
-          <span className="text-[16px] font-[700] text-primary font-public-sans">
+          <span className="text-[16px] font-[600] text-primary font-public-sans">
             {formatPrice(priceAmount, priceCurrency)}
           </span>
           <span className="text-[12px] text-muted-text font-public-sans">/ unit</span>
         </div>
 
-        {/* Add to cart button — appears on hover */}
+        {/* Add to cart button â€” appears on hover */}
         {onAddToCart && inStock && (
           <button
             type="button"

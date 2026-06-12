@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Nav items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NAV_ITEMS = [
   { href: '/portal', label: 'Overview', icon: LayoutDashboard },
@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { href: '/portal/settings', label: 'Settings', icon: Settings },
 ]
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function PortalSidebar() {
   const pathname = usePathname()
@@ -84,7 +84,7 @@ export function PortalSidebar() {
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
-            <span className="text-[12px] font-[700] font-public-sans text-white/80">{brandInitials}</span>
+            <span className="text-[12px] font-[600] font-public-sans text-white/80">{brandInitials}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-[600] font-public-sans text-white truncate">{brandName}</p>

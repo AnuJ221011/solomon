@@ -47,7 +47,7 @@ function StatCard({
         </div>
       </div>
       <div>
-        <p className="text-[28px] font-[700] font-playfair text-primary leading-none">{value}</p>
+        <p className="text-[28px] font-[600] font-playfair text-primary leading-none">{value}</p>
         {sub && <p className="text-[12px] font-public-sans text-muted-text mt-1">{sub}</p>}
       </div>
     </div>

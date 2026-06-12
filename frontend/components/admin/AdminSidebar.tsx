@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Nav items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },
 ]
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -91,7 +91,7 @@ export function AdminSidebar() {
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
-            <span className="text-[12px] font-[700] font-public-sans text-white/80">
+            <span className="text-[12px] font-[600] font-public-sans text-white/80">
               {adminInitials}
             </span>
           </div>

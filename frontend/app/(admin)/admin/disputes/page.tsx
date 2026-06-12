@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatusBadge({ status }: { status: AdminDispute['status'] }) {
   return (
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: AdminDispute['status'] }) {
   )
 }
 
-// ─── Row ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DisputeRow({ dispute }: { dispute: AdminDispute }) {
   const qc = useQueryClient()
@@ -66,7 +66,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
         {dispute.brandName}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-[600] font-public-sans text-primary">
-        ₹{dispute.amount.toLocaleString('en-IN')}
+        â‚¹{dispute.amount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 max-w-[220px]">
         <p className="text-[13px] font-public-sans text-muted-text truncate" title={dispute.reason}>
@@ -115,7 +115,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AdminDisputesPage() {
   const [status, setStatus] = useState<'OPEN' | 'RESOLVED' | 'CLOSED' | ''>('OPEN')
@@ -201,7 +201,7 @@ export default function AdminDisputesPage() {
                       <th
                         key={h}
                         className={cn(
-                          'py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]',
+                          'py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]',
                           h === 'Amount' ? 'text-right' : 'text-left'
                         )}
                       >
@@ -221,7 +221,7 @@ export default function AdminDisputesPage() {
             {total > 20 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total}
+                  Showing {(page - 1) * 20 + 1}â€“{Math.min(page * 20, total)} of {total}
                 </p>
                 <div className="flex gap-2">
                   <button

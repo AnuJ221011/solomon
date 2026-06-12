@@ -1,18 +1,20 @@
 import type { Metadata } from 'next'
-import { Playfair_Display, Public_Sans } from 'next/font/google'
+import { Trirong, Quattrocento_Sans } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/providers/Providers'
 
-const playfair = Playfair_Display({
+// Editorial serif — homepage hero, brand storefront names only
+const trirong = Trirong({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-playfair',
   display: 'swap',
 })
 
-const publicSans = Public_Sans({
+// UI sans — all marketplace interface text (Quattrocento Sans: 400 + 700 only)
+const quattrocentoSans = Quattrocento_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '700'],
   variable: '--font-public-sans',
   display: 'swap',
 })
@@ -29,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${publicSans.variable}`}>
+    <html lang="en" className={`${trirong.variable} ${quattrocentoSans.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

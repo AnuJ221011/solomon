@@ -1,8 +1,8 @@
-import { Bell, Search } from 'lucide-react'
+﻿import { Bell, Search } from 'lucide-react'
 import { PortalSidebar } from '@/components/brand-portal/PortalSidebar'
 import Link from 'next/link'
 
-// ─── Mobile bottom tab items ──────────────────────────────────────────────────
+// â”€â”€â”€ Mobile bottom tab items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MOBILE_TABS = [
   { href: '/portal', label: 'Overview' },
@@ -12,7 +12,7 @@ const MOBILE_TABS = [
   { href: '/portal/settings', label: 'Settings' },
 ]
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function BrandPortalLayout({
   children,
@@ -21,7 +21,7 @@ export default function BrandPortalLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-surface">
-      {/* Sidebar — hidden on mobile */}
+      {/* Sidebar â€” hidden on mobile */}
       <div className="hidden lg:block">
         <PortalSidebar />
       </div>
@@ -61,7 +61,7 @@ export default function BrandPortalLayout({
               type="button"
               className="h-9 px-3 rounded border border-border-warm text-[12px] font-[600] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
             >
-              INR ₹
+              INR â‚¹
             </button>
 
             {/* Avatar */}
@@ -69,7 +69,7 @@ export default function BrandPortalLayout({
               className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0 cursor-pointer border border-border-warm"
               aria-label="User menu"
             >
-              <span className="text-[13px] font-[700] font-public-sans text-primary">AR</span>
+              <span className="text-[13px] font-[600] font-public-sans text-primary">AR</span>
             </div>
           </div>
         </header>

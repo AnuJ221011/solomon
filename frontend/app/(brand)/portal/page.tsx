@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { TrendingUp, TrendingDown } from 'lucide-react'
@@ -10,7 +10,7 @@ import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
 import { useAchievementProgress } from '@/hooks/queries/useAchievements'
 import type { OrderStatus, AchievementCriteria } from '@/types'
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface StatCardProps {
   label: string
@@ -24,7 +24,7 @@ function StatCard({ label, value, trend, trendUp, trendNeutral }: StatCardProps)
   return (
     <div className="bg-surface border border-border-warm rounded p-5">
       <p className="text-[12px] leading-[1.3] font-public-sans text-muted-text">{label}</p>
-      <p className="text-[28px] font-[700] font-public-sans text-primary mt-1 leading-none tabular-nums">
+      <p className="text-[28px] font-[600] font-public-sans text-primary mt-1 leading-none tabular-nums">
         {value}
       </p>
       <div className={`flex items-center gap-1 mt-2 text-[12px] font-[600] font-public-sans ${
@@ -51,7 +51,7 @@ function StatCardSkeleton() {
   )
 }
 
-// ─── Table columns ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Table columns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type OrderRow = {
   id: string
@@ -83,7 +83,7 @@ const ORDER_COLUMNS = [
     sortable: true,
     render: (val: unknown) => (
       <span className="tabular-nums text-[14px]">
-        ₹{Number(val).toLocaleString('en-IN')}
+        â‚¹{Number(val).toLocaleString('en-IN')}
       </span>
     ),
   },
@@ -98,7 +98,7 @@ const ORDER_COLUMNS = [
   },
 ]
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function EmptyOrders() {
   return (
@@ -111,7 +111,7 @@ function EmptyOrders() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function PortalOverviewPage() {
   const { data: dashboard, isLoading: dashLoading, error: dashError } = useMyBrandDashboard()
@@ -142,7 +142,7 @@ export default function PortalOverviewPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             label="GMV This Month"
-            value={`₹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
+            value={`â‚¹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
             trend="this month"
             trendNeutral
           />
@@ -154,13 +154,13 @@ export default function PortalOverviewPage() {
           />
           <StatCard
             label="Avg Order Value"
-            value={`₹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
+            value={`â‚¹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
             trend="per order"
             trendNeutral
           />
           <StatCard
             label="Commission Saved"
-            value={`₹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
+            value={`â‚¹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
             trend="via Share Links"
             trendNeutral
           />
@@ -221,7 +221,7 @@ export default function PortalOverviewPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-[18px] font-[400] font-public-sans text-primary">
-                  Level {achievement.level} —{' '}
+                  Level {achievement.level} â€”{' '}
                   <span className="text-accent font-[600]">{achievement.name}</span>
                 </p>
                 <p className="text-[13px] font-public-sans text-muted-text mt-0.5">

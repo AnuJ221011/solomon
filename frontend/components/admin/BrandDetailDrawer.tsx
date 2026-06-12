@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { X, ExternalLink, Building2, CheckCircle, XCircle } from 'lucide-react'
@@ -12,14 +12,14 @@ import {
   useReactivateUser,
 } from '@/hooks/queries/useAdmin'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACHIEVEMENT_LEVELS = [
-  { value: 'L1_SPROUT', label: 'L1 — Sprout' },
-  { value: 'L2_RISING', label: 'L2 — Rising' },
-  { value: 'L3_TRUSTED', label: 'L3 — Trusted' },
-  { value: 'L4_ELITE', label: 'L4 — Elite' },
-  { value: 'L5_LEGEND', label: 'L5 — Legend' },
+  { value: 'L1_SPROUT', label: 'L1 â€” Sprout' },
+  { value: 'L2_RISING', label: 'L2 â€” Rising' },
+  { value: 'L3_TRUSTED', label: 'L3 â€” Trusted' },
+  { value: 'L4_ELITE', label: 'L4 â€” Elite' },
+  { value: 'L5_LEGEND', label: 'L5 â€” Legend' },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
@@ -41,12 +41,12 @@ const SHIPPING_ZONE_LABELS: Record<string, string> = {
 }
 
 const LEAD_TIME_LABELS: Record<string, string> = {
-  ONE_TO_THREE_DAYS: '1–3 days',
-  ONE_TO_TWO_WEEKS: '1–2 weeks',
-  TWO_TO_FOUR_WEEKS: '2–4 weeks',
+  ONE_TO_THREE_DAYS: '1â€“3 days',
+  ONE_TO_TWO_WEEKS: '1â€“2 weeks',
+  TWO_TO_FOUR_WEEKS: '2â€“4 weeks',
 }
 
-// ─── Detail row ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Detail row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (!value && value !== 0) return null
@@ -63,7 +63,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-muted-text font-public-sans mb-1 px-5">
+      <p className="text-[11px] font-[600] uppercase tracking-[0.08em] text-muted-text font-public-sans mb-1 px-5">
         {title}
       </p>
       <div className="px-5 bg-surface border-y border-border-warm">
@@ -73,7 +73,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-// ─── Reject modal ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Reject modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RejectConfirm({ brandId, brandName, onDone }: { brandId: string; brandName: string; onDone: () => void }) {
   const [reason, setReason] = useState('')
@@ -105,7 +105,7 @@ function RejectConfirm({ brandId, brandName, onDone }: { brandId: string; brandN
             disabled={rejectBrand.isPending}
             className="h-9 px-4 rounded bg-error text-white text-[13px] font-[600] font-public-sans hover:bg-error/90 transition-colors disabled:opacity-50"
           >
-            {rejectBrand.isPending ? 'Rejecting…' : 'Confirm Reject'}
+            {rejectBrand.isPending ? 'Rejectingâ€¦' : 'Confirm Reject'}
           </button>
         </div>
       </div>
@@ -113,7 +113,7 @@ function RejectConfirm({ brandId, brandName, onDone }: { brandId: string; brandN
   )
 }
 
-// ─── Drawer ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface Props {
   brandId: string | null
@@ -163,7 +163,7 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-warm bg-surface shrink-0">
           <h2 className="text-[17px] font-[600] font-playfair text-primary">
-            {isLoading ? 'Loading…' : brand?.brandName ?? 'Brand Details'}
+            {isLoading ? 'Loadingâ€¦' : brand?.brandName ?? 'Brand Details'}
           </h2>
           <button
             type="button"
@@ -225,10 +225,10 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
                   {[
                     { label: 'Products', value: brand._count?.products ?? 0 },
                     { label: 'Orders', value: brand._count?.orders ?? 0 },
-                    { label: 'Avg Rating', value: brand.avgRating > 0 ? brand.avgRating.toFixed(1) : '—' },
+                    { label: 'Avg Rating', value: brand.avgRating > 0 ? brand.avgRating.toFixed(1) : 'â€”' },
                   ].map(({ label, value }) => (
                     <div key={label} className="rounded border border-border-warm bg-surface p-3 text-center">
-                      <p className="text-[18px] font-[700] font-public-sans text-primary">{value}</p>
+                      <p className="text-[18px] font-[600] font-public-sans text-primary">{value}</p>
                       <p className="text-[11px] font-public-sans text-muted-text">{label}</p>
                     </div>
                   ))}
@@ -343,7 +343,7 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
                   )}
                 >
                   <CheckCircle size={14} aria-hidden="true" />
-                  {approveBrand.isPending ? 'Approving…' : 'Approve'}
+                  {approveBrand.isPending ? 'Approvingâ€¦' : 'Approve'}
                 </button>
                 <button
                   type="button"
@@ -367,7 +367,7 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
                   disabled={reactivateUser.isPending}
                   className="h-9 px-4 rounded border border-success/40 text-success bg-success/5 hover:bg-success/10 text-[13px] font-[600] font-public-sans transition-colors disabled:opacity-50"
                 >
-                  {reactivateUser.isPending ? 'Reactivating…' : 'Reactivate Brand'}
+                  {reactivateUser.isPending ? 'Reactivatingâ€¦' : 'Reactivate Brand'}
                 </button>
               ) : (
                 <button
@@ -376,7 +376,7 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
                   disabled={suspendUser.isPending}
                   className="h-9 px-4 rounded border border-error/40 text-error bg-error/5 hover:bg-error/10 text-[13px] font-[600] font-public-sans transition-colors disabled:opacity-50"
                 >
-                  {suspendUser.isPending ? 'Suspending…' : 'Suspend Brand'}
+                  {suspendUser.isPending ? 'Suspendingâ€¦' : 'Suspend Brand'}
                 </button>
               )
             )}

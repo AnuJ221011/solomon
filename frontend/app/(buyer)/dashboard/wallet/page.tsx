@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useWallet, type WalletCredit, type WalletCreditStatus } from '@/hooks/queries/useReferrals'
 
-// ─── Type badge ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Type badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function TypeBadge({ status }: { status: WalletCreditStatus }) {
   const config: Record<WalletCreditStatus, { label: string; className: string }> = {
@@ -27,7 +27,7 @@ function TypeBadge({ status }: { status: WalletCreditStatus }) {
   )
 }
 
-// ─── Toggle ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Toggle({
   checked,
@@ -65,7 +65,7 @@ function Toggle({
   )
 }
 
-// ─── Date formatter ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Date formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -75,7 +75,7 @@ function formatDate(iso: string) {
   })
 }
 
-// ─── Skeleton rows ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Skeleton rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SkeletonRow() {
   return (
@@ -89,7 +89,7 @@ function SkeletonRow() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function WalletPage() {
   const [autoApply, setAutoApply] = useState(true)
@@ -127,7 +127,7 @@ export default function WalletPage() {
             {isLoading ? (
               <div className="h-12 bg-white/10 rounded animate-pulse w-32 mt-2" />
             ) : (
-              <p className="text-[48px] leading-none font-[700] font-public-sans text-white mt-2">
+              <p className="text-[48px] leading-none font-[600] font-public-sans text-white mt-2">
                 &#x20B9;{balance.toLocaleString('en-IN')}
               </p>
             )}
@@ -146,7 +146,7 @@ export default function WalletPage() {
                 <div className="h-8 bg-white/10 rounded animate-pulse w-20 mt-1" />
               ) : (
                 <>
-                  <p className="text-[24px] font-[700] font-public-sans text-white leading-none mt-1">
+                  <p className="text-[24px] font-[600] font-public-sans text-white leading-none mt-1">
                     &#x20B9;{pendingAmount.toLocaleString('en-IN')}
                   </p>
                   <p className="text-[11px] font-public-sans text-white/50 mt-1">
@@ -252,7 +252,7 @@ export default function WalletPage() {
                         <td className="px-4 py-3">
                           <span
                             className={cn(
-                              'text-[14px] font-[700] font-public-sans tabular-nums',
+                              'text-[14px] font-[600] font-public-sans tabular-nums',
                               isPositive ? 'text-success' : isUsed ? 'text-error' : 'text-warning'
                             )}
                           >
@@ -266,7 +266,7 @@ export default function WalletPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-[13px] font-public-sans text-muted-text">
-                            {entry.expiresAt ? formatDate(entry.expiresAt) : '—'}
+                            {entry.expiresAt ? formatDate(entry.expiresAt) : 'â€”'}
                           </span>
                         </td>
                       </tr>

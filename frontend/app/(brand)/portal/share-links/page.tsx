@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Plus, Copy, Share2, Check, Trash2 } from 'lucide-react'
@@ -23,13 +23,13 @@ import {
   CreateShareLinkInput,
 } from '@/hooks/queries/useShareLinks'
 
-// ─── Summary card ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Summary card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-surface border border-border-warm rounded p-5">
       <p className="text-[12px] leading-[1.3] font-public-sans text-muted-text">{label}</p>
-      <p className="text-[28px] font-[700] font-public-sans text-primary mt-1 leading-none tabular-nums">
+      <p className="text-[28px] font-[600] font-public-sans text-primary mt-1 leading-none tabular-nums">
         {value}
       </p>
     </div>
@@ -45,7 +45,7 @@ function SummaryCardSkeleton() {
   )
 }
 
-// ─── Create link modal ────────────────────────────────────────────────────────
+// â”€â”€â”€ Create link modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateLinkModal() {
   const [open, setOpen] = useState(false)
@@ -98,7 +98,7 @@ function CreateLinkModal() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Paris Buyers — Winter 2025"
+              placeholder="e.g. Paris Buyers â€” Winter 2025"
               className="w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
             />
           </div>
@@ -157,12 +157,12 @@ function CreateLinkModal() {
               onChange={(e) => setCurrency(e.target.value)}
               className="w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
             >
-              <option value="">No lock — buyer's preference</option>
-              <option value="INR">INR — Indian Rupee</option>
-              <option value="USD">USD — US Dollar</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="GBP">GBP — British Pound</option>
-              <option value="AED">AED — UAE Dirham</option>
+              <option value="">No lock â€” buyer's preference</option>
+              <option value="INR">INR â€” Indian Rupee</option>
+              <option value="USD">USD â€” US Dollar</option>
+              <option value="EUR">EUR â€” Euro</option>
+              <option value="GBP">GBP â€” British Pound</option>
+              <option value="AED">AED â€” UAE Dirham</option>
             </select>
           </div>
         </div>
@@ -183,7 +183,7 @@ function CreateLinkModal() {
   )
 }
 
-// ─── Copy button ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Copy button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CopyButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
@@ -205,7 +205,7 @@ function CopyButton({ slug }: { slug: string }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ShareLinksPage() {
   const { data, isLoading } = useShareLinks()
@@ -258,7 +258,7 @@ export default function ShareLinksPage() {
       label: 'Revenue (INR)',
       sortable: true,
       render: (val: unknown) => (
-        <span className="tabular-nums text-[14px]">₹{Number(val).toLocaleString('en-IN')}</span>
+        <span className="tabular-nums text-[14px]">â‚¹{Number(val).toLocaleString('en-IN')}</span>
       ),
     },
     {
@@ -267,7 +267,7 @@ export default function ShareLinksPage() {
       sortable: true,
       render: (val: unknown) => (
         <span className="tabular-nums text-[14px] text-accent font-[600]">
-          ₹{Number(val).toLocaleString('en-IN')}
+          â‚¹{Number(val).toLocaleString('en-IN')}
         </span>
       ),
     },
@@ -346,7 +346,7 @@ export default function ShareLinksPage() {
             <SummaryCard label="Total Links" value={String(links.length)} />
             <SummaryCard
               label="Commission Saved"
-              value={`₹${totalCommission.toLocaleString('en-IN')}`}
+              value={`â‚¹${totalCommission.toLocaleString('en-IN')}`}
             />
             <SummaryCard label="Orders via Share Links" value={String(totalOrders)} />
           </>

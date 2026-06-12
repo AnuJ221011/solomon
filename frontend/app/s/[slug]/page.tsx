@@ -99,13 +99,13 @@ function ShareLinkBanner({ brandName }: { brandName: string }) {
   return (
     <div className="sticky top-16 z-30 bg-accent text-white px-4 py-2.5 flex items-center justify-between gap-4 shadow-sm">
       <p className="text-[13px] font-[500] font-public-sans leading-snug">
-        <span className="font-[700]">{brandName}</span> invited you to their wholesale catalogue — create a free account to place orders.
+        <span className="font-[600]">{brandName}</span> invited you to their wholesale catalogue — create a free account to place orders.
       </p>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
           type="button"
           onClick={() => openAuthModal('signup')}
-          className="h-7 px-3 rounded bg-white text-accent text-[12px] font-[700] font-public-sans hover:bg-white/90 transition-colors whitespace-nowrap"
+          className="h-7 px-3 rounded bg-white text-accent text-[12px] font-[600] font-public-sans hover:bg-white/90 transition-colors whitespace-nowrap"
         >
           Sign up free
         </button>
@@ -206,7 +206,7 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
               <Image src={brand.logo} alt={brand.name} width={80} height={80} className="object-cover w-full h-full" unoptimized />
             ) : (
               <div className="w-full h-full bg-muted-bg flex items-center justify-center">
-                <span className="text-[28px] font-[700] font-playfair text-muted-text">
+                <span className="text-[28px] font-[600] font-playfair text-muted-text">
                   {brand.name?.[0] ?? '?'}
                 </span>
               </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Truck, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useBrandOrders, useOrder, useUpdateOrderStatus } from '@/hooks/queries/useOrders'
 import type { OrderStatus } from '@/hooks/queries/useOrders'
 
-// ─── Status filter tabs ───────────────────────────────────────────────────────
+// â”€â”€â”€ Status filter tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type FilterValue = 'All' | OrderStatus
 
@@ -23,7 +23,7 @@ const STATUS_FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'Disputed', value: 'DISPUTED' },
 ]
 
-// ─── Order detail sheet ───────────────────────────────────────────────────────
+// â”€â”€â”€ Order detail sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OrderDetailSheet({
   orderId,
@@ -113,7 +113,7 @@ function OrderDetailSheet({
                           </p>
                         </div>
                         <p className="text-[14px] font-[600] font-public-sans text-primary tabular-nums">
-                          ₹{item.totalPrice.toLocaleString('en-IN')}
+                          â‚¹{item.totalPrice.toLocaleString('en-IN')}
                         </p>
                       </div>
                     ))}
@@ -124,8 +124,8 @@ function OrderDetailSheet({
               {/* Total */}
               <div className="flex items-center justify-between py-3 border-t border-border-warm mb-6">
                 <p className="text-[14px] font-[600] font-public-sans text-muted-text">Order Total</p>
-                <p className="text-[20px] font-[700] font-public-sans text-primary tabular-nums">
-                  ₹{order.amount.toLocaleString('en-IN')}
+                <p className="text-[20px] font-[600] font-public-sans text-primary tabular-nums">
+                  â‚¹{order.amount.toLocaleString('en-IN')}
                 </p>
               </div>
 
@@ -216,7 +216,7 @@ function OrderDetailSheet({
   )
 }
 
-// ─── Loading skeleton rows ────────────────────────────────────────────────────
+// â”€â”€â”€ Loading skeleton rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function TableSkeletonRows() {
   return (
@@ -235,7 +235,7 @@ function TableSkeletonRows() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const PAGE_LIMIT = 20
 
@@ -337,7 +337,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="tabular-nums text-[14px] font-public-sans">
-                        ₹{order.amount.toLocaleString('en-IN')}
+                        â‚¹{order.amount.toLocaleString('en-IN')}
                       </span>
                     </td>
                     <td className="px-4 py-3">

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { CheckCircle, Download, CreditCard } from 'lucide-react'
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { toast } from 'sonner'
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatusBadge({ status }: { status: AdminPayout['status'] }) {
   return (
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: AdminPayout['status'] }) {
   )
 }
 
-// ─── Row ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function PayoutRow({
   payout,
@@ -70,13 +70,13 @@ function PayoutRow({
         {payout.brandName}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-public-sans text-muted-text">
-        ₹{payout.grossAmount.toLocaleString('en-IN')}
+        â‚¹{payout.grossAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-public-sans text-muted-text">
-        {(payout.commissionRate * 100).toFixed(0)}% · ₹{payout.commissionAmount.toLocaleString('en-IN')}
+        {(payout.commissionRate * 100).toFixed(0)}% Â· â‚¹{payout.commissionAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-[600] font-public-sans text-primary">
-        ₹{payout.netAmount.toLocaleString('en-IN')}
+        â‚¹{payout.netAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4">
         <StatusBadge status={payout.status} />
@@ -106,7 +106,7 @@ function PayoutRow({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AdminPayoutsPage() {
   const [tab, setTab] = useState<'PENDING' | 'ALL'>('PENDING')
@@ -263,7 +263,7 @@ export default function AdminPayoutsPage() {
                     <th
                       key={h}
                       className={cn(
-                        'py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]',
+                        'py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]',
                         ['Gross', 'Commission', 'Net'].includes(h) ? 'text-right' : 'text-left'
                       )}
                     >

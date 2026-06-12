@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -22,7 +22,7 @@ import {
 import api from '@/lib/api'
 import type { Order } from '@/types'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatINR(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -32,7 +32,7 @@ function formatINR(amount: number) {
   }).format(amount)
 }
 
-// ─── Countries ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Countries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const COUNTRIES = [
   'Australia',
@@ -50,7 +50,7 @@ const COUNTRIES = [
   'Other',
 ]
 
-// ─── Section heading ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Section heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -60,7 +60,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── Order confirmation state ─────────────────────────────────────────────────
+// â”€â”€â”€ Order confirmation state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OrderConfirmed({ order }: { order: Order }) {
   return (
@@ -90,7 +90,7 @@ function OrderConfirmed({ order }: { order: Order }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ShippingForm {
   fullName: string
@@ -143,7 +143,7 @@ export default function CheckoutPage() {
     setShipping((f) => ({ ...f, [field]: value }))
   }
 
-  // ── Auth gate ───────────────────────────────────────────────────────────────
+  // â”€â”€ Auth gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!user) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // ── Empty cart ──────────────────────────────────────────────────────────────
+  // â”€â”€ Empty cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (items.length === 0 && !confirmedOrder) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // ── Confirmed ───────────────────────────────────────────────────────────────
+  // â”€â”€ Confirmed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (confirmedOrder) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -203,7 +203,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // ── Place order ─────────────────────────────────────────────────────────────
+  // â”€â”€ Place order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -260,7 +260,7 @@ export default function CheckoutPage() {
 
         <form onSubmit={handlePlaceOrder} noValidate>
           <div className="lg:grid lg:grid-cols-[1fr_360px] gap-12 items-start">
-            {/* ── Left: Shipping form ── */}
+            {/* â”€â”€ Left: Shipping form â”€â”€ */}
             <div className="flex flex-col gap-8">
               {/* Shipping address */}
               <section>
@@ -429,7 +429,7 @@ export default function CheckoutPage() {
               </section>
             </div>
 
-            {/* ── Right: Order summary ── */}
+            {/* â”€â”€ Right: Order summary â”€â”€ */}
             <aside className="sticky top-24 mt-8 lg:mt-0">
               <div className="bg-surface border border-border-warm rounded p-6">
                 <h2 className="text-[14px] leading-[1.4] font-[600] font-public-sans text-primary mb-4">
@@ -483,7 +483,7 @@ export default function CheckoutPage() {
 
                 <div className="border-t border-border-warm pt-4 flex justify-between mb-6">
                   <span className="text-[14px] font-[600] font-public-sans text-primary">Total</span>
-                  <span className="text-[18px] font-[700] font-public-sans text-primary">{formatINR(total)}</span>
+                  <span className="text-[18px] font-[600] font-public-sans text-primary">{formatINR(total)}</span>
                 </div>
 
                 {error && (
@@ -499,7 +499,7 @@ export default function CheckoutPage() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? 'Placing order…' : 'Place order'}
+                  {loading ? 'Placing orderâ€¦' : 'Place order'}
                 </Button>
 
                 <p className="mt-3 text-[11px] font-public-sans text-muted-text text-center leading-[1.4]">

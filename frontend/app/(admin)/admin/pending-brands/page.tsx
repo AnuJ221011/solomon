@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { CheckCircle, XCircle, ExternalLink, Clock } from 'lucide-react'
@@ -11,7 +11,7 @@ import {
 import { BrandDetailDrawer } from '@/components/admin/BrandDetailDrawer'
 import { cn } from '@/lib/utils'
 
-// ─── Reject modal ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Reject modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => void }) {
   const [reason, setReason] = useState('')
@@ -53,7 +53,7 @@ function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => v
             disabled={rejectBrand.isPending}
             className="h-9 px-4 rounded bg-error text-white text-[13px] font-[600] font-public-sans hover:bg-error/90 transition-colors disabled:opacity-50"
           >
-            {rejectBrand.isPending ? 'Rejecting…' : 'Confirm Reject'}
+            {rejectBrand.isPending ? 'Rejectingâ€¦' : 'Confirm Reject'}
           </button>
         </div>
       </div>
@@ -61,7 +61,7 @@ function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => v
   )
 }
 
-// ─── Row ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BrandRow({ brand, onReject, onSelect }: { brand: PendingBrand; onReject: (b: PendingBrand) => void; onSelect: (id: string) => void }) {
   const approveBrand = useApproveBrand()
@@ -132,7 +132,7 @@ function BrandRow({ brand, onReject, onSelect }: { brand: PendingBrand; onReject
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function PendingBrandsPage() {
   const { data: brands, isLoading } = useAdminPendingBrands()
@@ -178,11 +178,11 @@ export default function PendingBrandsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-warm bg-muted-bg/40">
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Brand</th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Category</th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Location</th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Catalogue</th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Applied</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]">Brand</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]">Category</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]">Location</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]">Catalogue</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]">Applied</th>
                   <th className="py-3 px-4" />
                 </tr>
               </thead>

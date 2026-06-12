@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Zap, Clock, Download } from 'lucide-react'
@@ -9,7 +9,7 @@ import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
 import { useBrandOrders, Order } from '@/hooks/queries/useOrders'
 import api from '@/lib/api'
 
-// ─── Payout speed option ──────────────────────────────────────────────────────
+// â”€â”€â”€ Payout speed option â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface SpeedOptionProps {
   icon: React.ReactNode
@@ -53,7 +53,7 @@ function SpeedOption({ icon, title, subtitle, selected, onSelect }: SpeedOptionP
   )
 }
 
-// ─── Derive payout row from order ─────────────────────────────────────────────
+// â”€â”€â”€ Derive payout row from order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface PayoutRow {
   id: string
@@ -66,7 +66,7 @@ interface PayoutRow {
 }
 
 function derivePayoutRow(order: Order): PayoutRow {
-  // Estimate commission at 8% if achievement level unknown — show "N/A" label handled in column
+  // Estimate commission at 8% if achievement level unknown â€” show "N/A" label handled in column
   const commissionRate = 0.08
   const net = Math.round(order.amount * (1 - commissionRate))
   // DELIVERED orders are treated as PAID
@@ -83,7 +83,7 @@ function derivePayoutRow(order: Order): PayoutRow {
   }
 }
 
-// ─── Summary card skeleton ────────────────────────────────────────────────────
+// â”€â”€â”€ Summary card skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatCard({
   label,
@@ -99,7 +99,7 @@ function StatCard({
   return (
     <div className="bg-surface border border-border-warm rounded p-5">
       <p className="text-[12px] font-public-sans text-muted-text">{label}</p>
-      <p className="text-[28px] font-[700] font-public-sans text-primary mt-1 tabular-nums leading-none">
+      <p className="text-[28px] font-[600] font-public-sans text-primary mt-1 tabular-nums leading-none">
         {value}
       </p>
       {sub && (
@@ -119,7 +119,7 @@ function StatCardSkeleton() {
   )
 }
 
-// ─── Export CSV ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Export CSV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function exportCsv() {
   try {
@@ -133,11 +133,11 @@ async function exportCsv() {
     a.click()
     URL.revokeObjectURL(url)
   } catch {
-    // Endpoint not yet available — silently ignore
+    // Endpoint not yet available â€” silently ignore
   }
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function PayoutsPage() {
   const [speedMode, setSpeedMode] = useState<'standard' | 'express'>('standard')
@@ -158,7 +158,7 @@ export default function PayoutsPage() {
 
   const payoutRows: PayoutRow[] = deliveredOrders.map(derivePayoutRow)
 
-  // Summary values — prefer dashboard stats if available, fallback to derived
+  // Summary values â€” prefer dashboard stats if available, fallback to derived
   const pendingTotal = pendingOrders.reduce(
     (sum, o) => sum + Math.round(o.amount * 0.92),
     0
@@ -206,7 +206,7 @@ export default function PayoutsPage() {
       label: 'Gross',
       sortable: true,
       render: (val: unknown) => (
-        <span className="tabular-nums text-[14px]">₹{Number(val).toLocaleString('en-IN')}</span>
+        <span className="tabular-nums text-[14px]">â‚¹{Number(val).toLocaleString('en-IN')}</span>
       ),
     },
     {
@@ -219,7 +219,7 @@ export default function PayoutsPage() {
           <div>
             <span className="text-[13px] font-public-sans text-muted-text">8%</span>
             <span className="text-[13px] font-public-sans text-muted-text ml-1.5">
-              (₹{commission.toLocaleString('en-IN')})
+              (â‚¹{commission.toLocaleString('en-IN')})
             </span>
           </div>
         )
@@ -231,7 +231,7 @@ export default function PayoutsPage() {
       sortable: true,
       render: (val: unknown) => (
         <span className="tabular-nums text-[14px] font-[600] text-primary">
-          ₹{Number(val).toLocaleString('en-IN')}
+          â‚¹{Number(val).toLocaleString('en-IN')}
         </span>
       ),
     },
@@ -247,7 +247,7 @@ export default function PayoutsPage() {
         }
         return (
           <Badge variant={variants[status]}>
-            {status ? status.charAt(0) + status.slice(1).toLowerCase() : '—'}
+            {status ? status.charAt(0) + status.slice(1).toLowerCase() : 'â€”'}
           </Badge>
         )
       },
@@ -279,21 +279,21 @@ export default function PayoutsPage() {
         <div className="flex gap-3 max-w-[600px]">
           <SpeedOption
             icon={<Clock size={16} />}
-            title="Standard — Net 30"
+            title="Standard â€” Net 30"
             subtitle="No fee. Settle within 30 days of delivery."
             selected={speedMode === 'standard'}
             onSelect={() => setSpeedMode('standard')}
           />
           <SpeedOption
             icon={<Zap size={16} />}
-            title="Express — Next Day"
+            title="Express â€” Next Day"
             subtitle="2.5% fee. Payout next business day."
             selected={speedMode === 'express'}
             onSelect={() => setSpeedMode('express')}
           />
         </div>
         <p className="text-[11px] font-public-sans text-muted-text mt-2">
-          Payout speed preference is informational — bank integrations coming soon.
+          Payout speed preference is informational â€” bank integrations coming soon.
         </p>
       </div>
 
@@ -309,19 +309,19 @@ export default function PayoutsPage() {
           <>
             <StatCard
               label="Pending Payout"
-              value={`₹${pendingTotal.toLocaleString('en-IN')}`}
+              value={`â‚¹${pendingTotal.toLocaleString('en-IN')}`}
               sub={`${pendingOrders.length} orders`}
               subColor="text-warning"
             />
             <StatCard
               label="This Month Paid"
-              value={`₹${paidThisMonth.toLocaleString('en-IN')}`}
+              value={`â‚¹${paidThisMonth.toLocaleString('en-IN')}`}
               sub={thisMonthLabel}
               subColor="text-success"
             />
             <StatCard
               label="Total Paid (All time)"
-              value={`₹${totalPaid.toLocaleString('en-IN')}`}
+              value={`â‚¹${totalPaid.toLocaleString('en-IN')}`}
               sub="Since onboarding"
             />
           </>

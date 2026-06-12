@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Clipboard, CheckCheck, MessageCircle, Mail, Trophy } from 'lucide-react'
@@ -12,7 +12,7 @@ import {
   type LeaderboardEntry,
 } from '@/hooks/queries/useReferrals'
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatCard({
   label,
@@ -33,8 +33,8 @@ function StatCard({
       {loading ? (
         <div className="h-8 bg-muted-bg rounded animate-pulse w-16 mt-2" />
       ) : (
-        <p className="text-[28px] font-[700] font-public-sans text-primary leading-none mt-2">
-          {value ?? '—'}
+        <p className="text-[28px] font-[600] font-public-sans text-primary leading-none mt-2">
+          {value ?? 'â€”'}
         </p>
       )}
       {sub && (
@@ -44,7 +44,7 @@ function StatCard({
   )
 }
 
-// ─── Referral status badge ────────────────────────────────────────────────────
+// â”€â”€â”€ Referral status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
   return (
@@ -62,7 +62,7 @@ function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false)
@@ -83,7 +83,7 @@ export default function ReferralsPage() {
 
   function shareWhatsApp() {
     const text = encodeURIComponent(
-      `Join Solomon Bharat — India's finest B2B wholesale marketplace. Use my referral link: ${referralLink}`
+      `Join Solomon Bharat â€” India's finest B2B wholesale marketplace. Use my referral link: ${referralLink}`
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -188,7 +188,7 @@ export default function ReferralsPage() {
         {leaderboardData && (
           <StatCard
             label="Leaderboard Rank"
-            value={leaderboardData.rank ? `#${leaderboardData.rank}` : '—'}
+            value={leaderboardData.rank ? `#${leaderboardData.rank}` : 'â€”'}
             sub={leaderboardData.total ? `of ${leaderboardData.total} referrers` : undefined}
             loading={leaderboardLoading}
           />
@@ -239,7 +239,7 @@ export default function ReferralsPage() {
                     <tr key={ref.id} className="border-b border-border-warm last:border-0">
                       <td className="px-4 py-3">
                         <span className="text-[14px] font-[600] font-public-sans text-primary">
-                          {ref.referredEmail ?? '—'}
+                          {ref.referredEmail ?? 'â€”'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -311,7 +311,7 @@ export default function ReferralsPage() {
                     <span
                       className={cn(
                         'w-7 h-7 flex items-center justify-center rounded',
-                        'text-[12px] font-[700] font-public-sans',
+                        'text-[12px] font-[600] font-public-sans',
                         entry.rank === 1
                           ? 'bg-accent text-white'
                           : 'bg-muted-bg text-muted-text'
@@ -322,7 +322,7 @@ export default function ReferralsPage() {
                     <span
                       className={cn(
                         'text-[14px] font-public-sans',
-                        entry.isCurrentUser ? 'font-[700] text-accent' : 'font-[400] text-primary'
+                        entry.isCurrentUser ? 'font-[600] text-accent' : 'font-[400] text-primary'
                       )}
                     >
                       {entry.name}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { CheckCircle, Circle, Download, AlertTriangle } from 'lucide-react'
@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { useMyOrders, useOrder } from '@/hooks/queries/useOrders'
 import type { Order, OrderStatus } from '@/hooks/queries/useOrders'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type FilterTab = 'All' | 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'DISPUTED'
 
@@ -30,7 +30,7 @@ const TAB_LABELS: Record<FilterTab, string> = {
   DISPUTED: 'Disputed',
 }
 
-// ─── Price formatter ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Price formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatINR(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -40,7 +40,7 @@ function formatINR(amount: number) {
   }).format(amount)
 }
 
-// ─── Date formatter ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Date formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -50,7 +50,7 @@ function formatDate(iso: string) {
   })
 }
 
-// ─── Status timeline steps ────────────────────────────────────────────────────
+// â”€â”€â”€ Status timeline steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TIMELINE_STEPS: OrderStatus[] = ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED']
 
@@ -58,7 +58,7 @@ function getStepIndex(status: OrderStatus): number {
   return TIMELINE_STEPS.indexOf(status)
 }
 
-// ─── Skeleton table row ───────────────────────────────────────────────────────
+// â”€â”€â”€ Skeleton table row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SkeletonRow() {
   return (
@@ -72,7 +72,7 @@ function SkeletonRow() {
   )
 }
 
-// ─── Order Detail Sheet ───────────────────────────────────────────────────────
+// â”€â”€â”€ Order Detail Sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OrderDetailSheet({
   orderId,
@@ -169,7 +169,7 @@ function OrderDetailSheet({
                 {/* Total */}
                 <div className="mt-4 pt-4 border-t border-border-warm flex justify-between">
                   <span className="text-[14px] font-[600] font-public-sans text-muted-text">Total</span>
-                  <span className="text-[16px] font-[700] font-public-sans text-primary">
+                  <span className="text-[16px] font-[600] font-public-sans text-primary">
                     {formatINR(order.amount)}
                   </span>
                 </div>
@@ -209,7 +209,7 @@ function OrderDetailSheet({
                                   : 'text-muted-text'
                               )}
                             >
-                              {step ? step.charAt(0) + step.slice(1).toLowerCase() : '—'}
+                              {step ? step.charAt(0) + step.slice(1).toLowerCase() : 'â€”'}
                             </p>
                             {step === 'CONFIRMED' && order.createdAt && (
                               <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
@@ -284,7 +284,7 @@ function OrderDetailSheet({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('All')
@@ -402,7 +402,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-[13px] font-public-sans text-muted-text">
-                          {itemCount > 0 ? `${itemCount} items` : '—'}
+                          {itemCount > 0 ? `${itemCount} items` : 'â€”'}
                         </span>
                       </td>
                       <td className="px-4 py-3">

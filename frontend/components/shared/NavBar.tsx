@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet'
 import { useCategories } from '@/hooks/queries/useCategories'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD']
 
@@ -20,7 +20,7 @@ const NAV_LINKS = [
   { href: '/brands', label: 'Brands' },
 ]
 
-// ─── Scroll hook ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Scroll hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function useScrolled(threshold = 24) {
   const [scrolled, setScrolled] = useState(false)
@@ -33,7 +33,7 @@ function useScrolled(threshold = 24) {
   return scrolled
 }
 
-// ─── Outside-click hook ───────────────────────────────────────────────────────
+// â”€â”€â”€ Outside-click hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function useOutsideClick(ref: React.RefObject<HTMLElement | null>, handler: () => void, enabled: boolean) {
   useEffect(() => {
@@ -46,7 +46,7 @@ function useOutsideClick(ref: React.RefObject<HTMLElement | null>, handler: () =
   }, [ref, handler, enabled])
 }
 
-// ─── Categories megamenu ──────────────────────────────────────────────────────
+// â”€â”€â”€ Categories megamenu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CategoriesMenu({ ghost }: { ghost: boolean }) {
   const { data: categories = [] } = useCategories()
@@ -86,7 +86,7 @@ function CategoriesMenu({ ghost }: { ghost: boolean }) {
         >
           <div className="bg-surface border border-border-warm rounded shadow-[0_8px_40px_rgba(26,26,26,0.10)] p-5">
             {categories.length === 0 ? (
-              <p className="text-[13px] font-public-sans text-muted-text">Loading…</p>
+              <p className="text-[13px] font-public-sans text-muted-text">Loadingâ€¦</p>
             ) : (
               <>
                 <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
@@ -112,7 +112,7 @@ function CategoriesMenu({ ghost }: { ghost: boolean }) {
                     onClick={() => setOpen(false)}
                     className="text-[13px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors"
                   >
-                    Browse all products →
+                    Browse all products â†’
                   </Link>
                 </div>
               </>
@@ -124,7 +124,7 @@ function CategoriesMenu({ ghost }: { ghost: boolean }) {
   )
 }
 
-// ─── Currency selector ────────────────────────────────────────────────────────
+// â”€â”€â”€ Currency selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CurrencySelector({ ghost }: { ghost: boolean }) {
   const currency = useCurrencyStore((s) => s.currency)
@@ -160,7 +160,7 @@ function CurrencySelector({ ghost }: { ghost: boolean }) {
               onClick={() => { setCurrency(c); setOpen(false) }}
               className={cn(
                 'w-full text-left px-3 py-2 text-[13px] font-[500] font-public-sans hover:bg-muted-bg transition-colors',
-                c === currency ? 'text-primary font-[700]' : 'text-muted-text'
+                c === currency ? 'text-primary font-[600]' : 'text-muted-text'
               )}
             >
               {c}
@@ -172,7 +172,7 @@ function CurrencySelector({ ghost }: { ghost: boolean }) {
   )
 }
 
-// ─── Cart button ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Cart button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CartButton({ ghost }: { ghost: boolean }) {
   const items = useCartStore((s) => s.items)
@@ -187,7 +187,7 @@ function CartButton({ ghost }: { ghost: boolean }) {
   return (
     <Link
       href={cartHref}
-      aria-label={`Cart — ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
+      aria-label={`Cart â€” ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
       className={cn(
         'relative inline-flex items-center justify-center w-10 h-10 rounded transition-colors',
         ghost ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-primary hover:bg-muted-bg'
@@ -195,7 +195,7 @@ function CartButton({ ghost }: { ghost: boolean }) {
     >
       <ShoppingBag size={18} aria-hidden="true" />
       {totalItems > 0 && (
-        <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] rounded-full bg-accent text-white text-[9px] font-[700] font-public-sans flex items-center justify-center px-0.5 tabular-nums leading-none pointer-events-none">
+        <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] rounded-full bg-accent text-white text-[9px] font-[600] font-public-sans flex items-center justify-center px-0.5 tabular-nums leading-none pointer-events-none">
           {totalItems > 99 ? '99+' : totalItems}
         </span>
       )}
@@ -203,7 +203,7 @@ function CartButton({ ghost }: { ghost: boolean }) {
   )
 }
 
-// ─── User dropdown ────────────────────────────────────────────────────────────
+// â”€â”€â”€ User dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function UserDropdown({ ghost }: { ghost: boolean }) {
   const user = useAuthStore((s) => s.user)
@@ -273,7 +273,7 @@ function UserDropdown({ ghost }: { ghost: boolean }) {
   )
 }
 
-// ─── Search input ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Search input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SearchInput({ className, ghost }: { className?: string; ghost: boolean }) {
   return (
@@ -285,7 +285,7 @@ function SearchInput({ className, ghost }: { className?: string; ghost: boolean 
       />
       <input
         type="search"
-        placeholder="Search brands and products…"
+        placeholder="Search brands and productsâ€¦"
         className={cn(
           'w-full h-10 rounded border pl-9 pr-4 text-[14px] font-public-sans outline-none transition-colors',
           ghost
@@ -297,7 +297,7 @@ function SearchInput({ className, ghost }: { className?: string; ghost: boolean 
   )
 }
 
-// ─── Mobile nav drawer ────────────────────────────────────────────────────────
+// â”€â”€â”€ Mobile nav drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -406,7 +406,7 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
-// ─── NavBar ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ NavBar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface NavBarProps {
   transparent?: boolean
@@ -439,7 +439,7 @@ export function NavBar({ transparent = false }: NavBarProps) {
           {/* Wordmark */}
           <Link
             href="/"
-            aria-label="Solomon Bharat — home"
+            aria-label="Solomon Bharat â€” home"
             className={cn(
               'font-playfair text-[22px] font-[600] leading-none flex-shrink-0 mr-2 transition-colors duration-300',
               ghost ? 'text-white' : 'text-primary'
@@ -465,7 +465,7 @@ export function NavBar({ transparent = false }: NavBarProps) {
             <CategoriesMenu ghost={ghost} />
           </nav>
 
-          {/* Search — center, flex-1 */}
+          {/* Search â€” center, flex-1 */}
           <div className="hidden md:flex flex-1 justify-center px-4">
             <SearchInput ghost={ghost} className="max-w-[420px] w-full" />
           </div>

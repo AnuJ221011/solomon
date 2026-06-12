@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { Plus, Upload, Link2, Trash2, X } from 'lucide-react'
@@ -10,7 +10,7 @@ import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 import { cn } from '@/lib/utils'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const PRODUCT_CATEGORIES = [
   'Textiles', 'Home Decor', 'Jewellery', 'Accessories', 'Apparel',
@@ -43,7 +43,7 @@ const SHIPPING_ZONES = [
   { key: 'REST_OF_WORLD', label: 'Rest of World' },
 ]
 
-// ─── UI helpers ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -75,7 +75,7 @@ const INPUT_CLS =
 const TEXTAREA_CLS =
   'w-full px-3 py-2 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TeamMember {
   id: string
@@ -99,7 +99,7 @@ interface ZoneRateState {
   freeShippingAboveInr: string
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function SettingsPage() {
   const queryClient = useQueryClient()
@@ -107,7 +107,7 @@ export default function SettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'Manager' | 'Viewer'>('Viewer')
 
-  // ── Brand profile fields ───────────────────────────────────────────────────
+  // â”€â”€ Brand profile fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [brandName, setBrandName] = useState('')
   const [city, setCity] = useState('')
   const [stateName, setStateName] = useState('')
@@ -127,14 +127,14 @@ export default function SettingsPage() {
   const [businessRegNumber, setBusinessRegNumber] = useState('')
   const [minimumOrderValue, setMinimumOrderValue] = useState('')
 
-  // ── Shipping zone state ────────────────────────────────────────────────────
-  // map of zone key → { flatRateInr, freeShippingAboveInr }
+  // â”€â”€ Shipping zone state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // map of zone key â†’ { flatRateInr, freeShippingAboveInr }
   const [zoneRates, setZoneRates] = useState<Record<string, ZoneRateState>>(() =>
     Object.fromEntries(SHIPPING_ZONES.map((z) => [z.key, { flatRateInr: '', freeShippingAboveInr: '' }]))
   )
   const [savingShipping, setSavingShipping] = useState(false)
 
-  // ── Queries ────────────────────────────────────────────────────────────────
+  // â”€â”€ Queries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { data: team = [], isLoading: teamLoading } = useQuery<TeamMember[]>({
     queryKey: ['brand-team'],
     queryFn: () => api.get('/team').then((r) => r.data.data ?? []),
@@ -150,7 +150,7 @@ export default function SettingsPage() {
     queryFn: () => api.get('/brands/me/profile').then((r) => r.data.data),
   })
 
-  // ── Populate brand profile form ────────────────────────────────────────────
+  // â”€â”€ Populate brand profile form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!brandProfile) return
     setBrandName(brandProfile.brandName ?? '')
@@ -172,7 +172,7 @@ export default function SettingsPage() {
     setMinimumOrderValue(brandProfile.minimumOrderValue != null ? String(brandProfile.minimumOrderValue) : '')
   }, [brandProfile])
 
-  // ── Populate shipping zone rates ───────────────────────────────────────────
+  // â”€â”€ Populate shipping zone rates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!shippingRates.length) return
     setZoneRates((prev) => {
@@ -187,7 +187,7 @@ export default function SettingsPage() {
     })
   }, [shippingRates])
 
-  // ── Mutations ──────────────────────────────────────────────────────────────
+  // â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const updateProfile = useMutation({
     mutationFn: (body: Record<string, unknown>) => api.patch('/brands/me/profile', body),
     onSuccess: () => {
@@ -287,7 +287,7 @@ export default function SettingsPage() {
     <div>
       <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary mb-6">Settings</h1>
 
-      {/* ── Brand Profile ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Brand Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Brand Profile" description="Basic information about your brand.">
         <div className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -325,8 +325,8 @@ export default function SettingsPage() {
                     className="w-12 h-12 rounded border border-border-warm object-cover" />
                 ) : (
                   <div className="w-12 h-12 rounded border border-border-warm bg-muted-bg flex items-center justify-center">
-                    <span className="text-[16px] font-[700] font-playfair text-muted-text">
-                      {brandName.slice(0, 2).toUpperCase() || '—'}
+                    <span className="text-[16px] font-[600] font-playfair text-muted-text">
+                      {brandName.slice(0, 2).toUpperCase() || 'â€”'}
                     </span>
                   </div>
                 )}
@@ -354,8 +354,8 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Brand Story ────────────────────────────────────────────────────── */}
-      <Section title="Brand Story" description="Tell buyers about your brand — this appears on your storefront.">
+      {/* â”€â”€ Brand Story â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <Section title="Brand Story" description="Tell buyers about your brand â€” this appears on your storefront.">
         <div className="space-y-5">
           <Field label="Brand Story" hint="Share your origin story and what makes your brand special (max 1000 characters).">
             <textarea rows={5} value={brandStory} onChange={(e) => setBrandStory(e.target.value)}
@@ -373,7 +373,7 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Categories ─────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Product Categories" description="The categories your products fall under.">
         <div className="flex flex-wrap gap-2">
           {categoryOptions.map((cat) => (
@@ -420,7 +420,7 @@ export default function SettingsPage() {
         )}
       </Section>
 
-      {/* ── Online Presence ─────────────────────────────────────────────────── */}
+      {/* â”€â”€ Online Presence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Online Presence" description="Your website and social media links.">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <Field label="Instagram Handle">
@@ -438,7 +438,7 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Business Details ────────────────────────────────────────────────── */}
+      {/* â”€â”€ Business Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Business Details" description="Legal and operational details for your brand.">
         <div className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -452,9 +452,9 @@ export default function SettingsPage() {
             </Field>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <Field label="Minimum Order Value (₹)" hint="Minimum order value buyers must meet to place an order.">
+            <Field label="Minimum Order Value (â‚¹)" hint="Minimum order value buyers must meet to place an order.">
               <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
-                <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">₹</span>
+                <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">â‚¹</span>
                 <input type="number" min={0} value={minimumOrderValue} onChange={(e) => setMinimumOrderValue(e.target.value)}
                   placeholder="e.g. 5000"
                   className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none" />
@@ -464,14 +464,14 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Save profile ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Save profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex justify-end mb-6">
         <Button size="md" onClick={handleSaveProfile} disabled={updateProfile.isPending}>
-          {updateProfile.isPending ? 'Saving…' : 'Save Changes'}
+          {updateProfile.isPending ? 'Savingâ€¦' : 'Save Changes'}
         </Button>
       </div>
 
-      {/* ── Shipping Zones ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Shipping Zones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Shipping Zones" description="Set flat shipping rates per zone. Leave a rate blank to disable that zone.">
         <div className="divide-y divide-border-warm">
           {SHIPPING_ZONES.map((z) => (
@@ -481,13 +481,13 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[12px] font-public-sans text-muted-text hidden sm:inline">Flat rate</span>
                 <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
-                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">₹</span>
+                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">â‚¹</span>
                   <input
                     type="number"
                     min={0}
                     value={zoneRates[z.key]?.flatRateInr ?? ''}
                     onChange={(e) => setZoneField(z.key, 'flatRateInr', e.target.value)}
-                    placeholder="—"
+                    placeholder="â€”"
                     className="w-20 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none text-right tabular-nums"
                   />
                 </div>
@@ -496,13 +496,13 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[12px] font-public-sans text-muted-text hidden sm:inline">Free above</span>
                 <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
-                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">₹</span>
+                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">â‚¹</span>
                   <input
                     type="number"
                     min={0}
                     value={zoneRates[z.key]?.freeShippingAboveInr ?? ''}
                     onChange={(e) => setZoneField(z.key, 'freeShippingAboveInr', e.target.value)}
-                    placeholder="—"
+                    placeholder="â€”"
                     className="w-24 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none text-right tabular-nums"
                   />
                 </div>
@@ -512,12 +512,12 @@ export default function SettingsPage() {
         </div>
         <div className="flex justify-end mt-4 pt-4 border-t border-border-warm">
           <Button size="sm" onClick={handleSaveShipping} disabled={savingShipping}>
-            {savingShipping ? 'Saving…' : 'Save Shipping'}
+            {savingShipping ? 'Savingâ€¦' : 'Save Shipping'}
           </Button>
         </div>
       </Section>
 
-      {/* ── Team Members ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Team Members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Team Members" description="Manage who has access to your brand portal.">
         {teamLoading ? (
           <div className="space-y-2 mb-4">
@@ -530,7 +530,7 @@ export default function SettingsPage() {
             {team.map((member) => (
               <div key={member.id} className="flex items-center gap-4 py-3 border-b border-border-warm last:border-0">
                 <div className="w-9 h-9 rounded bg-muted-bg flex items-center justify-center shrink-0">
-                  <span className="text-[12px] font-[700] font-public-sans text-muted-text">
+                  <span className="text-[12px] font-[600] font-public-sans text-muted-text">
                     {member.name?.split(' ').filter(Boolean).map((n) => n[0]).join('') ?? '?'}
                   </span>
                 </div>
@@ -571,12 +571,12 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Integrations ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Integrations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <Section title="Integrations" description="Connect your store and manage data sync.">
         <div className="space-y-4">
           <div className="flex items-center gap-4 p-4 border border-border-warm rounded">
             <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0">
-              <span className="text-[14px] font-[700] font-public-sans text-muted-text">Sp</span>
+              <span className="text-[14px] font-[600] font-public-sans text-muted-text">Sp</span>
             </div>
             <div className="flex-1">
               <p className="text-[14px] font-[600] font-public-sans text-primary">Shopify</p>
@@ -594,7 +594,7 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center gap-4 p-4 border border-border-warm rounded">
             <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0">
-              <span className="text-[12px] font-[700] font-public-sans text-muted-text">CSV</span>
+              <span className="text-[12px] font-[600] font-public-sans text-muted-text">CSV</span>
             </div>
             <div className="flex-1">
               <p className="text-[14px] font-[600] font-public-sans text-primary">CSV Import / Export</p>

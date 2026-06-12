@@ -70,7 +70,7 @@ function BrandMiniCard({
         <div className="w-7 h-7 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
           {brandSlug
             ? <img src={`https://picsum.photos/seed/${brandSlug}-logo/56/56`} alt="" className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-[10px] font-[700] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
+            : <div className="w-full h-full flex items-center justify-center text-[10px] font-[600] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
           }
         </div>
         <span className="font-public-sans text-[13px] font-[600] text-primary truncate">{brandName}</span>
@@ -104,7 +104,7 @@ function CartItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void 
       {/* Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
-          <p className="font-public-sans text-[15px] font-[700] text-primary leading-snug mb-0.5">
+          <p className="font-public-sans text-[15px] font-[600] text-primary leading-snug mb-0.5">
             {item.productName}
           </p>
           <p className="font-public-sans text-[13px] text-muted-text">
@@ -124,7 +124,7 @@ function CartItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void 
             >
               <Minus size={13} aria-hidden="true" />
             </button>
-            <span className="w-12 h-9 flex items-center justify-center text-[14px] font-[700] font-public-sans text-primary border-x border-border-warm select-none tabular-nums">
+            <span className="w-12 h-9 flex items-center justify-center text-[14px] font-[600] font-public-sans text-primary border-x border-border-warm select-none tabular-nums">
               {item.quantity}
             </span>
             <button
@@ -147,7 +147,7 @@ function CartItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void 
 
           {/* Price inline at bottom-right */}
           <div className="ml-auto text-right">
-            <p className="font-public-sans text-[15px] font-[700] text-primary tabular-nums">
+            <p className="font-public-sans text-[15px] font-[600] text-primary tabular-nums">
               {fmt(item.wholesalePrice * item.quantity)}
             </p>
             <p className="font-public-sans text-[11px] text-muted-text mt-0.5 tabular-nums">
@@ -273,11 +273,11 @@ export default function BrandCartPage({
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
                   {brandSlug
                     ? <img src={`https://picsum.photos/seed/${brandSlug}-logo/96/96`} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-[13px] font-[700] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
+                    : <div className="w-full h-full flex items-center justify-center text-[13px] font-[600] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
                   }
                 </div>
                 <div>
-                  <h1 className="font-public-sans text-[18px] font-[700] text-primary leading-tight">
+                  <h1 className="font-public-sans text-[18px] font-[600] text-primary leading-tight">
                     {brandName}
                   </h1>
                   <p className="font-public-sans text-[12px] text-accent">
@@ -319,7 +319,7 @@ export default function BrandCartPage({
 
             {/* Ships + delivery line */}
             <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <span className="font-public-sans text-[13px] font-[700] text-primary">
+              <span className="font-public-sans text-[13px] font-[600] text-primary">
                 Ships in {formatLeadTime(leadTime)}
               </span>
               <span className="text-border-warm" aria-hidden="true">|</span>
@@ -345,14 +345,14 @@ export default function BrandCartPage({
               {/* Order summary */}
               <aside className="hidden lg:block w-[280px] flex-shrink-0 sticky top-[88px]">
                 <div className="bg-surface border border-border-warm rounded-xl p-5">
-                  <h2 className="font-public-sans text-[18px] font-[700] text-primary mb-4">
+                  <h2 className="font-public-sans text-[18px] font-[600] text-primary mb-4">
                     Order summary
                   </h2>
 
                   <div className="flex flex-col gap-2.5 mb-4">
                     <div className="flex items-center justify-between">
                       <span className="font-public-sans text-[14px] text-muted-text">Item total</span>
-                      <span className="font-public-sans text-[14px] font-[700] text-primary tabular-nums">
+                      <span className="font-public-sans text-[14px] font-[600] text-primary tabular-nums">
                         {fmt(currentValue)}
                       </span>
                     </div>
@@ -364,7 +364,7 @@ export default function BrandCartPage({
 
                   <div className="border-t border-border-warm pt-3 mb-5">
                     <div className="flex items-center justify-between">
-                      <span className="font-public-sans text-[16px] font-[700] text-primary">Total</span>
+                      <span className="font-public-sans text-[16px] font-[600] text-primary">Total</span>
                       <span className="font-playfair text-[20px] font-[600] text-primary tabular-nums">
                         {fmt(currentValue)}
                       </span>
@@ -395,7 +395,7 @@ export default function BrandCartPage({
                     disabled={!met}
                     onClick={() => router.push('/checkout')}
                     className={cn(
-                      'w-full h-11 rounded-lg text-[14px] font-[700] font-public-sans transition-colors',
+                      'w-full h-11 rounded-lg text-[14px] font-[600] font-public-sans transition-colors',
                       met
                         ? 'bg-primary text-white hover:bg-[#2a2a2a]'
                         : 'bg-muted-bg text-muted-text cursor-not-allowed'

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,7 +12,7 @@ import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import type { CartItem } from '@/types'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -20,7 +20,7 @@ function fmt(n: number) {
   }).format(n)
 }
 
-// ─── Brand cart card ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Brand cart card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BrandCartCard({
   brandId, items, selected, onToggle, minimumOrderValue,
@@ -74,12 +74,12 @@ function BrandCartCard({
               <div className="w-10 h-10 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
                 {brandSlug
                   ? <img src={`https://picsum.photos/seed/${brandSlug}-logo/80/80`} alt="" className="w-full h-full object-cover" />
-                  : <div className="w-full h-full flex items-center justify-center text-[11px] font-[700] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
+                  : <div className="w-full h-full flex items-center justify-center text-[11px] font-[600] font-public-sans text-muted-text">{brandName.slice(0, 2).toUpperCase()}</div>
                 }
               </div>
               <div>
-                <p className="font-public-sans text-[15px] font-[700] text-primary leading-tight">{brandName}</p>
-                <p className="font-public-sans text-[12px] text-muted-text">Free shipping on orders over ₹15,000</p>
+                <p className="font-public-sans text-[15px] font-[600] text-primary leading-tight">{brandName}</p>
+                <p className="font-public-sans text-[12px] text-muted-text">Free shipping on orders over â‚¹15,000</p>
               </div>
             </div>
             <p className="font-playfair text-[17px] font-[600] text-primary tabular-nums ml-4 flex-shrink-0">
@@ -91,8 +91,8 @@ function BrandCartCard({
           <p className="font-public-sans text-[13px] text-muted-text mb-1.5">
             <span className="font-[600] text-primary">{fmt(targetValue)} minimum</span>
             {met
-              ? <span className="text-success"> · Minimum met!</span>
-              : <span> · {fmt(toGo)} to go</span>
+              ? <span className="text-success"> Â· Minimum met!</span>
+              : <span> Â· {fmt(toGo)} to go</span>
             }
           </p>
           <div className="h-1.5 bg-muted-bg rounded-full overflow-hidden mb-4">
@@ -142,7 +142,7 @@ function BrandCartCard({
   )
 }
 
-// ─── Sticky bottom bar ────────────────────────────────────────────────────────
+// â”€â”€â”€ Sticky bottom bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BottomBar({
   selectedIds,
@@ -164,7 +164,7 @@ function BottomBar({
     <div className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur border-t border-border-warm">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-16 py-3 flex items-center justify-between gap-4">
         <div>
-          <p className="font-public-sans text-[13px] font-[700] text-primary">
+          <p className="font-public-sans text-[13px] font-[600] text-primary">
             {selected.length} selected
           </p>
           {underMin > 0 && (
@@ -211,7 +211,7 @@ function BottomBar({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function CartPage() {
   const router          = useRouter()

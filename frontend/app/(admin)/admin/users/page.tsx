@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Search, UserX, UserCheck, Users } from 'lucide-react'
@@ -10,7 +10,7 @@ import {
 } from '@/hooks/queries/useAdmin'
 import { cn } from '@/lib/utils'
 
-// ─── Role badge ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Role badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RoleBadge({ role }: { role: AdminUser['role'] }) {
   return (
@@ -27,7 +27,7 @@ function RoleBadge({ role }: { role: AdminUser['role'] }) {
   )
 }
 
-// ─── Row ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function UserRow({ user }: { user: AdminUser }) {
   const suspend = useSuspendUser()
@@ -56,7 +56,7 @@ function UserRow({ user }: { user: AdminUser }) {
         </span>
       </td>
       <td className="py-3.5 px-4 text-[13px] font-public-sans text-muted-text">
-        {user.ordersCount ?? '—'}
+        {user.ordersCount ?? 'â€”'}
       </td>
       <td className="py-3.5 px-4 text-[13px] font-public-sans text-muted-text">
         {new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -98,7 +98,7 @@ function UserRow({ user }: { user: AdminUser }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState('')
@@ -189,7 +189,7 @@ export default function AdminUsersPage() {
                     {['User', 'Role', 'Status', 'Orders', 'Joined', ''].map((h) => (
                       <th
                         key={h}
-                        className="py-3 px-4 text-left text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]"
+                        className="py-3 px-4 text-left text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em]"
                       >
                         {h}
                       </th>
@@ -208,7 +208,7 @@ export default function AdminUsersPage() {
             {total > 20 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total}
+                  Showing {(page - 1) * 20 + 1}â€“{Math.min(page * 20, total)} of {total}
                 </p>
                 <div className="flex gap-2">
                   <button
