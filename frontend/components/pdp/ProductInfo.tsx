@@ -1,21 +1,53 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Minus, Plus } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, Minus, Plus, Package, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatINR } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { Button } from '@/components/ui/button'
+import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import type { Product } from '@/types'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Trust badge map ──────────────────────────────────────────────────────────
 
-interface ProductInfoProps {
-  product: Product
+const BADGE_MAP: Record<string, string> = {
+  'handmade':       'Handmade',
+  'hand-crafted':   'Handmade',
+  'handcraft':      'Handmade',
+  'hand-stitched':  'Handmade',
+  'organic':        'Organic',
+  'eco':            'Eco-friendly',
+  'eco-friendly':   'Eco-friendly',
+  'sustainable':    'Sustainable',
+  'zero-waste':     'Zero-waste',
+  'women-owned':    'Women-owned',
+  'block-print':    'Block-printed',
+  'block-printed':  'Block-printed',
+  'artisan':        'Artisan-made',
+  'natural':        'Natural',
+  'vegan':          'Vegan',
+  'not-on-amazon':  'Not on Amazon',
+  'fair-trade':     'Fair Trade',
+  'upcycled':       'Upcycled',
 }
 
-// ─── Expandable Section ───────────────────────────────────────────────────────
+function getBadges(tags: string[]): string[] {
+  const badges: string[] = []
+  const seen = new Set<string>()
+  for (const tag of tags) {
+    const badge = BADGE_MAP[tag.toLowerCase()]
+    if (badge && !seen.has(badge)) {
+      badges.push(badge)
+      seen.add(badge)
+    }
+  }
+  return badges
+}
+
+// ─── Expandable section ───────────────────────────────────────────────────────
 
 function ExpandableSection({
   title,
@@ -33,29 +65,18 @@ function ExpandableSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={cn(
-          'w-full flex items-center justify-between py-4',
-          'text-left text-[14px] font-[600] font-public-sans text-primary',
-          'hover:text-muted-text transition-colors',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-1 rounded'
-        )}
+        className="w-full flex items-center justify-between py-4 text-left text-[14px] font-[600] font-public-sans text-primary hover:text-muted-text transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
         aria-expanded={open}
       >
         {title}
         <ChevronDown
           size={16}
-          className={cn('text-muted-text transition-transform duration-200', open && 'rotate-180')}
+          className={cn('text-muted-text transition-transform duration-200 flex-shrink-0', open && 'rotate-180')}
           aria-hidden="true"
         />
       </button>
-
-      <div
-        className={cn(
-          'overflow-hidden transition-all duration-200',
-          open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
-        )}
-      >
-        <div className="pb-4 text-[16px] leading-[1.5] font-[400] font-public-sans text-muted-text">
+      <div className={cn('overflow-hidden transition-all duration-200', open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0')}>
+        <div className="pb-5 text-[14px] leading-[1.7] font-[400] font-public-sans text-muted-text">
           {children}
         </div>
       </div>
@@ -63,81 +84,29 @@ function ExpandableSection({
   )
 }
 
-// ─── Tag pills ────────────────────────────────────────────────────────────────
+// ─── Quantity stepper ─────────────────────────────────────────────────────────
 
-function TagPills({ tags }: { tags: string[] }) {
-  const VISIBLE_COUNT = 5
-  const visible = tags.slice(0, VISIBLE_COUNT)
-  const overflow = tags.length - VISIBLE_COUNT
-
+function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v: number) => void; min: number }) {
   return (
-    <div className="flex flex-wrap gap-2 mt-3" aria-label="Product tags">
-      {visible.map((tag) => (
-        <span
-          key={tag}
-          className="bg-muted-bg text-muted-text rounded px-3 py-1 text-[12px] font-[500] font-public-sans border border-border-warm"
-        >
-          {tag}
-        </span>
-      ))}
-      {overflow > 0 && (
-        <span className="bg-muted-bg text-muted-text rounded px-3 py-1 text-[12px] font-[500] font-public-sans border border-border-warm">
-          +{overflow} more
-        </span>
-      )}
-    </div>
-  )
-}
-
-// ─── Quantity Stepper ─────────────────────────────────────────────────────────
-
-function QuantityStepper({
-  value,
-  onChange,
-  min,
-}: {
-  value: number
-  onChange: (v: number) => void
-  min: number
-}) {
-  function decrement() {
-    if (value > min) onChange(value - 1)
-  }
-  function increment() {
-    onChange(value + 1)
-  }
-
-  return (
-    <div
-      className="flex items-center border border-border-warm rounded mt-6 w-fit"
-      role="group"
-      aria-label="Quantity"
-    >
+    <div className="flex items-center border border-border-warm rounded w-fit" role="group" aria-label="Quantity">
       <button
         type="button"
-        onClick={decrement}
+        onClick={() => value > min && onChange(value - 1)}
         disabled={value <= min}
-        className={cn(
-          'h-10 px-3 inline-flex items-center justify-center',
-          'text-primary hover:bg-muted-bg transition-colors rounded-l',
-          'disabled:opacity-30 disabled:cursor-not-allowed'
-        )}
+        className="h-10 px-3 inline-flex items-center justify-center text-primary hover:bg-muted-bg transition-colors rounded-l disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Decrease quantity"
       >
         <Minus size={14} aria-hidden="true" />
       </button>
-
       <div
         className="w-16 text-center text-[14px] font-[600] font-public-sans text-primary select-none border-x border-border-warm h-10 flex items-center justify-center"
         aria-live="polite"
-        aria-label={`Quantity: ${value}`}
       >
         {value}
       </div>
-
       <button
         type="button"
-        onClick={increment}
+        onClick={() => onChange(value + 1)}
         className="h-10 px-3 inline-flex items-center justify-center text-primary hover:bg-muted-bg transition-colors rounded-r"
         aria-label="Increase quantity"
       >
@@ -149,24 +118,13 @@ function QuantityStepper({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product }: { product: Product }) {
   const {
-    id,
-    name,
-    brandName,
-    brandSlug,
-    shortDescription,
-    description,
-    wholesalePrice,
-    displayPrice,
-    currency,
-    moq,
-    leadTime,
-    weight,
-    category,
-    tags,
-    images,
-    inStock,
+    id, name, brandName, brandSlug,
+    shortDescription, description,
+    wholesalePrice, displayPrice, currency,
+    moq, leadTime, weight, category, tags, images, inStock,
+    achievementLevel,
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -178,6 +136,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const priceAmount = displayPrice ?? wholesalePrice
   const priceCurrency = currency ?? 'INR'
   const showINREquiv = priceCurrency !== 'INR'
+  const suggestedRetail = priceAmount * 2
+  const minOrderValue = priceAmount * moq
+
+  const badges = getBadges(tags ?? [])
 
   function handleAddToCart() {
     requireAuth(() => {
@@ -196,125 +158,209 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }, 'add_to_cart')
   }
 
+  function handleRequestSamples() {
+    requireAuth(() => {
+      alert('Sample request feature coming soon!')
+    }, 'request_samples')
+  }
+
   return (
     <div className="flex flex-col">
-      {/* 1. Product name */}
-      <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
+
+      {/* 1. Brand row */}
+      <Link
+        href={`/brands/${brandSlug}`}
+        className="inline-flex items-center gap-2.5 mb-4 group w-fit"
+        aria-label={`View ${brandName} storefront`}
+      >
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
+          <img
+            src={`https://picsum.photos/seed/${brandSlug}-logo/64/64`}
+            alt={`${brandName} logo`}
+            width={32}
+            height={32}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <span className="font-public-sans text-[13px] font-[600] text-primary group-hover:text-accent transition-colors">
+          {brandName}
+        </span>
+        {achievementLevel && <AchievementBadge level={achievementLevel} />}
+      </Link>
+
+      {/* 2. Product name */}
+      <h1 className="font-playfair font-[500] text-primary text-[22px] sm:text-[26px] leading-[1.2] mb-5">
         {name}
       </h1>
 
-      {/* 2. Price */}
-      <div className="mt-4">
-        <p className="text-[48px] leading-[1.1] font-[700] font-public-sans text-primary tracking-[-0.02em]">
+      {/* 3. Price block */}
+      <div className="mb-4">
+        <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-1.5">
+          Wholesale price
+        </p>
+        <p className="font-public-sans text-[38px] font-[700] text-primary tracking-[-0.025em] leading-none">
           {formatCurrency(priceAmount, priceCurrency)}
         </p>
+        <p className="font-public-sans text-[13px] text-muted-text mt-1.5">
+          Suggested retail:&nbsp;
+          <span className="text-primary font-[500]">{formatCurrency(suggestedRetail, priceCurrency)}</span>
+          &nbsp;/ unit
+        </p>
         {showINREquiv && (
-          <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
+          <p className="font-public-sans text-[12px] text-muted-text mt-0.5">
             {formatINR(wholesalePrice)} per unit (INR)
           </p>
         )}
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-0.5">
-          Minimum order: {moq} units
-        </p>
       </div>
 
-      {/* 3. Tag pills */}
-      {tags && tags.length > 0 && <TagPills tags={tags} />}
-
-      {/* 4. Short description */}
-      <p className="text-[16px] leading-[1.5] font-[400] font-public-sans text-muted-text mt-4">
-        {shortDescription}
+      {/* 4. Min. order */}
+      <p className="font-public-sans text-[13px] text-muted-text mb-4">
+        Min. order:&nbsp;
+        <span className="font-[600] text-primary">{moq} units</span>
+        &nbsp;·&nbsp;
+        <span className="text-primary font-[500]">{formatCurrency(minOrderValue, priceCurrency)} total</span>
       </p>
 
-      {/* 5. Quantity stepper */}
-      {inStock ? (
-        <QuantityStepper value={quantity} onChange={setQuantity} min={moq} />
-      ) : (
-        <div className="mt-6 inline-flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-error flex-shrink-0" aria-hidden="true" />
-          <span className="text-[14px] font-[500] font-public-sans text-error">Out of stock</span>
+      {/* 5. Trust / attribute badges */}
+      {badges.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {badges.map((badge) => (
+            <span
+              key={badge}
+              className="inline-flex items-center bg-muted-bg border border-border-warm rounded-full px-3 py-1 text-[12px] font-[500] font-public-sans text-muted-text"
+            >
+              {badge}
+            </span>
+          ))}
         </div>
       )}
 
-      {/* 6. Add to Cart */}
-      <Button
-        variant="primary"
-        size="lg"
-        onClick={handleAddToCart}
-        disabled={!inStock}
-        className={cn(
-          'w-full mt-4 h-12 text-[14px] transition-all',
-          addedFeedback && 'bg-success hover:bg-success'
+      <div className="border-t border-border-warm mb-5" />
+
+      {/* 6. Quantity stepper */}
+      {inStock && (
+        <div className="mb-4">
+          <p className="font-public-sans text-[12px] font-[500] text-muted-text mb-2">
+            Quantity&nbsp;<span className="text-primary">(min. {moq})</span>
+          </p>
+          <QuantityStepper value={quantity} onChange={setQuantity} min={moq} />
+        </div>
+      )}
+
+      {!inStock && (
+        <div className="mb-4 inline-flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" aria-hidden="true" />
+          <span className="font-public-sans text-[14px] font-[500] text-red-500">Out of stock</span>
+        </div>
+      )}
+
+      {/* 7. CTAs */}
+      <div className="flex flex-col gap-2.5">
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={handleAddToCart}
+          disabled={!inStock}
+          className={cn('w-full h-12 text-[14px] font-[600] transition-all', addedFeedback && 'bg-success hover:bg-success')}
+          aria-label={inStock ? `Add ${quantity} units to order` : 'Out of stock'}
+        >
+          {addedFeedback ? 'Added to order ✓' : inStock ? 'Add to order' : 'Out of Stock'}
+        </Button>
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={handleRequestSamples}
+          className="w-full h-12 text-[14px] font-[600]"
+        >
+          Request samples
+        </Button>
+      </div>
+
+      {/* 8. Delivery + returns */}
+      <div className="mt-4 flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
+          <Package size={14} className="flex-shrink-0" aria-hidden="true" />
+          Estimated delivery:&nbsp;<span className="text-primary font-[500]">{leadTime}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
+          <RotateCcw size={14} className="flex-shrink-0" aria-hidden="true" />
+          Free returns on first-time orders within 60 days
+        </div>
+      </div>
+
+      <div className="border-t border-border-warm mt-6 mb-6" />
+
+      {/* 9. About this product — visible, not in accordion */}
+      <div className="mb-2">
+        <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-3">
+          About this product
+        </p>
+        <p className="font-public-sans text-[15px] leading-[1.75] text-muted-text">
+          {shortDescription}
+        </p>
+        {description && description !== shortDescription && (
+          <p className="font-public-sans text-[15px] leading-[1.75] text-muted-text mt-3">
+            {description}
+          </p>
         )}
-        aria-label={inStock ? `Add ${quantity} units of ${name} to cart` : 'Out of stock'}
-      >
-        {addedFeedback ? 'Added to cart' : inStock ? 'Add to Cart' : 'Out of Stock'}
-      </Button>
+      </div>
 
-      {/* MOQ reminder */}
-      <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-2 text-center">
-        MOQ {moq} units &middot; {leadTime} lead time
-      </p>
-
-      {/* 7. Expandable sections */}
-      <div className="mt-8 flex flex-col">
+      {/* 10. Accordions */}
+      <div className="mt-4 flex flex-col">
         <ExpandableSection title="Product Details" defaultOpen>
-          <ul className="flex flex-col gap-2">
-            <li>
-              <span className="text-[12px] font-[600] font-public-sans text-primary uppercase tracking-[0.04em]">
-                Category
-              </span>
-              <br />
-              {category}
-            </li>
-            <li>
-              <span className="text-[12px] font-[600] font-public-sans text-primary uppercase tracking-[0.04em]">
-                Weight
-              </span>
-              <br />
-              {weight} kg per unit
-            </li>
-            <li>
-              <span className="text-[12px] font-[600] font-public-sans text-primary uppercase tracking-[0.04em]">
-                Brand
-              </span>
-              <br />
-              <a
-                href={`/brands/${brandSlug}`}
-                className="text-accent hover:text-accent-hover transition-colors underline underline-offset-2"
-              >
-                {brandName}
-              </a>
-            </li>
-          </ul>
+          <dl className="flex flex-col gap-3">
+            {[
+              { label: 'Category',   value: category },
+              { label: 'Weight',     value: `${weight}g per unit` },
+              { label: 'Lead time',  value: leadTime },
+              { label: 'Min. order', value: `${moq} units` },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-baseline justify-between gap-4">
+                <dt className="font-public-sans text-[12px] font-[600] text-primary uppercase tracking-[0.04em] flex-shrink-0">
+                  {label}
+                </dt>
+                <dd className="font-public-sans text-[14px] text-muted-text text-right">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </ExpandableSection>
 
-        <ExpandableSection title="Shipping & Lead Time">
-          <div className="flex flex-col gap-3">
-            <p>
-              <span className="text-[12px] font-[600] font-public-sans text-primary uppercase tracking-[0.04em] block mb-1">
-                Lead Time
-              </span>
-              {leadTime} from order confirmation
-            </p>
-            <p>
-              Orders are dispatched from {brandName}'s warehouse. International shipments are
-              handled via our logistics partners. Tracking information is provided upon dispatch.
-            </p>
-            <p>
-              Bulk orders (10x MOQ or above) may qualify for dedicated freight arrangements —
-              contact your account manager for details.
-            </p>
+        <ExpandableSection title="Shipping & Returns">
+          <div className="flex flex-col gap-2.5">
+            <p>Lead time: <span className="text-primary font-[500]">{leadTime}</span> from order confirmation.</p>
+            <p>Orders dispatched from {brandName}'s warehouse. Tracking info provided on dispatch. International shipments via our logistics partners.</p>
+            <p>Bulk orders (10× MOQ or above) may qualify for dedicated freight — contact your account manager.</p>
+            <p className="pt-1 border-t border-border-warm mt-1">Free returns on first-time orders within <span className="text-primary font-[500]">60 days</span> of delivery.</p>
           </div>
         </ExpandableSection>
 
-        <ExpandableSection title="Brand Story">
-          <p>
+        <ExpandableSection title="About the Brand">
+          <p className="mb-3">
             {description ??
-              `${brandName} is a curated brand on Solomon Bharat, India's premium B2B wholesale marketplace. This product is crafted using traditional methods and responsibly sourced materials.`}
+              `${brandName} is a curated brand on Solomon Bharat, India's B2B wholesale marketplace. Products are crafted using traditional methods and responsibly sourced materials.`}
           </p>
+          <Link
+            href={`/brands/${brandSlug}`}
+            className="text-[13px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors underline underline-offset-2"
+          >
+            Visit brand storefront →
+          </Link>
         </ExpandableSection>
       </div>
+
+      {/* 11. Tags */}
+      {tags && tags.length > 0 && (
+        <div className="mt-6 pt-5 border-t border-border-warm flex flex-wrap gap-2">
+          {tags.slice(0, 8).map((tag) => (
+            <span
+              key={tag}
+              className="bg-muted-bg text-muted-text rounded px-3 py-1 text-[12px] font-[500] font-public-sans border border-border-warm"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
