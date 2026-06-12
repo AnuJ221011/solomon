@@ -22,15 +22,15 @@ export const listMyProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   const product = await productService.createProduct(req.user.id, req.body);
-  sendSuccess(res, product, 'Product created', 201);
+  sendSuccess(res, product, `"${product.name}" listed successfully. Add photos to make it visible to buyers.`, 201);
 };
 
 export const updateProduct = async (req, res) => {
   const product = await productService.updateProduct(req.user.id, req.params.id, req.body);
-  sendSuccess(res, product, 'Product updated');
+  sendSuccess(res, product, `"${product.name}" updated successfully.`);
 };
 
 export const deleteProduct = async (req, res) => {
   await productService.deleteProduct(req.user.id, req.params.id);
-  sendSuccess(res, null, 'Product deleted');
+  sendSuccess(res, null, 'Product removed from your listings.');
 };

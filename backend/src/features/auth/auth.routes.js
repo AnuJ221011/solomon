@@ -12,6 +12,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   storeTypeQuizSchema,
+  changePendingEmailSchema,
 } from './auth.validator.js';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.post('/refresh', ctrl.refreshToken);
 // Email verification
 router.post('/verify-email', otpLimiter, validate(verifyOtpSchema), ctrl.verifyEmail);
 router.post('/resend-otp', otpLimiter, ctrl.resendOtp);
+router.post('/change-pending-email', otpLimiter, validate(changePendingEmailSchema), ctrl.changePendingEmail);
 
 // Password reset
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), ctrl.forgotPassword);

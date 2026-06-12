@@ -3,7 +3,7 @@ import { sendSuccess } from '../../shared/utils/response.js';
 
 export const createShareLink = async (req, res) => {
   const link = await shareLinkService.createShareLink(req.user.id, req.body);
-  sendSuccess(res, link, 'Share link created', 201);
+  sendSuccess(res, link, 'Share link created and ready.', 201);
 };
 
 export const getShareLink = async (req, res) => {
@@ -24,10 +24,10 @@ export const getMyShareLinks = async (req, res) => {
 
 export const updateShareLink = async (req, res) => {
   const link = await shareLinkService.updateShareLink(req.user.id, req.params.id, req.body);
-  sendSuccess(res, link, 'Share link updated');
+  sendSuccess(res, link, 'Share link updated successfully.');
 };
 
 export const deleteShareLink = async (req, res) => {
   await shareLinkService.deleteShareLink(req.user.id, req.params.id);
-  sendSuccess(res, null, 'Share link deleted');
+  sendSuccess(res, null, 'Share link removed successfully.');
 };

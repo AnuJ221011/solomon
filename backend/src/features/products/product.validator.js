@@ -25,7 +25,7 @@ export const updateProductSchema = createProductSchema.partial();
 
 export const productQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().optional(),
   category: z.string().optional(),
   zone: shippingZoneEnum.optional(),
@@ -33,6 +33,7 @@ export const productQuerySchema = z.object({
   maxPrice: z.coerce.number().optional(),
   availability: z.enum(['ACTIVE', 'INACTIVE', 'COMING_SOON']).optional(),
   brandId: z.string().optional(),
+  brandSlug: z.string().optional(),
   sortBy: z.enum(['rank', 'createdAt', 'wholesalePriceInr', 'name']).default('rank'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

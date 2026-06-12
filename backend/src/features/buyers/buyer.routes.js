@@ -37,12 +37,12 @@ router.put('/cart/item', requireVerified, validate(cartItemSchema), async (req, 
 router.delete('/cart/item/:productId', requireVerified, async (req, res) => {
   const variantId = req.query.variantId;
   await buyerService.removeCartItem(req.user.id, req.params.productId, variantId);
-  sendSuccess(res, null, 'Item removed');
+  sendSuccess(res, null, 'Item removed from your cart.');
 });
 
 router.delete('/cart', requireVerified, async (req, res) => {
   await buyerService.clearCart(req.user.id);
-  sendSuccess(res, null, 'Cart cleared');
+  sendSuccess(res, null, 'Your cart is now empty.');
 });
 
 // Saved items
@@ -53,22 +53,22 @@ router.get('/saved', async (req, res) => {
 
 router.post('/saved/product/:productId', requireVerified, async (req, res) => {
   await buyerService.saveProduct(req.user.id, req.params.productId);
-  sendSuccess(res, null, 'Product saved');
+  sendSuccess(res, null, 'Product saved to your wishlist.');
 });
 
 router.delete('/saved/product/:productId', async (req, res) => {
   await buyerService.unsaveProduct(req.user.id, req.params.productId);
-  sendSuccess(res, null, 'Product unsaved');
+  sendSuccess(res, null, 'Product removed from your wishlist.');
 });
 
 router.post('/saved/brand/:brandProfileId', requireVerified, async (req, res) => {
   await buyerService.saveBrand(req.user.id, req.params.brandProfileId);
-  sendSuccess(res, null, 'Brand saved');
+  sendSuccess(res, null, 'Brand added to your saved list.');
 });
 
 router.delete('/saved/brand/:brandProfileId', async (req, res) => {
   await buyerService.unsaveBrand(req.user.id, req.params.brandProfileId);
-  sendSuccess(res, null, 'Brand unsaved');
+  sendSuccess(res, null, 'Brand removed from saved list.');
 });
 
 export default router;

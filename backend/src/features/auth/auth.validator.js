@@ -21,12 +21,14 @@ export const brandSignupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
   brandName: z.string().min(1).max(100),
-  category: z.array(z.string()).min(1).max(2),
+  category: z.array(z.string()).min(1),
   countryOfOrigin: z.string().length(2).default('IN'),
   gstNumber: z.string().optional(),
   businessRegNumber: z.string().optional(),
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
+  city: z.string().max(100).optional(),
+  state: z.string().max(100).optional(),
   yearFounded: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
   brandStory: z.string().max(1000).optional(),
   existingRetailPartners: z.string().max(500).optional(),
@@ -53,6 +55,11 @@ export const resetPasswordSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
   newPassword: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
+});
+
+export const changePendingEmailSchema = z.object({
+  currentEmail: z.string().email(),
+  newEmail: z.string().email(),
 });
 
 export const storeTypeQuizSchema = z.object({

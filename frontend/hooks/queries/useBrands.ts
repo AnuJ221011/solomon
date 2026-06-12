@@ -173,7 +173,24 @@ export function useMyBrandDashboard() {
     queryKey: ['brand-dashboard'],
     queryFn: async () => {
       const response = await api.get('/brands/me/dashboard')
-      return response.data.data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d: any = response.data.data
+      const gmvThis = d.gmvThisMonthInr ?? 0
+      const gmvLast = d.gmvLastMonthInr ?? 0
+      const orders  = d.ordersThisMonth ?? 0
+      const avgOrder = orders > 0 ? Math.round(gmvThis / orders) : 0
+      return {
+        stats: {
+          gmvThisMonth:    gmvThis,
+          ordersThisMonth: orders,
+          avgOrderValue:   avgOrder,
+          commissionSaved: d.pendingPayoutInr ?? 0,
+          totalOrders:     d.confirmedOrderCount ?? 0,
+          avgRating:       d.avgRating ?? 0,
+        },
+        recentOrders: d.recentOrders ?? [],
+        achievement: d.achievement ?? null,
+      }
     },
     staleTime: 60 * 1000,
   })

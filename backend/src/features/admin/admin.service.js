@@ -55,6 +55,29 @@ export const getPendingBrands = async () => {
   });
 };
 
+export const getBrandById = async (brandProfileId) => {
+  const brand = await prisma.brandProfile.findUnique({
+    where: { id: brandProfileId },
+    include: {
+      user: { select: { email: true, isActive: true, createdAt: true } },
+      _count: { select: { products: true, orders: true } },
+    },
+  });
+  if (!brand) throw createError('Brand not found', 404);
+  return brand;
+};
+
+export const getApprovedBrands = async () => {
+  return prisma.brandProfile.findMany({
+    where: { status: 'APPROVED' },
+    include: {
+      user: { select: { email: true } },
+      _count: { select: { products: true } },
+    },
+    orderBy: { approvedAt: 'desc' },
+  });
+};
+
 export const getPlatformStats = async () => {
   const [totalBrands, totalBuyers, totalOrders, pendingPayouts, gmv] = await Promise.all([
     prisma.brandProfile.count({ where: { status: 'APPROVED' } }),

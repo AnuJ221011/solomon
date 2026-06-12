@@ -1,140 +1,94 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle, XCircle, ExternalLink, Building2 } from 'lucide-react'
-import {
-  useAdminPendingBrands,
-  useApproveBrand,
-  useRejectBrand,
-  type PendingBrand,
-} from '@/hooks/queries/useAdmin'
-import { cn } from '@/lib/utils'
+import { Building2, Star, Package, ExternalLink } from 'lucide-react'
+import { useAdminApprovedBrands, type ApprovedBrand } from '@/hooks/queries/useAdmin'
+import { BrandDetailDrawer } from '@/components/admin/BrandDetailDrawer'
 
-// ─── Reject modal ─────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function RejectModal({
-  brand,
-  onClose,
-}: {
-  brand: PendingBrand
-  onClose: () => void
-}) {
-  const [reason, setReason] = useState('')
-  const rejectBrand = useRejectBrand()
+const LEVEL_LABELS: Record<string, string> = {
+  L1_SPROUT: 'Sprout',
+  L2_RISING: 'Rising',
+  L3_TRUSTED: 'Trusted',
+  L4_ELITE: 'Elite',
+  L5_LEGEND: 'Legend',
+}
 
-  function handleConfirm() {
-    rejectBrand.mutate(
-      { id: brand.id, reason: reason.trim() || undefined },
-      { onSuccess: onClose }
-    )
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-surface border border-border-warm rounded-lg shadow-xl w-full max-w-md p-6 space-y-4">
-        <h2 className="text-[18px] font-[600] font-playfair text-primary">Reject Brand</h2>
-        <p className="text-[14px] font-public-sans text-muted-text">
-          Rejecting <strong className="text-primary">{brand.name}</strong>. Optionally provide a reason.
-        </p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Reason for rejection (optional)..."
-          rows={3}
-          className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none"
-        />
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-9 px-4 rounded border border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={rejectBrand.isPending}
-            className="h-9 px-4 rounded bg-error text-white text-[13px] font-[600] font-public-sans hover:bg-error/90 transition-colors disabled:opacity-50"
-          >
-            {rejectBrand.isPending ? 'Rejecting…' : 'Confirm Reject'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+const LEVEL_COLORS: Record<string, string> = {
+  L1_SPROUT: 'text-muted-text bg-muted-bg border-border-warm',
+  L2_RISING: 'text-blue-600 bg-blue-50 border-blue-200',
+  L3_TRUSTED: 'text-green-700 bg-green-50 border-green-200',
+  L4_ELITE: 'text-purple-700 bg-purple-50 border-purple-200',
+  L5_LEGEND: 'text-amber-700 bg-amber-50 border-amber-200',
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function BrandRow({
-  brand,
-  onReject,
-}: {
-  brand: PendingBrand
-  onReject: (b: PendingBrand) => void
-}) {
-  const approveBrand = useApproveBrand()
+function BrandRow({ brand, onSelect }: { brand: ApprovedBrand; onSelect: (id: string) => void }) {
+  const levelLabel = LEVEL_LABELS[brand.achievementLevel] ?? brand.achievementLevel
+  const levelColor = LEVEL_COLORS[brand.achievementLevel] ?? LEVEL_COLORS.L1_SPROUT
 
   return (
-    <tr className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors">
+    <tr
+      className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors cursor-pointer"
+      onClick={() => onSelect(brand.id)}
+    >
       <td className="py-4 px-4">
-        <div>
-          <p className="text-[14px] font-[600] font-public-sans text-primary">{brand.name}</p>
-          <p className="text-[12px] font-public-sans text-muted-text">{brand.email}</p>
-        </div>
-      </td>
-      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">{brand.category}</td>
-      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
-        {brand.city}, {brand.state}
-      </td>
-      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
-        {brand.skuCount} SKUs
-      </td>
-      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
-        {new Date(brand.appliedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-2 justify-end">
-          {brand.instagramUrl && (
-            <a
-              href={brand.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-text hover:text-primary transition-colors"
-              aria-label="View Instagram"
-            >
-              <ExternalLink size={14} aria-hidden="true" />
-            </a>
+        <div className="flex items-center gap-3">
+          {brand.logoUrl ? (
+            <img
+              src={brand.logoUrl}
+              alt={brand.brandName}
+              className="w-8 h-8 rounded object-cover border border-border-warm"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded bg-muted-bg border border-border-warm flex items-center justify-center">
+              <Building2 size={14} className="text-muted-text" />
+            </div>
           )}
-          <button
-            type="button"
-            onClick={() => approveBrand.mutate(brand.id)}
-            disabled={approveBrand.isPending}
-            aria-label={`Approve ${brand.name}`}
-            className={cn(
-              'flex items-center gap-1.5 h-8 px-3 rounded border text-[12px] font-[600] font-public-sans transition-colors',
-              'border-success/40 text-success bg-success/5 hover:bg-success/10',
-              'disabled:opacity-50'
-            )}
-          >
-            <CheckCircle size={13} aria-hidden="true" />
-            Approve
-          </button>
-          <button
-            type="button"
-            onClick={() => onReject(brand)}
-            aria-label={`Reject ${brand.name}`}
-            className={cn(
-              'flex items-center gap-1.5 h-8 px-3 rounded border text-[12px] font-[600] font-public-sans transition-colors',
-              'border-error/40 text-error bg-error/5 hover:bg-error/10'
-            )}
-          >
-            <XCircle size={13} aria-hidden="true" />
-            Reject
-          </button>
+          <div>
+            <p className="text-[14px] font-[600] font-public-sans text-primary">{brand.brandName}</p>
+            <p className="text-[12px] font-public-sans text-muted-text">{brand.email}</p>
+          </div>
         </div>
+      </td>
+      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
+        {brand.category.join(', ') || '—'}
+      </td>
+      <td className="py-4 px-4">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-[600] font-public-sans ${levelColor}`}>
+          {levelLabel}
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-1 text-[13px] font-public-sans text-muted-text">
+          <Package size={13} aria-hidden="true" />
+          {brand.productCount}
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-1 text-[13px] font-public-sans text-muted-text">
+          <Star size={13} aria-hidden="true" className="text-amber-400" />
+          {brand.avgRating > 0 ? brand.avgRating.toFixed(1) : '—'}
+        </div>
+      </td>
+      <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
+        {brand.approvedAt
+          ? new Date(brand.approvedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '—'}
+      </td>
+      <td className="py-4 px-4">
+        <a
+          href={`/brands/${brand.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-muted-text hover:text-primary transition-colors"
+          aria-label={`View ${brand.brandName} storefront`}
+        >
+          <ExternalLink size={14} aria-hidden="true" />
+        </a>
       </td>
     </tr>
   )
@@ -143,30 +97,30 @@ function BrandRow({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminBrandsPage() {
-  const { data: brands, isLoading } = useAdminPendingBrands()
-  const [rejectTarget, setRejectTarget] = useState<PendingBrand | null>(null)
+  const { data: brands, isLoading } = useAdminApprovedBrands()
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-[28px] leading-[1.3] font-[500] font-playfair text-primary">
-          Brand Applications
+          Approved Brands
         </h1>
         <p className="text-[14px] font-public-sans text-muted-text mt-1">
-          Review and approve pending brand applications
+          All live brands on the platform
         </p>
       </div>
 
       <div className="bg-surface border border-border-warm rounded overflow-hidden">
         {isLoading ? (
           <div className="divide-y divide-border-warm">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-4 flex gap-4 animate-pulse">
+                <div className="w-8 h-8 bg-muted-bg rounded" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-muted-bg rounded w-40" />
                   <div className="h-3 bg-muted-bg rounded w-28" />
                 </div>
-                <div className="h-8 bg-muted-bg rounded w-24" />
               </div>
             ))}
           </div>
@@ -175,9 +129,9 @@ export default function AdminBrandsPage() {
             <div className="w-12 h-12 rounded-full bg-muted-bg flex items-center justify-center">
               <Building2 size={22} className="text-muted-text" aria-hidden="true" />
             </div>
-            <p className="text-[16px] font-[600] font-public-sans text-primary">No pending applications</p>
+            <p className="text-[16px] font-[600] font-public-sans text-primary">No approved brands yet</p>
             <p className="text-[13px] font-public-sans text-muted-text max-w-[260px]">
-              All brand applications have been reviewed.
+              Approved brands will appear here once applications are reviewed.
             </p>
           </div>
         ) : (
@@ -185,27 +139,18 @@ export default function AdminBrandsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-warm bg-muted-bg/40">
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">
-                    Brand
-                  </th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">
-                    Category
-                  </th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">
-                    Location
-                  </th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">
-                    Catalogue
-                  </th>
-                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">
-                    Applied
-                  </th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Brand</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Category</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Level</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Products</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Rating</th>
+                  <th className="text-left py-3 px-4 text-[12px] font-[700] font-public-sans text-muted-text uppercase tracking-[0.06em]">Approved</th>
                   <th className="py-3 px-4" />
                 </tr>
               </thead>
               <tbody>
                 {brands.map((brand) => (
-                  <BrandRow key={brand.id} brand={brand} onReject={setRejectTarget} />
+                  <BrandRow key={brand.id} brand={brand} onSelect={setSelectedId} />
                 ))}
               </tbody>
             </table>
@@ -213,9 +158,7 @@ export default function AdminBrandsPage() {
         )}
       </div>
 
-      {rejectTarget && (
-        <RejectModal brand={rejectTarget} onClose={() => setRejectTarget(null)} />
-      )}
+      <BrandDetailDrawer brandId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   )
 }

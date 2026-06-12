@@ -47,7 +47,7 @@ router.post('/',
   validate(createSchema),
   async (req, res) => {
     const category = await categoryService.createCategory(req.body);
-    sendSuccess(res, category, 'Category created', 201);
+    sendSuccess(res, category, 'New category created successfully.', 201);
   }
 );
 
@@ -58,7 +58,7 @@ router.patch('/:id',
   validate(updateSchema),
   async (req, res) => {
     const category = await categoryService.updateCategory(req.params.id, req.body);
-    sendSuccess(res, category, 'Category updated');
+    sendSuccess(res, category, 'Category details updated successfully.');
   }
 );
 
@@ -67,7 +67,7 @@ router.delete('/:id',
   authenticate, authorize('ADMIN'),
   async (req, res) => {
     await categoryService.deleteCategory(req.params.id, { force: req.query.force === 'true' });
-    sendSuccess(res, null, req.query.force === 'true' ? 'Category deleted' : 'Category deactivated');
+    sendSuccess(res, null, req.query.force === 'true' ? 'Category permanently removed.' : 'Category hidden from listings.');
   }
 );
 

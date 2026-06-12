@@ -8,7 +8,7 @@ export const getMyBrand = async (req, res) => {
 
 export const updateMyBrand = async (req, res) => {
   const brand = await brandService.updateBrandProfile(req.user.id, req.body);
-  sendSuccess(res, brand, 'Brand profile updated');
+  sendSuccess(res, brand, 'Brand profile updated successfully.');
 };
 
 export const getBrandBySlug = async (req, res) => {

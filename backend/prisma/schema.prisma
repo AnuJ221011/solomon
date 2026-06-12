@@ -186,6 +186,8 @@ model BrandProfile {
   yearFounded          Int?
   socialLinks          Json?           // { instagram, facebook, twitter, pinterest }
   existingRetailPartners String?
+  city                 String?
+  state                String?
   pickupPincode        String?   // used for Shiprocket rate calculation
   logoUrl              String?
   bannerUrl            String?

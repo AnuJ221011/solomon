@@ -42,7 +42,7 @@ router.post('/', validate(createSchema), async (req, res) => {
   const collection = await prisma.collection.create({
     data: { ...req.body, brandProfileId },
   });
-  sendSuccess(res, collection, 'Collection created', 201);
+  sendSuccess(res, collection, 'Collection created and saved.', 201);
 });
 
 router.patch('/:id', validate(createSchema.partial()), async (req, res) => {
@@ -50,7 +50,7 @@ router.patch('/:id', validate(createSchema.partial()), async (req, res) => {
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);
   const updated = await prisma.collection.update({ where: { id: col.id }, data: req.body });
-  sendSuccess(res, updated, 'Collection updated');
+  sendSuccess(res, updated, 'Collection updated successfully.');
 });
 
 router.delete('/:id', async (req, res) => {
@@ -58,7 +58,7 @@ router.delete('/:id', async (req, res) => {
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);
   await prisma.collection.delete({ where: { id: col.id } });
-  sendSuccess(res, null, 'Collection deleted');
+  sendSuccess(res, null, 'Collection removed from your store.');
 });
 
 router.post('/:id/products', validate(addProductSchema), async (req, res) => {

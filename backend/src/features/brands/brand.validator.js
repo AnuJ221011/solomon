@@ -4,12 +4,14 @@ export const updateBrandProfileSchema = z.object({
   brandName: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   brandStory: z.string().max(1000).optional(),
-  category: z.array(z.string()).min(1).max(2).optional(),
+  category: z.array(z.string()).min(1).optional(),
   countryOfOrigin: z.string().length(2).optional(),
   gstNumber: z.string().optional(),
   businessRegNumber: z.string().optional(),
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
+  city: z.string().max(100).optional(),
+  state: z.string().max(100).optional(),
   yearFounded: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
   socialLinks: z.object({
     instagram: z.string().optional(),
@@ -18,6 +20,7 @@ export const updateBrandProfileSchema = z.object({
     pinterest: z.string().optional(),
   }).optional(),
   existingRetailPartners: z.string().max(500).optional(),
+  minimumOrderValue: z.number().int().min(0).optional(),
   pickupPincode: z.string().max(10).optional(),
   payoutSpeed: z.enum(['NET_30', 'EXPRESS']).optional(),
 });

@@ -15,7 +15,7 @@ router.get('/', authenticate, authorize('BRAND'), async (req, res) => {
 
 router.put('/zone', authenticate, authorize('BRAND'), validate(upsertShippingRateSchema), async (req, res) => {
   const rate = await upsertShippingRate(req.user.id, req.body);
-  sendSuccess(res, rate, 'Shipping rate saved');
+  sendSuccess(res, rate, 'Shipping rate saved for this zone.');
 });
 
 export default router;

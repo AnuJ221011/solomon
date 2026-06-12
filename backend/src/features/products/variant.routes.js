@@ -60,7 +60,7 @@ router.post('/',
     const variant = await variantService.createVariant(
       req.user.id, req.params.productId, req.body
     );
-    sendSuccess(res, variant, 'Variant created', 201);
+    sendSuccess(res, variant, 'Variant added to this product.', 201);
   }
 );
 
@@ -84,7 +84,7 @@ router.patch('/:variantId',
     const variant = await variantService.updateVariant(
       req.user.id, req.params.productId, req.params.variantId, req.body
     );
-    sendSuccess(res, variant, 'Variant updated');
+    sendSuccess(res, variant, 'Variant updated successfully.');
   }
 );
 
@@ -96,7 +96,7 @@ router.patch('/:variantId/stock',
     const variant = await variantService.updateStock(
       req.user.id, req.params.productId, req.params.variantId, req.body
     );
-    sendSuccess(res, variant, 'Stock updated');
+    sendSuccess(res, variant, 'Stock level updated successfully.');
   }
 );
 
@@ -107,7 +107,7 @@ router.delete('/:variantId',
     await variantService.deleteVariant(
       req.user.id, req.params.productId, req.params.variantId
     );
-    sendSuccess(res, null, 'Variant deleted');
+    sendSuccess(res, null, 'Variant removed from product.');
   }
 );
 

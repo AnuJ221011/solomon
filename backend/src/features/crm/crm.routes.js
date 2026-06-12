@@ -44,7 +44,7 @@ router.post('/contacts', validate(z.object({
     create: { brandProfileId, ...req.body },
     update: req.body,
   });
-  sendSuccess(res, contact, 'Contact saved', 201);
+  sendSuccess(res, contact, 'Contact saved to your CRM.', 201);
 });
 
 // Delete a contact
@@ -53,7 +53,7 @@ router.delete('/contacts/:id', async (req, res) => {
   const contact = await prisma.crmContact.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!contact) throw createError('Contact not found', 404);
   await prisma.crmContact.delete({ where: { id: contact.id } });
-  sendSuccess(res, null, 'Contact deleted');
+  sendSuccess(res, null, 'Contact removed from your CRM.');
 });
 
 // Upload contacts from CSV (columns: name, email, businessName, notes)
@@ -73,7 +73,7 @@ router.post('/contacts/import', (req, res, next) => csvUpload.single('file')(req
     }).then(() => imported++).catch(() => skipped++);
   }
 
-  sendSuccess(res, { imported, skipped }, 'Contacts imported');
+  sendSuccess(res, { imported, skipped }, 'Contacts imported from CSV file.');
 });
 
 // Send a share link campaign to contacts

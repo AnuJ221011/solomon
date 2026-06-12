@@ -134,7 +134,7 @@ router.post('/', validate(sendSchema), async (req, res) => {
     include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
   });
 
-  sendSuccess(res, message, 'Message sent', 201);
+  sendSuccess(res, message, 'Message sent to recipient.', 201);
 });
 
 /**
@@ -146,7 +146,7 @@ router.patch('/:id/read', async (req, res) => {
   if (!msg) throw createError('Message not found', 404);
   if (msg.recipientId !== req.user.id) throw createError('Access denied', 403);
   await prisma.message.update({ where: { id: msg.id }, data: { isRead: true } });
-  sendSuccess(res, null, 'Marked as read');
+  sendSuccess(res, null, 'Message marked as read.');
 });
 
 export default router;

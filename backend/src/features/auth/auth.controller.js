@@ -12,13 +12,13 @@ const REFRESH_COOKIE_OPTIONS = {
 export const buyerSignup = async (req, res) => {
   const { user, accessToken, refreshToken } = await authService.registerBuyer(req.body);
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-  sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Account created', 201);
+  sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Welcome! Your account is ready.', 201);
 };
 
 export const brandSignup = async (req, res) => {
   const { user, accessToken, refreshToken } = await authService.registerBrand(req.body);
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-  sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Brand registered — pending admin approval', 201);
+  sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Brand registered, awaiting admin approval.', 201);
 };
 
 export const login = async (req, res) => {
@@ -29,17 +29,22 @@ export const login = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   await authService.confirmEmailOtp(req.body);
-  sendSuccess(res, null, 'Email verified successfully');
+  sendSuccess(res, null, "Email verified, you're good to go.");
 };
 
 export const resendOtp = async (req, res) => {
   await authService.resendOtp(req.body.email);
-  sendSuccess(res, null, 'OTP sent');
+  sendSuccess(res, null, 'Verification code sent to your email.');
+};
+
+export const changePendingEmail = async (req, res) => {
+  await authService.changePendingEmail(req.body);
+  sendSuccess(res, null, 'Email updated, new code sent.');
 };
 
 export const saveStoreTypeQuiz = async (req, res) => {
   const profile = await authService.saveStoreTypeQuiz(req.user.id, req.body);
-  sendSuccess(res, profile, 'Preferences saved');
+  sendSuccess(res, profile, 'Store preferences saved successfully.');
 };
 
 export const refreshToken = async (req, res) => {
@@ -55,17 +60,17 @@ export const logout = async (req, res) => {
   const token = req.cookies?.refreshToken;
   await authService.logout(token);
   res.clearCookie('refreshToken');
-  sendSuccess(res, null, 'Logged out');
+  sendSuccess(res, null, "You've been signed out safely.");
 };
 
 export const forgotPassword = async (req, res) => {
   await authService.sendForgotPasswordOtp(req.body.email);
-  sendSuccess(res, null, 'If that email exists, an OTP has been sent');
+  sendSuccess(res, null, 'Reset code sent if account exists.');
 };
 
 export const resetPassword = async (req, res) => {
   await authService.resetPassword(req.body);
-  sendSuccess(res, null, 'Password reset successfully');
+  sendSuccess(res, null, 'Password updated, sign in now.');
 };
 
 export const getMe = (req, res) => {

@@ -32,6 +32,19 @@ export interface PendingBrand {
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
 }
 
+export interface ApprovedBrand {
+  id: string
+  brandName: string
+  slug: string
+  email: string
+  category: string[]
+  achievementLevel: string
+  approvedAt: string
+  productCount: number
+  avgRating: number
+  logoUrl?: string
+}
+
 export interface AdminPayout {
   id: string
   orderId: string
@@ -98,7 +111,66 @@ export function useAdminPendingBrands() {
     queryFn: async () => {
       const res = await api.get('/admin/brands/pending')
       const payload = res.data.data
-      return Array.isArray(payload) ? payload : (payload.brands ?? [])
+      const raw: any[] = Array.isArray(payload) ? payload : (payload.brands ?? [])
+      return raw.map((b) => ({
+        id: b.id,
+        name: b.brandName,
+        email: b.user?.email ?? '',
+        category: Array.isArray(b.category) ? b.category.join(', ') : (b.category ?? ''),
+        city: b.city ?? '',
+        state: b.state ?? '',
+        instagramUrl: b.instagramUrl,
+        websiteUrl: b.websiteUrl,
+        skuCount: b.skuCount ?? 0,
+        appliedAt: b.createdAt,
+        status: b.status,
+      }))
+    },
+  })
+}
+
+export function useAdminBrand(id: string | null) {
+  return useQuery({
+    queryKey: ['admin-brand', id],
+    queryFn: async () => {
+      const res = await api.get(`/admin/brands/${id}`)
+      return res.data.data
+    },
+    enabled: !!id,
+  })
+}
+
+export function useOverrideAchievementLevel() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; level: string }>({
+    mutationFn: ({ id, level }) => api.post(`/admin/brands/${id}/level`, { level }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-brand', vars.id] })
+      qc.invalidateQueries({ queryKey: ['admin-approved-brands'] })
+      toast.success('Achievement level updated.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useAdminApprovedBrands() {
+  return useQuery<ApprovedBrand[]>({
+    queryKey: ['admin-approved-brands'],
+    queryFn: async () => {
+      const res = await api.get('/admin/brands/approved')
+      const payload = res.data.data
+      return (Array.isArray(payload) ? payload : []).map((b: any) => ({
+        id: b.id,
+        brandName: b.brandName,
+        slug: b.slug,
+        email: b.user?.email ?? '',
+        category: b.category ?? [],
+        achievementLevel: b.achievementLevel ?? 'L1_SPROUT',
+        approvedAt: b.approvedAt,
+        productCount: b._count?.products ?? 0,
+        avgRating: b.avgRating ?? 0,
+        logoUrl: b.logoUrl,
+      }))
     },
   })
 }
@@ -109,6 +181,7 @@ export function useApproveBrand() {
     mutationFn: (id) => api.post(`/admin/brands/${id}/approve`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-pending-brands'] })
+      qc.invalidateQueries({ queryKey: ['admin-approved-brands'] })
       qc.invalidateQueries({ queryKey: ['admin-stats'] })
       toast.success('Brand approved.')
     },

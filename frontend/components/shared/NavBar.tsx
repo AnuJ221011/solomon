@@ -252,12 +252,12 @@ function UserDropdown({ ghost }: { ghost: boolean }) {
             <p className="text-[11px] font-public-sans text-muted-text truncate">{user.email}</p>
           </div>
           <Link
-            href={user.role === 'BRAND' ? '/portal' : '/dashboard'}
+            href={user.role === 'ADMIN' ? '/admin' : user.role === 'BRAND' ? '/portal' : '/dashboard'}
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 px-3 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
           >
             <UserIcon size={14} aria-hidden="true" />
-            {user.role === 'BRAND' ? 'Brand Portal' : 'My Account'}
+            {user.role === 'ADMIN' ? 'Admin Panel' : user.role === 'BRAND' ? 'Brand Portal' : 'My Account'}
           </Link>
           <button
             type="button"

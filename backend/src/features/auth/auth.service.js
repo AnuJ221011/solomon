@@ -66,11 +66,49 @@ export const registerBuyer = async ({
 export const registerBrand = async ({
   email, password, brandName, category, countryOfOrigin,
   gstNumber, businessRegNumber,
-  instagramHandle, websiteUrl, yearFounded, brandStory, existingRetailPartners,
+  instagramHandle, websiteUrl, city, state, yearFounded, brandStory, existingRetailPartners,
   referralToken,
 }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) throw createError('Email already registered', 409);
+
+  if (existing) {
+    // Already verified — hard stop
+    if (existing.isEmailVerified) throw createError('Email already registered', 409);
+
+    // Unverified account from a previous attempt — update fields and resend OTP
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        passwordHash,
+        name: brandName,
+        brandProfile: {
+          update: {
+            brandName, slug, category, countryOfOrigin,
+            gstNumber: gstNumber ?? null,
+            businessRegNumber: businessRegNumber ?? null,
+            instagramHandle: instagramHandle ?? null,
+            websiteUrl: websiteUrl || null,
+            city: city ?? null,
+            state: state ?? null,
+            yearFounded: yearFounded ?? null,
+            brandStory: brandStory ?? null,
+            existingRetailPartners: existingRetailPartners ?? null,
+          },
+        },
+      },
+    });
+
+    const otp = generateOtp();
+    await storeOtp(email, otp);
+    sendOtpEmail(email, otp).catch(() => {});
+
+    const accessToken = generateAccessToken(existing.id, existing.role);
+    const refreshToken = await generateRefreshToken(existing.id);
+    return { user: existing, accessToken, refreshToken };
+  }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
@@ -91,6 +129,8 @@ export const registerBrand = async ({
           businessRegNumber,
           instagramHandle,
           websiteUrl: websiteUrl || null,
+          city: city ?? null,
+          state: state ?? null,
           yearFounded,
           brandStory,
           existingRetailPartners,
@@ -105,7 +145,7 @@ export const registerBrand = async ({
 
   const otp = generateOtp();
   await storeOtp(email, otp);
-  sendOtpEmail(email, otp).catch(() => {}); // non-blocking
+  sendOtpEmail(email, otp).catch(() => {});
 
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = await generateRefreshToken(user.id);
@@ -140,6 +180,17 @@ export const confirmEmailOtp = async ({ email, otp }) => {
 
   await sendWelcomeEmail(email, user.name);
   return user;
+};
+
+export const changePendingEmail = async ({ currentEmail, newEmail }) => {
+  const user = await prisma.user.findUnique({ where: { email: currentEmail } });
+  if (!user) throw createError('No account found with this email.', 404);
+  if (user.isEmailVerified) throw createError('This account is already verified.', 400);
+
+  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+  if (taken) throw createError('This email is already registered.', 409);
+
+  await prisma.user.update({ where: { email: currentEmail }, data: { email: newEmail } });
 };
 
 export const resendOtp = async (email) => {

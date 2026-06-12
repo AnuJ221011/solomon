@@ -24,30 +24,40 @@ router.get('/brands/pending', async (req, res) => {
   sendSuccess(res, brands);
 });
 
+router.get('/brands/approved', async (req, res) => {
+  const brands = await adminService.getApprovedBrands();
+  sendSuccess(res, brands);
+});
+
+router.get('/brands/:id', async (req, res) => {
+  const brand = await adminService.getBrandById(req.params.id);
+  sendSuccess(res, brand);
+});
+
 router.post('/brands/:id/approve', async (req, res) => {
   const brand = await adminService.approveBrand(req.params.id);
-  sendSuccess(res, brand, 'Brand approved');
+  sendSuccess(res, brand, 'Brand approved and is now live.');
 });
 
 router.post('/brands/:id/reject', async (req, res) => {
   const brand = await adminService.rejectBrand(req.params.id);
-  sendSuccess(res, brand, 'Brand rejected');
+  sendSuccess(res, brand, 'Brand application has been rejected.');
 });
 
 router.post('/brands/:id/level', validate(z.object({ level: z.string() })), async (req, res) => {
   const brand = await adminService.overrideAchievementLevel(req.params.id, req.body.level);
-  sendSuccess(res, brand, 'Achievement level updated');
+  sendSuccess(res, brand, 'Achievement level overridden by admin.');
 });
 
 // ── User management ────────────────────────────────────────────────────────
 router.post('/users/:id/suspend', async (req, res) => {
   const user = await adminService.suspendUser(req.params.id);
-  sendSuccess(res, user, 'User suspended');
+  sendSuccess(res, user, 'User account has been suspended.');
 });
 
 router.post('/users/:id/reactivate', async (req, res) => {
   const user = await adminService.reactivateUser(req.params.id);
-  sendSuccess(res, user, 'User reactivated');
+  sendSuccess(res, user, 'User account is now active.');
 });
 
 // ── Payout management ──────────────────────────────────────────────────────
@@ -78,7 +88,7 @@ router.post('/payouts/:id/mark-paid',
   validate(z.object({ paypalBatchId: z.string().optional() })),
   async (req, res) => {
     const payout = await adminService.markPayoutPaid(req.params.id, req.body);
-    sendSuccess(res, payout, 'Payout marked as paid');
+    sendSuccess(res, payout, 'Payout marked as paid successfully.');
   }
 );
 

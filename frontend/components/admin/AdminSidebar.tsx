@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Building2,
+  Clock,
   Users,
   CreditCard,
   AlertTriangle,
@@ -18,6 +19,7 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 const NAV_ITEMS = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/brands', label: 'Brands', icon: Building2 },
+  { href: '/admin/pending-brands', label: 'Pending Brands', icon: Clock },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/payouts', label: 'Payouts', icon: CreditCard },
   { href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },

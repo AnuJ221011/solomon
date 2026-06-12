@@ -90,7 +90,7 @@ router.post(
       )
     );
 
-    sendSuccess(res, photos, 'Photos uploaded', 201);
+    sendSuccess(res, photos, `${photos.length} photo${photos.length !== 1 ? 's' : ''} uploaded successfully.`, 201);
   }
 );
 
@@ -102,7 +102,7 @@ router.patch('/product/:productId/reorder', authenticate, authorize('BRAND'), as
   await prisma.$transaction(
     order.map(({ id, position }) => prisma.productPhoto.update({ where: { id }, data: { position } }))
   );
-  sendSuccess(res, null, 'Photos reordered');
+  sendSuccess(res, null, 'Photo order saved successfully.');
 });
 
 // Delete a product photo
@@ -115,7 +115,7 @@ router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRA
 
   await cloudinary.uploader.destroy(photo.publicId).catch(() => {});
   await prisma.productPhoto.delete({ where: { id: photo.id } });
-  sendSuccess(res, null, 'Photo deleted');
+  sendSuccess(res, null, 'Photo removed from product gallery.');
 });
 
 // Upload brand logo
@@ -126,7 +126,7 @@ router.post('/brand/logo', authenticate, authorize('BRAND'), safeUpload(upload.s
     where: { userId: req.user.id },
     data: { logoUrl: result.secure_url },
   });
-  sendSuccess(res, { logoUrl: result.secure_url }, 'Logo uploaded');
+  sendSuccess(res, { logoUrl: result.secure_url }, 'Brand logo updated successfully.');
 });
 
 // Upload brand banner
@@ -137,7 +137,7 @@ router.post('/brand/banner', authenticate, authorize('BRAND'), safeUpload(upload
     where: { userId: req.user.id },
     data: { bannerUrl: result.secure_url },
   });
-  sendSuccess(res, { bannerUrl: result.secure_url }, 'Banner uploaded');
+  sendSuccess(res, { bannerUrl: result.secure_url }, 'Brand banner updated successfully.');
 });
 
 export default router;

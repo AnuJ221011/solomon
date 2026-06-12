@@ -22,7 +22,7 @@ const updateStatusSchema = z.object({
 // Buyer — request a return
 router.post('/order/:orderId', authenticate, authorize('BUYER'), validate(requestReturnSchema), async (req, res) => {
   const ret = await requestReturn(req.user.id, req.params.orderId, req.body);
-  sendSuccess(res, ret, 'Return requested', 201);
+  sendSuccess(res, ret, 'Return request submitted to admin.', 201);
 });
 
 // Admin — list and update returns
@@ -33,7 +33,7 @@ router.get('/', authenticate, authorize('ADMIN'), async (req, res) => {
 
 router.patch('/:id/status', authenticate, authorize('ADMIN'), validate(updateStatusSchema), async (req, res) => {
   const ret = await updateReturnStatus(req.user.id, req.params.id, req.body);
-  sendSuccess(res, ret, 'Return status updated');
+  sendSuccess(res, ret, 'Return status has been updated.');
 });
 
 export default router;

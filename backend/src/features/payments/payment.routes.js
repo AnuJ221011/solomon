@@ -48,7 +48,7 @@ router.post(
   validate(initiateSchema),
   async (req, res) => {
     const result = await paymentService.initiatePayPalPayment(req.user.id, req.body);
-    sendSuccess(res, result, 'PayPal order created');
+    sendSuccess(res, result, 'PayPal checkout session created.');
   }
 );
 
@@ -60,7 +60,7 @@ router.post(
   validate(captureSchema),
   async (req, res) => {
     const result = await paymentService.captureAndFulfil(req.user.id, req.body);
-    sendSuccess(res, result, 'Payment captured and orders created', 201);
+    sendSuccess(res, result, 'Payment captured, orders confirmed.', 201);
   }
 );
 

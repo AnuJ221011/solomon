@@ -40,7 +40,7 @@ router.post('/', authenticate, authorize('BRAND'), validate(submitSchema), async
       isActive: false, // Admin must activate
     },
   });
-  sendSuccess(res, promo, 'Promoted listing submitted — pending admin activation', 201);
+  sendSuccess(res, promo, 'Listing submitted, awaiting admin activation.', 201);
 });
 
 // Brand — list own promoted listings
@@ -60,7 +60,7 @@ router.delete('/:id', authenticate, authorize('BRAND'), async (req, res) => {
   const listing = await prisma.promotedListing.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!listing) throw createError('Promoted listing not found', 404);
   await prisma.promotedListing.delete({ where: { id: listing.id } });
-  sendSuccess(res, null, 'Promoted listing cancelled');
+  sendSuccess(res, null, 'Promoted listing cancelled successfully.');
 });
 
 // Admin — activate / deactivate a promoted listing
@@ -69,7 +69,7 @@ router.post('/:id/activate', authenticate, authorize('ADMIN'), async (req, res) 
     where: { id: req.params.id },
     data: { isActive: true },
   });
-  sendSuccess(res, listing, 'Promoted listing activated');
+  sendSuccess(res, listing, 'Promoted listing is now live.');
 });
 
 router.post('/:id/deactivate', authenticate, authorize('ADMIN'), async (req, res) => {
@@ -77,7 +77,7 @@ router.post('/:id/deactivate', authenticate, authorize('ADMIN'), async (req, res
     where: { id: req.params.id },
     data: { isActive: false },
   });
-  sendSuccess(res, listing, 'Promoted listing deactivated');
+  sendSuccess(res, listing, 'Promoted listing paused successfully.');
 });
 
 // Admin — list all active promotions

@@ -47,7 +47,7 @@ router.post('/', validate(inviteSchema), async (req, res) => {
     },
     include: { user: { select: { id: true, name: true, email: true } } },
   });
-  sendSuccess(res, member, 'Team member added', 201);
+  sendSuccess(res, member, 'Team member added successfully.', 201);
 });
 
 router.delete('/:userId', async (req, res) => {
@@ -56,7 +56,7 @@ router.delete('/:userId', async (req, res) => {
   });
   if (!member) throw createError('Team member not found', 404);
   await prisma.teamMember.delete({ where: { id: member.id } });
-  sendSuccess(res, null, 'Team member removed');
+  sendSuccess(res, null, 'Team member removed successfully.');
 });
 
 export default router;

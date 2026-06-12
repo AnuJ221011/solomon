@@ -60,13 +60,18 @@ export const getProductBySlug = async (slug) => {
 
 export const listProducts = async ({
   page, limit, search, category, zone, minPrice, maxPrice,
-  availability, brandId, sortBy, sortOrder,
+  availability, brandId, brandSlug, sortBy, sortOrder,
   // Personalisation context (passed when a logged-in buyer fetches the feed)
   buyerUserId,
 }) => {
   const where = {};
   where.availability = availability ?? 'ACTIVE';
 
+  // Resolve brandSlug → brandProfileId when brandId not explicitly provided
+  if (brandSlug && !brandId) {
+    const brand = await prisma.brandProfile.findUnique({ where: { slug: brandSlug }, select: { id: true } });
+    if (brand) brandId = brand.id;
+  }
   if (brandId) where.brandProfileId = brandId;
   if (category) {
     const cats = Array.isArray(category)

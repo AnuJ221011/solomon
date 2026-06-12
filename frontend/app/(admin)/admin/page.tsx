@@ -70,7 +70,8 @@ function StatCardSkeleton() {
 
 // ─── Format helpers ───────────────────────────────────────────────────────────
 
-function formatINR(n: number) {
+function formatINR(n: number | undefined | null) {
+  if (n == null || isNaN(n)) return '₹0'
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)}Cr`
   if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)}L`
   if (n >= 1_000) return `₹${(n / 1_000).toFixed(0)}K`

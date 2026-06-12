@@ -1,15 +1,38 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Upload, Link2, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Upload, Link2, Trash2, X } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
+import { cn } from '@/lib/utils'
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const PRODUCT_CATEGORIES = [
+  'Textiles', 'Home Decor', 'Jewellery', 'Accessories', 'Apparel',
+  'Food & Wellness', 'Art & Craft', 'Stationery', 'Other',
+]
+
+const COUNTRIES = [
+  { code: 'IN', name: 'India' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' },
+]
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -25,15 +48,14 @@ function Section({ title, description, children }: { title: string; description?
   )
 }
 
-// ─── Form field ───────────────────────────────────────────────────────────────
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
         {label}
       </label>
       {children}
+      {hint && <p className="text-[11px] font-public-sans text-muted-text mt-1">{hint}</p>}
     </div>
   )
 }
@@ -70,6 +92,35 @@ export default function SettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'Manager' | 'Viewer'>('Viewer')
 
+  // ── Brand Profile ──────────────────────────────────────────────────────────
+  const [brandName, setBrandName] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [countryOfOrigin, setCountryOfOrigin] = useState('IN')
+  const [yearFounded, setYearFounded] = useState('')
+
+  // ── Brand Story ────────────────────────────────────────────────────────────
+  const [brandStory, setBrandStory] = useState('')
+  const [description, setDescription] = useState('')
+  const [existingRetailPartners, setExistingRetailPartners] = useState('')
+
+  // ── Categories ─────────────────────────────────────────────────────────────
+  const [categories, setCategories] = useState<string[]>([])
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(PRODUCT_CATEGORIES)
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
+  const [newCategoryInput, setNewCategoryInput] = useState('')
+  const newCategoryRef = useRef<HTMLInputElement>(null)
+
+  // ── Online Presence ────────────────────────────────────────────────────────
+  const [instagramHandle, setInstagramHandle] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
+
+  // ── Business Details ───────────────────────────────────────────────────────
+  const [gstNumber, setGstNumber] = useState('')
+  const [businessRegNumber, setBusinessRegNumber] = useState('')
+  const [minimumOrderValue, setMinimumOrderValue] = useState('')
+
+  // ── Queries ────────────────────────────────────────────────────────────────
   const { data: team = [], isLoading: teamLoading } = useQuery<TeamMember[]>({
     queryKey: ['brand-team'],
     queryFn: () => api.get('/team').then((r) => r.data.data ?? []),
@@ -84,6 +135,75 @@ export default function SettingsPage() {
     queryKey: ['my-brand-profile'],
     queryFn: () => api.get('/brands/me/profile').then((r) => r.data.data),
   })
+
+  // Populate form when data loads
+  useEffect(() => {
+    if (!brandProfile) return
+    setBrandName(brandProfile.brandName ?? '')
+    setCity(brandProfile.city ?? '')
+    setState(brandProfile.state ?? '')
+    setCountryOfOrigin(brandProfile.countryOfOrigin ?? 'IN')
+    setYearFounded(brandProfile.yearFounded ? String(brandProfile.yearFounded) : '')
+    setBrandStory(brandProfile.brandStory ?? '')
+    setDescription(brandProfile.description ?? '')
+    setExistingRetailPartners(brandProfile.existingRetailPartners ?? '')
+    const saved: string[] = brandProfile.category ?? []
+    setCategories(saved)
+    // merge saved custom categories into options
+    const extra = saved.filter((c: string) => !PRODUCT_CATEGORIES.includes(c))
+    if (extra.length) setCategoryOptions([...PRODUCT_CATEGORIES, ...extra])
+    setInstagramHandle(brandProfile.instagramHandle ?? '')
+    setWebsiteUrl(brandProfile.websiteUrl ?? '')
+    setGstNumber(brandProfile.gstNumber ?? '')
+    setBusinessRegNumber(brandProfile.businessRegNumber ?? '')
+    setMinimumOrderValue(brandProfile.minimumOrderValue != null ? String(brandProfile.minimumOrderValue) : '')
+  }, [brandProfile])
+
+  // ── Mutations ──────────────────────────────────────────────────────────────
+  const updateProfile = useMutation({
+    mutationFn: (body: Record<string, unknown>) => api.patch('/brands/me/profile', body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-brand-profile'] })
+      toast.success('Profile saved.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+
+  function handleSaveProfile() {
+    updateProfile.mutate({
+      brandName: brandName.trim() || undefined,
+      city: city.trim() || undefined,
+      state: state.trim() || undefined,
+      countryOfOrigin: countryOfOrigin || undefined,
+      yearFounded: yearFounded ? Number(yearFounded) : undefined,
+      brandStory: brandStory.trim() || undefined,
+      description: description.trim() || undefined,
+      existingRetailPartners: existingRetailPartners.trim() || undefined,
+      category: categories.length ? categories : undefined,
+      instagramHandle: instagramHandle.trim() || undefined,
+      websiteUrl: websiteUrl.trim() || undefined,
+      gstNumber: gstNumber.trim() || undefined,
+      businessRegNumber: businessRegNumber.trim() || undefined,
+      minimumOrderValue: minimumOrderValue !== '' ? Number(minimumOrderValue) : undefined,
+    })
+  }
+
+  function toggleCategory(cat: string) {
+    setCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    )
+  }
+
+  function confirmNewCategory() {
+    const val = newCategoryInput.trim()
+    if (!val) return
+    if (!categoryOptions.includes(val)) {
+      setCategoryOptions((prev) => [...prev, val])
+    }
+    setCategories((prev) => prev.includes(val) ? prev : [...prev, val])
+    setNewCategoryInput('')
+    setShowNewCategoryInput(false)
+  }
 
   const removeMember = useMutation({
     mutationFn: (userId: string) => api.delete(`/team/${userId}`),
@@ -116,51 +236,81 @@ export default function SettingsPage() {
         Settings
       </h1>
 
-      {/* Brand Profile */}
+      {/* ── Brand Profile ──────────────────────────────────────────────────── */}
       <Section
         title="Brand Profile"
-        description="This information appears on your brand storefront and product pages."
+        description="Basic information about your brand that appears across the platform."
       >
         <div className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Field label="Brand Name">
               <input
                 type="text"
-                defaultValue={brandProfile?.name ?? ''}
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                placeholder="Your brand name"
                 className={INPUT_CLS}
               />
             </Field>
-            <Field label="Location">
+            <Field label="Country of Origin">
+              <select
+                value={countryOfOrigin}
+                onChange={(e) => setCountryOfOrigin(e.target.value)}
+                className={INPUT_CLS}
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+            <Field label="City">
               <input
                 type="text"
-                defaultValue={brandProfile?.location ?? ''}
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g. Jaipur"
+                className={INPUT_CLS}
+              />
+            </Field>
+            <Field label="State">
+              <input
+                type="text"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                placeholder="e.g. Rajasthan"
+                className={INPUT_CLS}
+              />
+            </Field>
+            <Field label="Year Founded">
+              <input
+                type="number"
+                value={yearFounded}
+                onChange={(e) => setYearFounded(e.target.value)}
+                placeholder="e.g. 2018"
                 className={INPUT_CLS}
               />
             </Field>
           </div>
 
-          <Field label="Tagline">
-            <input
-              type="text"
-              defaultValue={brandProfile?.tagline ?? ''}
-              className={INPUT_CLS}
-            />
-          </Field>
-
-          <Field label="Description">
-            <textarea
-              rows={4}
-              defaultValue={brandProfile?.description ?? ''}
-              className={TEXTAREA_CLS}
-            />
-          </Field>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Field label="Logo">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded border border-border-warm bg-muted-bg flex items-center justify-center">
-                  <span className="text-[16px] font-[700] font-playfair text-muted-text">AR</span>
-                </div>
+                {brandProfile?.logoUrl ? (
+                  <img
+                    src={brandProfile.logoUrl}
+                    alt="Logo"
+                    className="w-12 h-12 rounded border border-border-warm object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded border border-border-warm bg-muted-bg flex items-center justify-center">
+                    <span className="text-[16px] font-[700] font-playfair text-muted-text">
+                      {brandName.slice(0, 2).toUpperCase() || '—'}
+                    </span>
+                  </div>
+                )}
                 <button
                   type="button"
                   className="inline-flex items-center gap-1.5 h-9 px-4 rounded border border-border-warm text-[13px] font-[600] font-public-sans text-primary hover:bg-muted-bg transition-colors"
@@ -170,10 +320,17 @@ export default function SettingsPage() {
                 </button>
               </div>
             </Field>
-
             <Field label="Banner">
               <div className="flex items-center gap-3">
-                <div className="w-20 h-12 rounded border border-border-warm bg-muted-bg" />
+                {brandProfile?.bannerUrl ? (
+                  <img
+                    src={brandProfile.bannerUrl}
+                    alt="Banner"
+                    className="w-20 h-12 rounded border border-border-warm object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-12 rounded border border-border-warm bg-muted-bg" />
+                )}
                 <button
                   type="button"
                   className="inline-flex items-center gap-1.5 h-9 px-4 rounded border border-border-warm text-[13px] font-[600] font-public-sans text-primary hover:bg-muted-bg transition-colors"
@@ -184,35 +341,204 @@ export default function SettingsPage() {
               </div>
             </Field>
           </div>
+        </div>
+      </Section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <Field label="Instagram">
+      {/* ── Brand Story ────────────────────────────────────────────────────── */}
+      <Section
+        title="Brand Story"
+        description="Tell buyers about your brand — this appears on your storefront."
+      >
+        <div className="space-y-5">
+          <Field label="Brand Story" hint="Share your origin story, craft process, and what makes your brand special (max 1000 characters).">
+            <textarea
+              rows={5}
+              value={brandStory}
+              onChange={(e) => setBrandStory(e.target.value)}
+              maxLength={1000}
+              placeholder="Tell us the story behind your brand..."
+              className={TEXTAREA_CLS}
+            />
+            <p className="text-[11px] font-public-sans text-muted-text mt-1 text-right">
+              {brandStory.length}/1000
+            </p>
+          </Field>
+
+          <Field label="Short Description" hint="A brief description shown on search and category pages.">
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="A short description of your brand..."
+              className={TEXTAREA_CLS}
+            />
+          </Field>
+
+          <Field label="Existing Retail Partners" hint="List any current stores or platforms where your products are sold.">
+            <textarea
+              rows={3}
+              value={existingRetailPartners}
+              onChange={(e) => setExistingRetailPartners(e.target.value)}
+              maxLength={500}
+              placeholder="e.g. Nykaa, local boutiques in Mumbai..."
+              className={TEXTAREA_CLS}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ── Categories ─────────────────────────────────────────────────────── */}
+      <Section
+        title="Product Categories"
+        description="The categories your products fall under."
+      >
+        <div className="flex flex-wrap gap-2">
+          {categoryOptions.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => toggleCategory(cat)}
+              className={cn(
+                'px-3 py-2 rounded border text-[13px] font-[500] font-public-sans transition-colors',
+                categories.includes(cat)
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-muted-text border-border-warm hover:border-primary/40 hover:text-primary',
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+
+          {showNewCategoryInput ? (
+            <div className="flex items-center gap-1.5 rounded border border-accent px-2 py-1">
+              <input
+                ref={newCategoryRef}
+                value={newCategoryInput}
+                onChange={(e) => setNewCategoryInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); confirmNewCategory() }
+                  if (e.key === 'Escape') { setShowNewCategoryInput(false); setNewCategoryInput('') }
+                }}
+                placeholder="Category name"
+                className="text-[13px] font-public-sans text-primary bg-transparent outline-none w-32"
+                autoFocus
+              />
+              <button type="button" onClick={confirmNewCategory} className="text-accent hover:text-primary transition-colors">
+                <Plus size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowNewCategoryInput(false); setNewCategoryInput('') }}
+                className="text-muted-text hover:text-primary transition-colors"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setShowNewCategoryInput(true)
+                setTimeout(() => newCategoryRef.current?.focus(), 50)
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded border border-dashed border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:border-accent hover:text-accent transition-colors"
+            >
+              <Plus size={13} aria-hidden="true" />
+              New category
+            </button>
+          )}
+        </div>
+        {categories.length === 0 && (
+          <p className="text-[12px] font-public-sans text-error mt-3">Please select at least one category.</p>
+        )}
+      </Section>
+
+      {/* ── Online Presence ─────────────────────────────────────────────────── */}
+      <Section
+        title="Online Presence"
+        description="Your website and social media links."
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <Field label="Instagram Handle">
+            <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
+              <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">
+                @
+              </span>
+              <input
+                type="text"
+                value={instagramHandle}
+                onChange={(e) => setInstagramHandle(e.target.value)}
+                placeholder="yourhandle"
+                className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none"
+              />
+            </div>
+          </Field>
+          <Field label="Website URL">
+            <input
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              placeholder="https://yourbrand.com"
+              className={INPUT_CLS}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ── Business Details ────────────────────────────────────────────────── */}
+      <Section
+        title="Business Details"
+        description="Legal and operational details for your brand."
+      >
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="GST Number">
+              <input
+                type="text"
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value)}
+                placeholder="e.g. 22AAAAA0000A1Z5"
+                className={INPUT_CLS}
+              />
+            </Field>
+            <Field label="Business Registration Number">
+              <input
+                type="text"
+                value={businessRegNumber}
+                onChange={(e) => setBusinessRegNumber(e.target.value)}
+                placeholder="e.g. U74999MH2020PTC123456"
+                className={INPUT_CLS}
+              />
+            </Field>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Minimum Order Value (₹)" hint="The minimum order value buyers must meet to place an order.">
               <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
                 <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">
-                  @
+                  ₹
                 </span>
                 <input
-                  type="text"
-                  defaultValue={brandProfile?.instagramHandle ?? ''}
+                  type="number"
+                  min={0}
+                  value={minimumOrderValue}
+                  onChange={(e) => setMinimumOrderValue(e.target.value)}
+                  placeholder="e.g. 5000"
                   className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none"
                 />
               </div>
             </Field>
-            <Field label="Website">
-              <input type="url" defaultValue={brandProfile?.website ?? ''} className={INPUT_CLS} />
-            </Field>
-            <Field label="Year Founded">
-              <input type="number" defaultValue={brandProfile?.yearFounded ?? ''} className={INPUT_CLS} />
-            </Field>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button size="md">Save Changes</Button>
           </div>
         </div>
       </Section>
 
-      {/* Shipping Zones */}
+      {/* ── Save all ────────────────────────────────────────────────────────── */}
+      <div className="flex justify-end mb-6">
+        <Button size="md" onClick={handleSaveProfile} disabled={updateProfile.isPending}>
+          {updateProfile.isPending ? 'Saving…' : 'Save Changes'}
+        </Button>
+      </div>
+
+      {/* ── Shipping Zones ──────────────────────────────────────────────────── */}
       <Section title="Shipping Zones" description="Configure flat-rate shipping per zone. Free shipping threshold applies per order.">
         {zonesLoading && (
           <div className="space-y-3">
@@ -223,64 +549,56 @@ export default function SettingsPage() {
         )}
         {!zonesLoading && (
           <>
-          <div className="space-y-3">
-          {zones.map((zone) => (
-            <div key={zone.id} className="flex items-center gap-4 py-3 border-b border-border-warm last:border-0">
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-[600] font-public-sans text-primary">{zone.name}</p>
-                <p className="text-[12px] font-public-sans text-muted-text">{zone.countries}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[12px] font-public-sans text-muted-text">Flat rate</span>
-                <div className="flex items-center rounded border border-border-warm overflow-hidden">
-                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    defaultValue={zone.rate}
-                    className="w-20 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none text-right tabular-nums"
-                  />
+            <div className="space-y-3">
+              {zones.map((zone) => (
+                <div key={zone.id} className="flex items-center gap-4 py-3 border-b border-border-warm last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-[600] font-public-sans text-primary">{zone.name}</p>
+                    <p className="text-[12px] font-public-sans text-muted-text">{zone.countries}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[12px] font-public-sans text-muted-text">Flat rate</span>
+                    <div className="flex items-center rounded border border-border-warm overflow-hidden">
+                      <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">₹</span>
+                      <input
+                        type="number"
+                        defaultValue={zone.rate}
+                        className="w-20 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none text-right tabular-nums"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[12px] font-public-sans text-muted-text">Free above</span>
+                    <div className="flex items-center rounded border border-border-warm overflow-hidden">
+                      <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">₹</span>
+                      <input
+                        type="number"
+                        defaultValue={zone.freeThreshold ?? ''}
+                        placeholder="—"
+                        className="w-24 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none text-right tabular-nums"
+                      />
+                    </div>
+                  </div>
+                  <button type="button" aria-label="Remove zone" className="text-muted-text hover:text-error transition-colors">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[12px] font-public-sans text-muted-text">Free above</span>
-                <div className="flex items-center rounded border border-border-warm overflow-hidden">
-                  <span className="px-2.5 h-8 flex items-center text-[12px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    defaultValue={zone.freeThreshold ?? ''}
-                    placeholder="—"
-                    className="w-24 h-8 px-2 bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none text-right tabular-nums"
-                  />
-                </div>
-              </div>
-              <button
-                type="button"
-                aria-label="Remove zone"
-                className="text-muted-text hover:text-error transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-warm">
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <Plus size={13} />
-            Add Zone
-          </Button>
-          <Button size="sm" onClick={() => saveShipping.mutate({ zone: 'CUSTOM', rateType: 'FLAT', rate: 0 })}>
-            Save Shipping
-          </Button>
-        </div>
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-warm">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Plus size={13} />
+                Add Zone
+              </Button>
+              <Button size="sm" onClick={() => saveShipping.mutate({ zone: 'CUSTOM', rateType: 'FLAT', rate: 0 })}>
+                Save Shipping
+              </Button>
+            </div>
           </>
         )}
       </Section>
 
-      {/* Team Members */}
+      {/* ── Team Members ────────────────────────────────────────────────────── */}
       <Section title="Team Members" description="Manage who has access to your brand portal.">
         {teamLoading && (
           <div className="space-y-2 mb-4">
@@ -292,10 +610,7 @@ export default function SettingsPage() {
         {!teamLoading && (
           <div className="space-y-1 mb-4">
             {team.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center gap-4 py-3 border-b border-border-warm last:border-0"
-              >
+              <div key={member.id} className="flex items-center gap-4 py-3 border-b border-border-warm last:border-0">
                 <div className="w-9 h-9 rounded bg-muted-bg flex items-center justify-center shrink-0">
                   <span className="text-[12px] font-[700] font-public-sans text-muted-text">
                     {member.name?.split(' ').filter(Boolean).map((n) => n[0]).join('') ?? '?'}
@@ -306,9 +621,7 @@ export default function SettingsPage() {
                   <p className="text-[12px] font-public-sans text-muted-text">{member.email}</p>
                 </div>
                 <Badge variant={roleBadgeVariant(member.role)}>{member.role}</Badge>
-                <span className="text-[12px] font-public-sans text-muted-text shrink-0">
-                  Joined {member.joinedAt}
-                </span>
+                <span className="text-[12px] font-public-sans text-muted-text shrink-0">Joined {member.joinedAt}</span>
                 {member.role !== 'Owner' && (
                   <button
                     type="button"
@@ -356,10 +669,9 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* Integrations */}
+      {/* ── Integrations ────────────────────────────────────────────────────── */}
       <Section title="Integrations" description="Connect your store and manage data sync.">
         <div className="space-y-4">
-          {/* Shopify */}
           <div className="flex items-center gap-4 p-4 border border-border-warm rounded">
             <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0">
               <span className="text-[14px] font-[700] font-public-sans text-muted-text">Sp</span>
@@ -371,9 +683,7 @@ export default function SettingsPage() {
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              {shopifyConnected && (
-                <Badge variant="success">Connected</Badge>
-              )}
+              {shopifyConnected && <Badge variant="success">Connected</Badge>}
               <Button
                 variant={shopifyConnected ? 'ghost' : 'primary'}
                 size="sm"
@@ -386,7 +696,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* CSV */}
           <div className="flex items-center gap-4 p-4 border border-border-warm rounded">
             <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0">
               <span className="text-[12px] font-[700] font-public-sans text-muted-text">CSV</span>
@@ -402,9 +711,7 @@ export default function SettingsPage() {
                 <Upload size={12} />
                 Import
               </Button>
-              <Button variant="ghost" size="sm">
-                Export
-              </Button>
+              <Button variant="ghost" size="sm">Export</Button>
             </div>
           </div>
         </div>

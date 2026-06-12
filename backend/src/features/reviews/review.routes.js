@@ -34,18 +34,18 @@ router.get('/product/:productId', validateQuery(querySchema), async (req, res) =
 // Buyer
 router.post('/', authenticate, authorize('BUYER'), validate(createSchema), async (req, res) => {
   const review = await createReview(req.user.id, req.body);
-  sendSuccess(res, review, 'Review submitted', 201);
+  sendSuccess(res, review, 'Review submitted, thank you!', 201);
 });
 
 router.patch('/:id', authenticate, authorize('BUYER'), validate(editSchema), async (req, res) => {
   const review = await editReview(req.user.id, req.params.id, req.body);
-  sendSuccess(res, review, 'Review updated');
+  sendSuccess(res, review, 'Review updated successfully.');
 });
 
 // Brand
 router.post('/:id/respond', authenticate, authorize('BRAND'), validate(respondSchema), async (req, res) => {
   const review = await respondToReview(req.user.id, req.params.id, req.body.brandResponse);
-  sendSuccess(res, review, 'Response added');
+  sendSuccess(res, review, 'Brand response posted to review.');
 });
 
 export default router;

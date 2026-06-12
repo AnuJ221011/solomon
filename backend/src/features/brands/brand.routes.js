@@ -9,11 +9,10 @@ import { createError } from '../../shared/utils/createError.js';
 
 const router = Router();
 
-// Public
+// Public list
 router.get('/', validateQuery(brandQuerySchema), ctrl.listBrands);
-router.get('/:slug', ctrl.getBrandBySlug);
 
-// Brand-only
+// Brand-only — must be declared before /:slug so Express doesn't swallow them
 router.get('/me/profile', authenticate, authorize('BRAND'), ctrl.getMyBrand);
 router.patch('/me/profile', authenticate, authorize('BRAND'), validate(updateBrandProfileSchema), ctrl.updateMyBrand);
 router.get('/me/dashboard', authenticate, authorize('BRAND'), ctrl.getDashboardStats);
@@ -40,5 +39,8 @@ router.get('/me/payouts/export', authenticate, authorize('BRAND'), async (req, r
   res.setHeader('Content-Disposition', `attachment; filename="payouts_${Date.now()}.csv"`);
   res.send(header + rows);
 });
+
+// Public — must come last so /me/* routes above take priority
+router.get('/:slug', ctrl.getBrandBySlug);
 
 export default router;

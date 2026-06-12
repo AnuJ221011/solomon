@@ -42,7 +42,7 @@ router.post('/', validate(createSchema), async (req, res) => {
   const promo = await prisma.promotion.create({
     data: { ...req.body, brandProfileId, startsAt: new Date(req.body.startsAt), endsAt: req.body.endsAt ? new Date(req.body.endsAt) : null },
   });
-  sendSuccess(res, promo, 'Promotion created', 201);
+  sendSuccess(res, promo, 'Promotion created and scheduled.', 201);
 });
 
 router.patch('/:id', async (req, res) => {
@@ -50,7 +50,7 @@ router.patch('/:id', async (req, res) => {
   const promo = await prisma.promotion.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!promo) throw createError('Promotion not found', 404);
   const updated = await prisma.promotion.update({ where: { id: promo.id }, data: { ...req.body, isActive: req.body.isActive } });
-  sendSuccess(res, updated, 'Promotion updated');
+  sendSuccess(res, updated, 'Promotion updated successfully.');
 });
 
 router.delete('/:id', async (req, res) => {
@@ -58,7 +58,7 @@ router.delete('/:id', async (req, res) => {
   const promo = await prisma.promotion.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!promo) throw createError('Promotion not found', 404);
   await prisma.promotion.delete({ where: { id: promo.id } });
-  sendSuccess(res, null, 'Promotion deleted');
+  sendSuccess(res, null, 'Promotion removed from catalog.');
 });
 
 export default router;

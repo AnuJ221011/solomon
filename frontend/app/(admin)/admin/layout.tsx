@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils'
 const MOBILE_TABS = [
   { href: '/admin', label: 'Overview' },
   { href: '/admin/brands', label: 'Brands' },
+  { href: '/admin/pending-brands', label: 'Pending' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/payouts', label: 'Payouts' },
-  { href: '/admin/disputes', label: 'Disputes' },
 ]
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
@@ -23,13 +23,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const hasHydrated = useAuthStore((s) => s._hasHydrated)
 
   useEffect(() => {
+    if (!hasHydrated) return
     if (!isAuthenticated || user?.role !== 'ADMIN') {
       router.replace('/')
     }
-  }, [isAuthenticated, user, router])
+  }, [hasHydrated, isAuthenticated, user, router])
 
+  // Wait for store to rehydrate from localStorage before making auth decisions
+  if (!hasHydrated) return null
   if (!isAuthenticated || user?.role !== 'ADMIN') return null
 
   return (

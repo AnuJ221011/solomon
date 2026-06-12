@@ -24,7 +24,7 @@ const LEVEL_NAMES: Record<1 | 2 | 3 | 4 | 5, string> = {
 
 export function AchievementProgressBar({
   currentLevel,
-  criteria,
+  criteria = [],
   nextLevelName,
   className,
 }: AchievementProgressBarProps) {

@@ -3,12 +3,12 @@ import { sendSuccess } from '../../shared/utils/response.js';
 
 export const checkout = async (req, res) => {
   const orders = await orderService.createOrdersFromCart(req.user.id, req.body);
-  sendSuccess(res, orders, 'Orders created', 201);
+  sendSuccess(res, orders, 'Orders placed successfully.', 201);
 };
 
 export const createManualOrder = async (req, res) => {
   const order = await orderService.createManualOrder(req.user.id, req.body);
-  sendSuccess(res, order, 'Manual order created', 201);
+  sendSuccess(res, order, 'Manual order created successfully.', 201);
 };
 
 export const listMyBrandOrders = async (req, res) => {
@@ -28,5 +28,5 @@ export const getOrder = async (req, res) => {
 
 export const updateStatus = async (req, res) => {
   const order = await orderService.updateOrderStatus(req.user.id, req.params.id, req.body);
-  sendSuccess(res, order, 'Order status updated');
+  sendSuccess(res, order, 'Order status updated successfully.');
 };
