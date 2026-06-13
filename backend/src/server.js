@@ -13,8 +13,12 @@ const startServer = async () => {
   await prisma.$connect();
   logger.info('Database connected');
 
-  // Verify Redis connection
-  await redis.connect();
+  // Connect Redis — non-fatal so the server starts even if Redis is temporarily unavailable
+  try {
+    await redis.connect();
+  } catch (err) {
+    logger.warn('Redis unavailable at startup — OTP and token rotation features degraded', { error: err.message });
+  }
 
   // Initial FX rate load
   try {
