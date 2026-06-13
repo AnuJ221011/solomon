@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { toast } from 'sonner'
 
-// â”€â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: AdminPayout['status'] }) {
   return (
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: AdminPayout['status'] }) {
   )
 }
 
-// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Row ──────────────────────────────────────────────────────────────────────
 
 function PayoutRow({
   payout,
@@ -70,13 +70,13 @@ function PayoutRow({
         {payout.brandName}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-public-sans text-muted-text">
-        â‚¹{payout.grossAmount.toLocaleString('en-IN')}
+        ₹{payout.grossAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-public-sans text-muted-text">
-        {(payout.commissionRate * 100).toFixed(0)}% Â· â‚¹{payout.commissionAmount.toLocaleString('en-IN')}
+        {(payout.commissionRate * 100).toFixed(0)}% · ₹{payout.commissionAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-[600] font-public-sans text-primary">
-        â‚¹{payout.netAmount.toLocaleString('en-IN')}
+        ₹{payout.netAmount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4">
         <StatusBadge status={payout.status} />
@@ -106,7 +106,7 @@ function PayoutRow({
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminPayoutsPage() {
   const [tab, setTab] = useState<'PENDING' | 'ALL'>('PENDING')

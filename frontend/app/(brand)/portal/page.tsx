@@ -10,7 +10,7 @@ import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
 import { useAchievementProgress } from '@/hooks/queries/useAchievements'
 import type { OrderStatus, AchievementCriteria } from '@/types'
 
-// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Stat card ────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
   label: string
@@ -51,7 +51,7 @@ function StatCardSkeleton() {
   )
 }
 
-// â”€â”€â”€ Table columns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Table columns ────────────────────────────────────────────────────────────
 
 type OrderRow = {
   id: string
@@ -83,7 +83,7 @@ const ORDER_COLUMNS = [
     sortable: true,
     render: (val: unknown) => (
       <span className="tabular-nums text-[14px]">
-        â‚¹{Number(val).toLocaleString('en-IN')}
+        ₹{Number(val).toLocaleString('en-IN')}
       </span>
     ),
   },
@@ -98,7 +98,7 @@ const ORDER_COLUMNS = [
   },
 ]
 
-// â”€â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyOrders() {
   return (
@@ -111,7 +111,7 @@ function EmptyOrders() {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PortalOverviewPage() {
   const { data: dashboard, isLoading: dashLoading, error: dashError } = useMyBrandDashboard()
@@ -142,7 +142,7 @@ export default function PortalOverviewPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             label="GMV This Month"
-            value={`â‚¹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
+            value={`₹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
             trend="this month"
             trendNeutral
           />
@@ -154,13 +154,13 @@ export default function PortalOverviewPage() {
           />
           <StatCard
             label="Avg Order Value"
-            value={`â‚¹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
+            value={`₹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
             trend="per order"
             trendNeutral
           />
           <StatCard
             label="Commission Saved"
-            value={`â‚¹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
+            value={`₹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
             trend="via Share Links"
             trendNeutral
           />
@@ -221,7 +221,7 @@ export default function PortalOverviewPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-[18px] font-[400] font-public-sans text-primary">
-                  Level {achievement.level} â€”{' '}
+                  Level {achievement.level} —{' '}
                   <span className="text-accent font-[600]">{achievement.name}</span>
                 </p>
                 <p className="text-[13px] font-public-sans text-muted-text mt-0.5">

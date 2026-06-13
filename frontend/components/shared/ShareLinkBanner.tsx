@@ -5,14 +5,14 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ShareLinkBannerProps {
   brandName: string
   className?: string
 }
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ShareLinkBanner({ brandName, className }: ShareLinkBannerProps) {
   const [dismissed, setDismissed] = useState(false)
@@ -31,7 +31,7 @@ export function ShareLinkBanner({ brandName, className }: ShareLinkBannerProps) 
         {/* Message */}
         <p className="text-[14px] leading-[1.4] font-[600] font-public-sans text-white">
           <span className="font-[600]">{brandName}</span> invited you to their wholesale
-          catalogue â€” create a free account to place orders
+          catalogue — create a free account to place orders
         </p>
 
         {/* Actions */}

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useBrandOrders, useOrder, useUpdateOrderStatus } from '@/hooks/queries/useOrders'
 import type { OrderStatus } from '@/hooks/queries/useOrders'
 
-// â”€â”€â”€ Status filter tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Status filter tabs ───────────────────────────────────────────────────────
 
 type FilterValue = 'All' | OrderStatus
 
@@ -23,7 +23,7 @@ const STATUS_FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'Disputed', value: 'DISPUTED' },
 ]
 
-// â”€â”€â”€ Order detail sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Order detail sheet ───────────────────────────────────────────────────────
 
 function OrderDetailSheet({
   orderId,
@@ -113,7 +113,7 @@ function OrderDetailSheet({
                           </p>
                         </div>
                         <p className="text-[14px] font-[600] font-public-sans text-primary tabular-nums">
-                          â‚¹{item.totalPrice.toLocaleString('en-IN')}
+                          ₹{item.totalPrice.toLocaleString('en-IN')}
                         </p>
                       </div>
                     ))}
@@ -125,7 +125,7 @@ function OrderDetailSheet({
               <div className="flex items-center justify-between py-3 border-t border-border-warm mb-6">
                 <p className="text-[14px] font-[600] font-public-sans text-muted-text">Order Total</p>
                 <p className="text-[20px] font-[600] font-public-sans text-primary tabular-nums">
-                  â‚¹{order.amount.toLocaleString('en-IN')}
+                  ₹{order.amount.toLocaleString('en-IN')}
                 </p>
               </div>
 
@@ -216,7 +216,7 @@ function OrderDetailSheet({
   )
 }
 
-// â”€â”€â”€ Loading skeleton rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Loading skeleton rows ────────────────────────────────────────────────────
 
 function TableSkeletonRows() {
   return (
@@ -235,7 +235,7 @@ function TableSkeletonRows() {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 const PAGE_LIMIT = 20
 
@@ -337,7 +337,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="tabular-nums text-[14px] font-public-sans">
-                        â‚¹{order.amount.toLocaleString('en-IN')}
+                        ₹{order.amount.toLocaleString('en-IN')}
                       </span>
                     </td>
                     <td className="px-4 py-3">

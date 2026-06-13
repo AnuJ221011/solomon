@@ -11,7 +11,7 @@ import {
 import { BrandDetailDrawer } from '@/components/admin/BrandDetailDrawer'
 import { cn } from '@/lib/utils'
 
-// â”€â”€â”€ Reject modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Reject modal ─────────────────────────────────────────────────────────────
 
 function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => void }) {
   const [reason, setReason] = useState('')
@@ -53,7 +53,7 @@ function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => v
             disabled={rejectBrand.isPending}
             className="h-9 px-4 rounded bg-error text-white text-[13px] font-[600] font-public-sans hover:bg-error/90 transition-colors disabled:opacity-50"
           >
-            {rejectBrand.isPending ? 'Rejectingâ€¦' : 'Confirm Reject'}
+            {rejectBrand.isPending ? 'Rejecting…' : 'Confirm Reject'}
           </button>
         </div>
       </div>
@@ -61,7 +61,7 @@ function RejectModal({ brand, onClose }: { brand: PendingBrand; onClose: () => v
   )
 }
 
-// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Row ──────────────────────────────────────────────────────────────────────
 
 function BrandRow({ brand, onReject, onSelect }: { brand: PendingBrand; onReject: (b: PendingBrand) => void; onSelect: (id: string) => void }) {
   const approveBrand = useApproveBrand()
@@ -132,7 +132,7 @@ function BrandRow({ brand, onReject, onSelect }: { brand: PendingBrand; onReject
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PendingBrandsPage() {
   const { data: brands, isLoading } = useAdminPendingBrands()

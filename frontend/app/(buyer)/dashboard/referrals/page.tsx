@@ -12,7 +12,7 @@ import {
   type LeaderboardEntry,
 } from '@/hooks/queries/useReferrals'
 
-// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
   label,
@@ -34,7 +34,7 @@ function StatCard({
         <div className="h-8 bg-muted-bg rounded animate-pulse w-16 mt-2" />
       ) : (
         <p className="text-[28px] font-[600] font-public-sans text-primary leading-none mt-2">
-          {value ?? 'â€”'}
+          {value ?? '—'}
         </p>
       )}
       {sub && (
@@ -44,7 +44,7 @@ function StatCard({
   )
 }
 
-// â”€â”€â”€ Referral status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Referral status badge ────────────────────────────────────────────────────
 
 function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
   return (
@@ -62,7 +62,7 @@ function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false)
@@ -83,7 +83,7 @@ export default function ReferralsPage() {
 
   function shareWhatsApp() {
     const text = encodeURIComponent(
-      `Join Solomon Bharat â€” India's finest B2B wholesale marketplace. Use my referral link: ${referralLink}`
+      `Join Solomon Bharat — India's finest B2B wholesale marketplace. Use my referral link: ${referralLink}`
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -188,7 +188,7 @@ export default function ReferralsPage() {
         {leaderboardData && (
           <StatCard
             label="Leaderboard Rank"
-            value={leaderboardData.rank ? `#${leaderboardData.rank}` : 'â€”'}
+            value={leaderboardData.rank ? `#${leaderboardData.rank}` : '—'}
             sub={leaderboardData.total ? `of ${leaderboardData.total} referrers` : undefined}
             loading={leaderboardLoading}
           />
@@ -239,7 +239,7 @@ export default function ReferralsPage() {
                     <tr key={ref.id} className="border-b border-border-warm last:border-0">
                       <td className="px-4 py-3">
                         <span className="text-[14px] font-[600] font-public-sans text-primary">
-                          {ref.referredEmail ?? 'â€”'}
+                          {ref.referredEmail ?? '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">

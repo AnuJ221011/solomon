@@ -16,7 +16,7 @@ import type { Product as ApiProduct } from '@/hooks/queries/useProducts'
 import { useCategories } from '@/hooks/queries/useCategories'
 import type { Product } from '@/types'
 
-// â”€â”€â”€ Sort options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Sort options ─────────────────────────────────────────────────────────────
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'newest'
 
@@ -29,7 +29,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 const PAGE_SIZE = 20
 
-// â”€â”€â”€ Map API product to @/types Product â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Map API product to @/types Product ──────────────────────────────────────
 
 function toTypedProduct(p: ApiProduct): Product {
   return {
@@ -53,7 +53,7 @@ function toTypedProduct(p: ApiProduct): Product {
   }
 }
 
-// â”€â”€â”€ Loading skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function CatalogueLoadingSkeleton() {
   return (
@@ -70,7 +70,7 @@ function CatalogueLoadingSkeleton() {
   )
 }
 
-// â”€â”€â”€ Page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page component ───────────────────────────────────────────────────────────
 
 export default function CataloguePage() {
   const searchParams = useSearchParams()
@@ -91,7 +91,7 @@ export default function CataloguePage() {
   const { data: categoriesData } = useCategories()
   const categoryNames = (categoriesData ?? []).map((c) => c.name)
 
-  // Resolve URL slug â†’ category name, then seed filters once categories load
+  // Resolve URL slug → category name, then seed filters once categories load
   const resolvedCategoryName = useMemo(() => {
     if (!categorySlug || !categoriesData) return null
     const match = categoriesData.find(
@@ -115,7 +115,7 @@ export default function CataloguePage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // â”€â”€ Data fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Data fetching ─────────────────────────────────────────────────────────────
   // Prefer sidebar-driven categories; fall back to the URL-resolved name so the
   // first render already sends the correct filter (before the useEffect fires).
   const activeCategory =
@@ -164,7 +164,7 @@ export default function CataloguePage() {
       <NavBar />
 
       <main className="flex flex-1 min-h-0">
-        {/* â”€â”€ Desktop sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
         <FilterSidebar
           key={resolvedCategoryName ?? 'all'}
           onFilterChange={handleFilterChange}
@@ -172,7 +172,7 @@ export default function CataloguePage() {
           initialCategories={resolvedCategoryName ? [resolvedCategoryName] : []}
         />
 
-        {/* â”€â”€ Mobile filter sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Mobile filter sheet ───────────────────────────────────────────── */}
         <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
           <SheetContent side="bottom" className="w-full max-h-[90vh] p-0 overflow-y-auto rounded-t">
             <SheetHeader className="px-5 pt-5 pb-0">
@@ -202,7 +202,7 @@ export default function CataloguePage() {
           </SheetContent>
         </Sheet>
 
-        {/* â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Main content ──────────────────────────────────────────────────── */}
         <div className="flex-1 px-6 lg:px-10 py-8 min-w-0">
           {/* Top bar */}
           <div
@@ -318,7 +318,7 @@ export default function CataloguePage() {
   )
 }
 
-// â”€â”€â”€ Mobile filter sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Mobile filter sidebar ────────────────────────────────────────────────────
 
 function MobileFilterSidebar({
   onFilterChange,

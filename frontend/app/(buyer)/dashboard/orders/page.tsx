@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { useMyOrders, useOrder } from '@/hooks/queries/useOrders'
 import type { Order, OrderStatus } from '@/hooks/queries/useOrders'
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type FilterTab = 'All' | 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'DISPUTED'
 
@@ -30,7 +30,7 @@ const TAB_LABELS: Record<FilterTab, string> = {
   DISPUTED: 'Disputed',
 }
 
-// â”€â”€â”€ Price formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Price formatter ──────────────────────────────────────────────────────────
 
 function formatINR(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -40,7 +40,7 @@ function formatINR(amount: number) {
   }).format(amount)
 }
 
-// â”€â”€â”€ Date formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Date formatter ───────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -50,7 +50,7 @@ function formatDate(iso: string) {
   })
 }
 
-// â”€â”€â”€ Status timeline steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Status timeline steps ────────────────────────────────────────────────────
 
 const TIMELINE_STEPS: OrderStatus[] = ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED']
 
@@ -58,7 +58,7 @@ function getStepIndex(status: OrderStatus): number {
   return TIMELINE_STEPS.indexOf(status)
 }
 
-// â”€â”€â”€ Skeleton table row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Skeleton table row ───────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -72,7 +72,7 @@ function SkeletonRow() {
   )
 }
 
-// â”€â”€â”€ Order Detail Sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Order Detail Sheet ───────────────────────────────────────────────────────
 
 function OrderDetailSheet({
   orderId,
@@ -209,7 +209,7 @@ function OrderDetailSheet({
                                   : 'text-muted-text'
                               )}
                             >
-                              {step ? step.charAt(0) + step.slice(1).toLowerCase() : 'â€”'}
+                              {step ? step.charAt(0) + step.slice(1).toLowerCase() : '—'}
                             </p>
                             {step === 'CONFIRMED' && order.createdAt && (
                               <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
@@ -284,7 +284,7 @@ function OrderDetailSheet({
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('All')
@@ -402,7 +402,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-[13px] font-public-sans text-muted-text">
-                          {itemCount > 0 ? `${itemCount} items` : 'â€”'}
+                          {itemCount > 0 ? `${itemCount} items` : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">

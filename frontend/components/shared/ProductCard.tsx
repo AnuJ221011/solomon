@@ -7,7 +7,7 @@ import type { Product } from '@/types'
 import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ProductCardProps {
   product: Product
@@ -15,7 +15,7 @@ interface ProductCardProps {
   className?: string
 }
 
-// â”€â”€â”€ Price formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Price formatter ──────────────────────────────────────────────────────────
 
 function formatPrice(amount: number, currency = 'INR'): string {
   return new Intl.NumberFormat('en-IN', {
@@ -26,7 +26,7 @@ function formatPrice(amount: number, currency = 'INR'): string {
   }).format(amount)
 }
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ProductCard({ product, onAddToCart, className }: ProductCardProps) {
   const {
@@ -132,7 +132,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
           <span className="text-[12px] text-muted-text font-public-sans">/ unit</span>
         </div>
 
-        {/* Add to cart button â€” appears on hover */}
+        {/* Add to cart button — appears on hover */}
         {onAddToCart && inStock && (
           <button
             type="button"

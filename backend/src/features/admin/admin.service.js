@@ -78,6 +78,79 @@ export const getApprovedBrands = async () => {
   });
 };
 
+export const listUsers = async ({ page = 1, limit = 20, search, role, status }) => {
+  const where = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (role) where.role = role;
+  if (status === 'ACTIVE') where.isActive = true;
+  else if (status === 'SUSPENDED') where.isActive = false;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, name: true, email: true, role: true, isActive: true, createdAt: true,
+        brandProfile: { select: { id: true, slug: true, totalGmvInr: true, confirmedOrderCount: true } },
+        _count: { select: { orders: true } },
+        orders: { select: { totalInr: true } },
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    users: users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      status: u.isActive ? 'ACTIVE' : 'SUSPENDED',
+      createdAt: u.createdAt,
+      ordersCount: u.role === 'BUYER' ? u._count.orders : (u.brandProfile?.confirmedOrderCount ?? 0),
+      gmvInr: u.role === 'BUYER'
+        ? u.orders.reduce((s, o) => s + Number(o.totalInr ?? 0), 0)
+        : Number(u.brandProfile?.totalGmvInr ?? 0),
+      brandSlug: u.brandProfile?.slug ?? null,
+      brandProfileId: u.brandProfile?.id ?? null,
+    })),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+};
+
+export const getUsersCsv = async () => {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true, name: true, email: true, role: true, isActive: true, createdAt: true,
+      brandProfile: { select: { totalGmvInr: true, confirmedOrderCount: true } },
+      _count: { select: { orders: true } },
+      orders: { select: { totalInr: true } },
+    },
+  });
+
+  const header = 'ID,Name,Email,Role,Status,Orders,GMV_INR,Joined\n';
+  const rows = users.map((u) => {
+    const gmv = u.role === 'BUYER'
+      ? u.orders.reduce((s, o) => s + Number(o.totalInr ?? 0), 0)
+      : Number(u.brandProfile?.totalGmvInr ?? 0);
+    const orders = u.role === 'BUYER' ? u._count.orders : (u.brandProfile?.confirmedOrderCount ?? 0);
+    return [u.id, `"${u.name}"`, u.email, u.role, u.isActive ? 'ACTIVE' : 'SUSPENDED', orders, gmv, u.createdAt.toISOString()].join(',');
+  }).join('\n');
+
+  return header + rows;
+};
+
 export const getPlatformStats = async () => {
   const [totalBrands, totalBuyers, totalOrders, pendingPayouts, gmv] = await Promise.all([
     prisma.brandProfile.count({ where: { status: 'APPROVED' } }),

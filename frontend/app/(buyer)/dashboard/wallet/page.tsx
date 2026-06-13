@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useWallet, type WalletCredit, type WalletCreditStatus } from '@/hooks/queries/useReferrals'
 
-// â”€â”€â”€ Type badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Type badge ───────────────────────────────────────────────────────────────
 
 function TypeBadge({ status }: { status: WalletCreditStatus }) {
   const config: Record<WalletCreditStatus, { label: string; className: string }> = {
@@ -27,7 +27,7 @@ function TypeBadge({ status }: { status: WalletCreditStatus }) {
   )
 }
 
-// â”€â”€â”€ Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Toggle ───────────────────────────────────────────────────────────────────
 
 function Toggle({
   checked,
@@ -65,7 +65,7 @@ function Toggle({
   )
 }
 
-// â”€â”€â”€ Date formatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Date formatter ───────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -75,7 +75,7 @@ function formatDate(iso: string) {
   })
 }
 
-// â”€â”€â”€ Skeleton rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Skeleton rows ────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -89,7 +89,7 @@ function SkeletonRow() {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function WalletPage() {
   const [autoApply, setAutoApply] = useState(true)
@@ -266,7 +266,7 @@ export default function WalletPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-[13px] font-public-sans text-muted-text">
-                            {entry.expiresAt ? formatDate(entry.expiresAt) : 'â€”'}
+                            {entry.expiresAt ? formatDate(entry.expiresAt) : '—'}
                           </span>
                         </td>
                       </tr>

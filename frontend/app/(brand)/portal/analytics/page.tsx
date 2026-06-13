@@ -19,7 +19,7 @@ import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
 import { useBrandOrders, Order } from '@/hooks/queries/useOrders'
 import { useShareLinks, ShareLink } from '@/hooks/queries/useShareLinks'
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 const TIME_RANGES = ['30d', '90d', '12m'] as const
 type TimeRange = typeof TIME_RANGES[number]
@@ -30,7 +30,7 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
   '12m': '12 months',
 }
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function cutoffDate(range: TimeRange): Date {
   const now = new Date()
@@ -64,7 +64,7 @@ function buildGmvSeries(
       }))
   }
 
-  // 90d / 12m â€” group by YYYY-MM
+  // 90d / 12m — group by YYYY-MM
   const byMonth: Record<string, number> = {}
   orders.forEach((o) => {
     const ym = o.createdAt.slice(0, 7) // "2024-11"
@@ -99,7 +99,7 @@ function buildTopProducts(
     .map(([name, qty]) => ({ name, orders: qty }))
 }
 
-// â”€â”€â”€ Custom tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Custom tooltip ───────────────────────────────────────────────────────────
 
 function GmvTooltip({
   active,
@@ -122,13 +122,13 @@ function GmvTooltip({
     >
       <p className="text-[12px] font-public-sans text-muted-text">{label}</p>
       <p className="text-[16px] font-[600] font-public-sans text-primary tabular-nums mt-0.5">
-        â‚¹{payload?.[0]?.value?.toLocaleString('en-IN') ?? '0'}
+        ₹{payload?.[0]?.value?.toLocaleString('en-IN') ?? '0'}
       </p>
     </div>
   )
 }
 
-// â”€â”€â”€ Chart skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Chart skeleton ───────────────────────────────────────────────────────────
 
 function ChartSkeleton({ height = 280 }: { height?: number }) {
   return (
@@ -139,7 +139,7 @@ function ChartSkeleton({ height = 280 }: { height?: number }) {
   )
 }
 
-// â”€â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyChartState({ message }: { message: string }) {
   return (
@@ -149,7 +149,7 @@ function EmptyChartState({ message }: { message: string }) {
   )
 }
 
-// â”€â”€â”€ Share link table columns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Share link table columns ─────────────────────────────────────────────────
 
 const SL_COLUMNS = [
   { key: 'name', label: 'Link Name', sortable: true },
@@ -173,7 +173,7 @@ const SL_COLUMNS = [
     label: 'Revenue',
     sortable: true,
     render: (val: unknown) => (
-      <span className="tabular-nums">â‚¹{Number(val).toLocaleString('en-IN')}</span>
+      <span className="tabular-nums">₹{Number(val).toLocaleString('en-IN')}</span>
     ),
   },
   {
@@ -182,7 +182,7 @@ const SL_COLUMNS = [
     render: (val: unknown, row: unknown) => {
       const l = row as ShareLink
       const rate =
-        l.views > 0 ? ((l.orders / l.views) * 100).toFixed(1) + '%' : 'â€”'
+        l.views > 0 ? ((l.orders / l.views) * 100).toFixed(1) + '%' : '—'
       return <span className="text-accent font-[600]">{rate}</span>
     },
   },
@@ -195,7 +195,7 @@ const SL_COLUMNS = [
   },
 ]
 
-// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -217,7 +217,7 @@ function StatCardSkeleton() {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
@@ -284,7 +284,7 @@ export default function AnalyticsPage() {
           <>
             <StatCard
               label="GMV This Month"
-              value={`â‚¹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
+              value={`₹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
             />
             <StatCard
               label="Orders This Month"
@@ -292,17 +292,17 @@ export default function AnalyticsPage() {
             />
             <StatCard
               label="Avg Order Value"
-              value={`â‚¹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
+              value={`₹${(stats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
             />
             <StatCard
               label="Commission Saved"
-              value={`â‚¹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
+              value={`₹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
             />
           </>
         )}
       </div>
 
-      {/* Row 1 â€” GMV trend */}
+      {/* Row 1 — GMV trend */}
       <section className="mb-8">
         <div className="bg-surface border border-border-warm rounded p-6">
           <h2 className="text-[14px] font-[600] font-public-sans text-primary mb-6">
@@ -326,7 +326,7 @@ export default function AnalyticsPage() {
                   tick={{ fontSize: 11, fill: '#444748', fontFamily: 'var(--font-public-sans)' }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v: number) => `â‚¹${(v / 1000).toFixed(0)}k`}
+                  tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip content={<GmvTooltip />} />
                 <Area
@@ -345,7 +345,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
 
-      {/* Row 2 â€” top products + orders by country */}
+      {/* Row 2 — top products + orders by country */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Top products bar chart */}
         <div className="bg-surface border border-border-warm rounded p-6">
@@ -394,7 +394,7 @@ export default function AnalyticsPage() {
           )}
         </div>
 
-        {/* Orders by country â€” only if buyerCountry field present */}
+        {/* Orders by country — only if buyerCountry field present */}
         <div className="bg-surface border border-border-warm rounded p-6">
           <h2 className="text-[14px] font-[600] font-public-sans text-primary mb-6">
             Orders by Country
@@ -452,7 +452,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
 
-      {/* Row 3 â€” Share link performance */}
+      {/* Row 3 — Share link performance */}
       <section>
         <h2 className="text-[14px] font-[600] font-public-sans text-primary mb-4">
           Share Link Performance

@@ -9,8 +9,8 @@ import { logger } from './shared/utils/logger.js';
 const FX_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 const startServer = async () => {
-  // Verify DB connection (adapter connects lazily — a lightweight query confirms it)
-  await prisma.$queryRaw`SELECT 1`;
+  // Verify DB connection
+  await prisma.$connect();
   logger.info('Database connected');
 
   // Verify Redis connection

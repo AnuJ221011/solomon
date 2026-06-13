@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { ArrowRight, Store, Globe2, Users, Package, Star } from 'lucide-react'
 
-// â”€â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const STATS = [
   { Icon: Users,   value: '500+',    label: 'Verified Brands'    },
@@ -17,23 +17,23 @@ const TRUST_AVATARS = [
   'https://picsum.photos/seed/buyer-c/40/40',
 ]
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden h-[90vh]">
 
-      {/* Full-bleed background image â€” no overlay */}
+      {/* Full-bleed background image — no overlay */}
       <Image
         src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781188595/heroSection_lzdtky.png"
-        alt="Indian artisan home dÃ©cor products"
+        alt="Indian artisan home décor products"
         fill
         sizes="100vw"
         className="object-cover object-right"
         priority
       />
 
-      {/* Very subtle left-side fade so dark text stays readable â€” no darkness on image */}
+      {/* Very subtle left-side fade so dark text stays readable — no darkness on image */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: 'linear-gradient(to right, rgba(249,247,242,0.82) 0%, rgba(249,247,242,0.55) 45%, rgba(249,247,242,0) 70%)' }}
@@ -105,7 +105,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Floating trust card â€” top right area */}
+      {/* Floating trust card — top right area */}
       <div className="absolute top-8 left-[50%] lg:left-[50%] bg-white border border-border-warm rounded-lg px-4 py-3 shadow-[0_4px_24px_rgba(26,26,26,0.10)] flex items-center gap-3 z-10">
         <div className="flex -space-x-1.5 flex-shrink-0">
           {TRUST_AVATARS.map((src, i) => (

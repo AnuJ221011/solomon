@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 
-// â”€â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: AdminDispute['status'] }) {
   return (
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: AdminDispute['status'] }) {
   )
 }
 
-// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Row ──────────────────────────────────────────────────────────────────────
 
 function DisputeRow({ dispute }: { dispute: AdminDispute }) {
   const qc = useQueryClient()
@@ -66,7 +66,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
         {dispute.brandName}
       </td>
       <td className="py-3.5 px-4 text-right text-[13px] font-[600] font-public-sans text-primary">
-        â‚¹{dispute.amount.toLocaleString('en-IN')}
+        ₹{dispute.amount.toLocaleString('en-IN')}
       </td>
       <td className="py-3.5 px-4 max-w-[220px]">
         <p className="text-[13px] font-public-sans text-muted-text truncate" title={dispute.reason}>
@@ -115,7 +115,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminDisputesPage() {
   const [status, setStatus] = useState<'OPEN' | 'RESOLVED' | 'CLOSED' | ''>('OPEN')
@@ -221,7 +221,7 @@ export default function AdminDisputesPage() {
             {total > 20 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  Showing {(page - 1) * 20 + 1}â€“{Math.min(page * 20, total)} of {total}
+                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total}
                 </p>
                 <div className="flex gap-2">
                   <button

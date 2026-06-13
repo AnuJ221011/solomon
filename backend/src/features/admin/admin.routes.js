@@ -50,6 +50,26 @@ router.post('/brands/:id/level', validate(z.object({ level: z.string() })), asyn
 });
 
 // ── User management ────────────────────────────────────────────────────────
+const usersQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().optional(),
+  role: z.enum(['BUYER', 'BRAND', 'ADMIN']).optional(),
+  status: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
+});
+
+router.get('/users/export', async (req, res) => {
+  const csv = await adminService.getUsersCsv();
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="users_${Date.now()}.csv"`);
+  res.send(csv);
+});
+
+router.get('/users', validateQuery(usersQuerySchema), async (req, res) => {
+  const result = await adminService.listUsers(req.query);
+  sendSuccess(res, result);
+});
+
 router.post('/users/:id/suspend', async (req, res) => {
   const user = await adminService.suspendUser(req.params.id);
   sendSuccess(res, user, 'User account has been suspended.');

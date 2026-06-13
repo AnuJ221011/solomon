@@ -5,7 +5,7 @@ import { Building2, Star, Package, ExternalLink } from 'lucide-react'
 import { useAdminApprovedBrands, type ApprovedBrand } from '@/hooks/queries/useAdmin'
 import { BrandDetailDrawer } from '@/components/admin/BrandDetailDrawer'
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const LEVEL_LABELS: Record<string, string> = {
   L1_SPROUT: 'Sprout',
@@ -23,7 +23,7 @@ const LEVEL_COLORS: Record<string, string> = {
   L5_LEGEND: 'text-amber-700 bg-amber-50 border-amber-200',
 }
 
-// â”€â”€â”€ Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Row ──────────────────────────────────────────────────────────────────────
 
 function BrandRow({ brand, onSelect }: { brand: ApprovedBrand; onSelect: (id: string) => void }) {
   const levelLabel = LEVEL_LABELS[brand.achievementLevel] ?? brand.achievementLevel
@@ -54,7 +54,7 @@ function BrandRow({ brand, onSelect }: { brand: ApprovedBrand; onSelect: (id: st
         </div>
       </td>
       <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
-        {brand.category.join(', ') || 'â€”'}
+        {brand.category.join(', ') || '—'}
       </td>
       <td className="py-4 px-4">
         <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-[600] font-public-sans ${levelColor}`}>
@@ -70,13 +70,13 @@ function BrandRow({ brand, onSelect }: { brand: ApprovedBrand; onSelect: (id: st
       <td className="py-4 px-4">
         <div className="flex items-center gap-1 text-[13px] font-public-sans text-muted-text">
           <Star size={13} aria-hidden="true" className="text-amber-400" />
-          {brand.avgRating > 0 ? brand.avgRating.toFixed(1) : 'â€”'}
+          {brand.avgRating > 0 ? brand.avgRating.toFixed(1) : '—'}
         </div>
       </td>
       <td className="py-4 px-4 text-[13px] font-public-sans text-muted-text">
         {brand.approvedAt
           ? new Date(brand.approvedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-          : 'â€”'}
+          : '—'}
       </td>
       <td className="py-4 px-4">
         <a
@@ -94,7 +94,7 @@ function BrandRow({ brand, onSelect }: { brand: ApprovedBrand; onSelect: (id: st
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminBrandsPage() {
   const { data: brands, isLoading } = useAdminApprovedBrands()

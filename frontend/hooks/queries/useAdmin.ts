@@ -68,7 +68,10 @@ export interface AdminUser {
   role: 'BUYER' | 'BRAND' | 'ADMIN'
   status: 'ACTIVE' | 'SUSPENDED'
   createdAt: string
-  ordersCount?: number
+  ordersCount: number
+  gmvInr: number
+  brandSlug?: string | null
+  brandProfileId?: string | null
 }
 
 export interface AdminDispute {
@@ -247,7 +250,7 @@ export function useBulkMarkPayoutsPaid() {
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
-export function useAdminUsers(params?: { page?: number; search?: string; role?: string }) {
+export function useAdminUsers(params?: { page?: number; search?: string; role?: string; status?: string }) {
   return useQuery<{ users: AdminUser[]; total: number }>({
     queryKey: ['admin-users', params],
     queryFn: async () => {
@@ -255,7 +258,7 @@ export function useAdminUsers(params?: { page?: number; search?: string; role?: 
       const payload = res.data.data
       return {
         users: payload.users ?? payload ?? [],
-        total: res.data.meta?.total ?? payload.total ?? 0,
+        total: payload.total ?? res.data.meta?.total ?? 0,
       }
     },
   })

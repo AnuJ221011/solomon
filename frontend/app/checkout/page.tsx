@@ -22,7 +22,7 @@ import {
 import api from '@/lib/api'
 import type { Order } from '@/types'
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatINR(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -32,7 +32,7 @@ function formatINR(amount: number) {
   }).format(amount)
 }
 
-// â”€â”€â”€ Countries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Countries ────────────────────────────────────────────────────────────────
 
 const COUNTRIES = [
   'Australia',
@@ -50,7 +50,7 @@ const COUNTRIES = [
   'Other',
 ]
 
-// â”€â”€â”€ Section heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Section heading ──────────────────────────────────────────────────────────
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -60,7 +60,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   )
 }
 
-// â”€â”€â”€ Order confirmation state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Order confirmation state ─────────────────────────────────────────────────
 
 function OrderConfirmed({ order }: { order: Order }) {
   return (
@@ -90,7 +90,7 @@ function OrderConfirmed({ order }: { order: Order }) {
   )
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface ShippingForm {
   fullName: string
@@ -143,7 +143,7 @@ export default function CheckoutPage() {
     setShipping((f) => ({ ...f, [field]: value }))
   }
 
-  // â”€â”€ Auth gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Auth gate ───────────────────────────────────────────────────────────────
   if (!user) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // â”€â”€ Empty cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Empty cart ──────────────────────────────────────────────────────────────
   if (items.length === 0 && !confirmedOrder) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // â”€â”€ Confirmed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Confirmed ───────────────────────────────────────────────────────────────
   if (confirmedOrder) {
     return (
       <div className="bg-bg min-h-screen flex flex-col">
@@ -203,7 +203,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // â”€â”€ Place order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Place order ─────────────────────────────────────────────────────────────
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -260,7 +260,7 @@ export default function CheckoutPage() {
 
         <form onSubmit={handlePlaceOrder} noValidate>
           <div className="lg:grid lg:grid-cols-[1fr_360px] gap-12 items-start">
-            {/* â”€â”€ Left: Shipping form â”€â”€ */}
+            {/* ── Left: Shipping form ── */}
             <div className="flex flex-col gap-8">
               {/* Shipping address */}
               <section>
@@ -429,7 +429,7 @@ export default function CheckoutPage() {
               </section>
             </div>
 
-            {/* â”€â”€ Right: Order summary â”€â”€ */}
+            {/* ── Right: Order summary ── */}
             <aside className="sticky top-24 mt-8 lg:mt-0">
               <div className="bg-surface border border-border-warm rounded p-6">
                 <h2 className="text-[14px] leading-[1.4] font-[600] font-public-sans text-primary mb-4">
@@ -499,7 +499,7 @@ export default function CheckoutPage() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? 'Placing orderâ€¦' : 'Place order'}
+                  {loading ? 'Placing order…' : 'Place order'}
                 </Button>
 
                 <p className="mt-3 text-[11px] font-public-sans text-muted-text text-center leading-[1.4]">

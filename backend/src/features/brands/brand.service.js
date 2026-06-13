@@ -80,14 +80,19 @@ export const listBrands = async ({ page, limit, status, level, category, search,
       orderBy: [{ achievementLevel: 'desc' }, { avgRating: 'desc' }, { createdAt: 'desc' }],
       select: {
         id: true, brandName: true, slug: true, category: true,
-        achievementLevel: true, avgRating: true, logoUrl: true,
-        description: true, countryOfOrigin: true, minimumOrderValue: true,
+        achievementLevel: true, avgRating: true, logoUrl: true, bannerUrl: true,
+        description: true, countryOfOrigin: true, city: true, state: true,
+        yearFounded: true, minimumOrderValue: true,
+        _count: { select: { products: { where: { availability: 'ACTIVE' } } } },
       },
     }),
     prisma.brandProfile.count({ where }),
   ]);
 
-  return { brands, total, page, limit, totalPages: Math.ceil(total / limit) };
+  return {
+    brands: brands.map(({ _count, ...rest }) => ({ ...rest, productCount: _count.products })),
+    total, page, limit, totalPages: Math.ceil(total / limit),
+  };
 };
 
 export const getBrandDashboardStats = async (userId) => {

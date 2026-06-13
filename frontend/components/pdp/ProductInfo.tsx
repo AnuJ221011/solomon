@@ -10,7 +10,7 @@ import { useCartStore } from '@/lib/store/useCartStore'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/types'
 
-// â”€â”€â”€ Trust badge map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Trust badge map ──────────────────────────────────────────────────────────
 
 const BADGE_MAP: Record<string, string> = {
   'handmade':       'Handmade',
@@ -33,13 +33,13 @@ const BADGE_MAP: Record<string, string> = {
   'upcycled':       'Upcycled',
 }
 
-// â”€â”€â”€ Free-shipping thresholds by currency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Free-shipping thresholds by currency ─────────────────────────────────────
 
 const FREE_SHIP: Record<string, number> = {
   INR: 15000, USD: 200, EUR: 180, GBP: 150, AED: 750, SGD: 270, AUD: 300,
 }
 
-// â”€â”€â”€ Delivery range from lead time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Delivery range from lead time ───────────────────────────────────────────
 
 function getDeliveryRange(leadTime: string): string {
   const lt = leadTime.toUpperCase()
@@ -53,9 +53,9 @@ function getDeliveryRange(leadTime: string): string {
   const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   if (min.getMonth() === max.getMonth()) {
-    return `${min.toLocaleDateString('en-US', { month: 'short' })} ${min.getDate()}â€“${max.getDate()}`
+    return `${min.toLocaleDateString('en-US', { month: 'short' })} ${min.getDate()}–${max.getDate()}`
   }
-  return `${fmt(min)} â€“ ${fmt(max)}`
+  return `${fmt(min)} – ${fmt(max)}`
 }
 
 function getBadges(tags: string[]): string[] {
@@ -71,7 +71,7 @@ function getBadges(tags: string[]): string[] {
   return badges
 }
 
-// â”€â”€â”€ Expandable section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Expandable section ───────────────────────────────────────────────────────
 
 function ExpandableSection({
   title,
@@ -108,7 +108,7 @@ function ExpandableSection({
   )
 }
 
-// â”€â”€â”€ Quantity stepper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Quantity stepper ─────────────────────────────────────────────────────────
 
 function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v: number) => void; min: number }) {
   return (
@@ -140,7 +140,7 @@ function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v
   )
 }
 
-// â”€â”€â”€ Variant selector helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Variant selector helpers ─────────────────────────────────────────────────
 
 function buildAxes(variants: NonNullable<Product['variants']>) {
   const map = new Map<string, string[]>()
@@ -153,7 +153,7 @@ function buildAxes(variants: NonNullable<Product['variants']>) {
   return Array.from(map.entries()).map(([name, values]) => ({ name, values }))
 }
 
-// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProductInfo({ product }: { product: Product }) {
   const {
@@ -167,7 +167,7 @@ export function ProductInfo({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(moq)
   const [addedFeedback, setAddedFeedback] = useState(false)
 
-  // â”€â”€ Variant state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Variant state ──────────────────────────────────────────────────────────
   const axes = buildAxes(variants)
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({})
 
@@ -273,7 +273,7 @@ export function ProductInfo({ product }: { product: Product }) {
                 {axis.name}
                 {selectedAttrs[axis.name] && (
                   <span className="ml-1.5 text-primary normal-case font-[500] tracking-normal">
-                    â€” {selectedAttrs[axis.name]}
+                    — {selectedAttrs[axis.name]}
                   </span>
                 )}
               </p>
@@ -312,7 +312,7 @@ export function ProductInfo({ product }: { product: Product }) {
             <p className="text-[12px] font-public-sans text-muted-text">
               SKU: <span className="text-primary font-[500]">{selectedVariant.sku}</span>
               {selectedVariant.stock > 0 && (
-                <> &nbsp;Â·&nbsp; <span className="text-green-600">{selectedVariant.stock} in stock</span></>
+                <> &nbsp;·&nbsp; <span className="text-green-600">{selectedVariant.stock} in stock</span></>
               )}
             </p>
           )}
@@ -328,7 +328,7 @@ export function ProductInfo({ product }: { product: Product }) {
       <p className="font-public-sans text-[13px] text-muted-text mb-4">
         Min. order:&nbsp;
         <span className="font-[600] text-primary">{moq} units</span>
-        &nbsp;Â·&nbsp;
+        &nbsp;·&nbsp;
         <span className="text-primary font-[500]">{formatCurrency(minOrderValue, priceCurrency)} total</span>
       </p>
 
@@ -376,7 +376,7 @@ export function ProductInfo({ product }: { product: Product }) {
           aria-label={effectiveInStock ? `Add ${quantity} units to order` : 'Out of stock'}
         >
           {addedFeedback
-            ? 'Added to order âœ“'
+            ? 'Added to order ✓'
             : axes.length > 0 && !selectedVariant
             ? 'Select options to continue'
             : effectiveInStock ? 'Add to order' : 'Out of Stock'}
@@ -435,7 +435,7 @@ export function ProductInfo({ product }: { product: Product }) {
 
       <div className="border-t border-border-warm mt-6 mb-6" />
 
-      {/* 9. About this product â€” visible, not in accordion */}
+      {/* 9. About this product — visible, not in accordion */}
       <div className="mb-2">
         <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-3">
           About this product
@@ -474,7 +474,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="flex flex-col gap-2.5">
             <p>Lead time: <span className="text-primary font-[500]">{leadTime}</span> from order confirmation.</p>
             <p>Orders dispatched from {brandName}'s warehouse. Tracking info provided on dispatch. International shipments via our logistics partners.</p>
-            <p>Bulk orders (10Ã— MOQ or above) may qualify for dedicated freight â€” contact your account manager.</p>
+            <p>Bulk orders (10× MOQ or above) may qualify for dedicated freight — contact your account manager.</p>
             <p className="pt-1 border-t border-border-warm mt-1">Free returns on first-time orders within <span className="text-primary font-[500]">60 days</span> of delivery.</p>
           </div>
         </ExpandableSection>
@@ -488,7 +488,7 @@ export function ProductInfo({ product }: { product: Product }) {
             href={`/brands/${brandSlug}`}
             className="text-[13px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors underline underline-offset-2"
           >
-            Visit brand storefront â†’
+            Visit brand storefront →
           </Link>
         </ExpandableSection>
       </div>

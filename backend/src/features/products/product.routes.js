@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import prisma from '../../config/db.js';
 import * as ctrl from './product.controller.js';
 import { authenticate, optionalAuthenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
@@ -17,6 +18,53 @@ router.get('/:slug', ctrl.getProduct);
 
 // Brand-only
 router.get('/me/listings', authenticate, authorize('BRAND'), validateQuery(productQuerySchema), ctrl.listMyProducts);
+
+// CSV export — must be before /:slug
+router.get('/me/export-csv', authenticate, authorize('BRAND'), async (req, res) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+  if (!brand) throw new Error('Brand profile not found');
+
+  const products = await prisma.product.findMany({
+    where: { brandProfileId: brand.id },
+    include: { variants: { include: { attributes: true }, orderBy: { createdAt: 'asc' } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const q = (s) => `"${(s ?? '').toString().replace(/"/g, '""')}"`;
+  const header = 'name,short_description,full_description,wholesale_price_inr,moq,weight_grams,lead_time,shipping_zones,categories,tags,hs_tariff_code,country_of_origin,variant_sku,variant_attributes,variant_price_inr,variant_stock';
+
+  const rows = [];
+  for (const p of products) {
+    const base = [
+      q(p.name),
+      q(p.shortDescription),
+      q(p.fullDescription),
+      p.wholesalePriceInr,
+      p.moq,
+      p.weightGrams,
+      (p.leadTime ?? '').toLowerCase(),
+      (p.enabledZones ?? []).join('|'),
+      (p.categories ?? []).join('|'),
+      (p.tags ?? []).join('|'),
+      p.hsTariffCode ?? '',
+      p.countryOfOrigin ?? 'IN',
+    ];
+
+    if (p.variants.length === 0) {
+      rows.push([...base, '', '', '', ''].join(','));
+    } else {
+      for (const v of p.variants) {
+        const attrs = v.attributes.map((a) => `${a.name}:${a.value}`).join('|');
+        rows.push([...base, v.sku, attrs, Number(v.priceInr), v.stock].join(','));
+      }
+    }
+  }
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="products_${Date.now()}.csv"`);
+  res.send(header + '\n' + rows.join('\n'));
+});
+
 router.post('/', authenticate, authorize('BRAND'), validate(createProductSchema), ctrl.createProduct);
 router.patch('/:id', authenticate, authorize('BRAND'), validate(updateProductSchema), ctrl.updateProduct);
 router.delete('/:id', authenticate, authorize('BRAND'), ctrl.deleteProduct);
