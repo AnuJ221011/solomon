@@ -5,7 +5,8 @@ import { env } from '../../config/env.js';
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  // cross-domain (vercel.app ↔ render.com) requires sameSite: none + secure: true
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
