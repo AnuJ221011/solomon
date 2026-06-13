@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -73,6 +73,22 @@ function CatalogueLoadingSkeleton() {
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function CataloguePage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-bg min-h-screen flex flex-col">
+        <div className="flex flex-1 min-h-0">
+          <div className="flex-1 px-6 lg:px-10 py-8">
+            <CatalogueLoadingSkeleton />
+          </div>
+        </div>
+      </div>
+    }>
+      <CatalogueContent />
+    </Suspense>
+  )
+}
+
+function CatalogueContent() {
   const searchParams = useSearchParams()
   const categorySlug = searchParams.get('category') // e.g. "textiles"
 
