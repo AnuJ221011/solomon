@@ -33,6 +33,12 @@ router.get('/flat', async (req, res) => {
   sendSuccess(res, categories);
 });
 
+// GET /api/categories/tree — full L1→L2→L3 tree with attributes
+router.get('/tree', async (req, res) => {
+  const tree = await categoryService.getCategoryTree();
+  sendSuccess(res, tree);
+});
+
 router.get('/:slug', async (req, res) => {
   const category = await categoryService.getCategoryBySlug(req.params.slug);
   sendSuccess(res, category);

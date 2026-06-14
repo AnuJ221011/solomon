@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { formatCurrency, formatINR } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartStore } from '@/lib/store/useCartStore'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/types'
 
@@ -218,6 +219,10 @@ export function ProductInfo({ product }: { product: Product }) {
         leadTime,
         achievementLevel: product.achievementLevel,
         brandMinimumOrderValue: product.brandMinimumOrderValue,
+      })
+      toast.success(`${name} added to cart`, {
+        description: `Qty: ${quantity} · ${brandName}`,
+        duration: 3000,
       })
       setAddedFeedback(true)
       setTimeout(() => setAddedFeedback(false), 2000)

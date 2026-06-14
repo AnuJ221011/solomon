@@ -63,6 +63,10 @@ export const listProducts = async ({
   availability, brandId, brandSlug, sortBy, sortOrder,
   // Personalisation context (passed when a logged-in buyer fetches the feed)
   buyerUserId,
+  // Attribute filters: JSON string of { [attrName]: string[] }
+  attrs,
+  // Brand minimum order value ceiling (e.g. 5000 → only brands with MOV ≤ ₹5,000)
+  brandMaxMin,
 }) => {
   const where = {};
   where.availability = availability ?? 'ACTIVE';
@@ -73,18 +77,61 @@ export const listProducts = async ({
     if (brand) brandId = brand.id;
   }
   if (brandId) where.brandProfileId = brandId;
+
   if (category) {
-    const cats = Array.isArray(category)
+    const slugs = Array.isArray(category)
       ? category
       : String(category).split(',').map((s) => s.trim()).filter(Boolean);
-    where.categories = cats.length === 1 ? { has: cats[0] } : { hasSome: cats };
+
+    // Resolve slugs → category names (products store names, not slugs)
+    const resolved = await Promise.all(
+      slugs.map(async (s) => {
+        // Also handle L2 category: look up L2, and if the product categories field uses L2 names
+        const found = await prisma.category.findUnique({ where: { slug: s }, select: { name: true } });
+        return found ? found.name : s; // fall back to the raw value if not a slug
+      })
+    );
+    where.categories = resolved.length === 1 ? { has: resolved[0] } : { hasSome: resolved };
   }
+
+  // Attribute value filters: { Fabric: ['Cotton', 'Linen'], Technique: ['Hand block print'] }
+  if (attrs) {
+    let attrFilters;
+    try {
+      attrFilters = typeof attrs === 'string' ? JSON.parse(attrs) : attrs;
+    } catch {
+      attrFilters = null;
+    }
+    if (attrFilters && typeof attrFilters === 'object') {
+      const andConditions = [];
+      for (const [attrName, values] of Object.entries(attrFilters)) {
+        const vals = Array.isArray(values) ? values.filter(Boolean) : [];
+        if (vals.length === 0) continue;
+        andConditions.push({
+          attributeValues: {
+            some: {
+              attribute: { name: attrName },
+              value: vals.length === 1 ? vals[0] : { in: vals },
+            },
+          },
+        });
+      }
+      if (andConditions.length > 0) {
+        where.AND = [...(where.AND ?? []), ...andConditions];
+      }
+    }
+  }
+
   if (zone) where.enabledZones = { has: zone };
 
   if (minPrice || maxPrice) {
     where.wholesalePriceInr = {};
-    if (minPrice) where.wholesalePriceInr.gte = minPrice;
-    if (maxPrice) where.wholesalePriceInr.lte = maxPrice;
+    if (minPrice) where.wholesalePriceInr.gte = Number(minPrice);
+    if (maxPrice) where.wholesalePriceInr.lte = Number(maxPrice);
+  }
+
+  if (brandMaxMin) {
+    where.brandProfile = { minimumOrderValue: { lte: Number(brandMaxMin) } };
   }
 
   if (search) {

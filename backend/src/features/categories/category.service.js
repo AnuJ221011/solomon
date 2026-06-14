@@ -22,9 +22,37 @@ export const listCategories = async ({ includeInactive = false } = {}) => {
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       },
     },
-    // Only return top-level categories (parentId = null)
-    // Children are nested inside each via the `children` relation
   });
+};
+
+/**
+ * Returns the full L1 → L2 → L3 tree with CategoryAttributes on each node.
+ * Shape: L1[] → { children: L2[] → { children: L3[], attributes: Attr[] } }
+ */
+export const getCategoryTree = async ({ includeInactive = false } = {}) => {
+  const activeFilter = includeInactive ? undefined : { isActive: true };
+
+  const l1s = await prisma.category.findMany({
+    where: { level: 1, ...activeFilter },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    include: {
+      attributes: { orderBy: { sortOrder: 'asc' } },
+      children: {
+        where: activeFilter,
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        include: {
+          attributes: { orderBy: { sortOrder: 'asc' } },
+          children: {
+            where: activeFilter,
+            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+            include: { attributes: { orderBy: { sortOrder: 'asc' } } },
+          },
+        },
+      },
+    },
+  });
+
+  return l1s;
 };
 
 /** Returns a flat list — useful for dropdowns */
@@ -74,11 +102,17 @@ export const createCategory = async ({ name, description, parentId, sortOrder })
   });
   if (existing) throw createError(`Category "${name}" already exists`, 409);
 
-  // Auto-assign sortOrder if not provided
   const autoOrder = sortOrder ?? (await prisma.category.count()) + 1;
 
+  let level = 1;
+  if (parentId) {
+    const parent = await prisma.category.findUnique({ where: { id: parentId }, select: { level: true } });
+    if (!parent) throw createError('Parent category not found', 404);
+    level = parent.level + 1;
+  }
+
   return prisma.category.create({
-    data: { name, slug, description: description ?? null, parentId: parentId ?? null, sortOrder: autoOrder },
+    data: { name, slug, description: description ?? null, parentId: parentId ?? null, sortOrder: autoOrder, level },
   });
 };
 

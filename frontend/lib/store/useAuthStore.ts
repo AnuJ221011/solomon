@@ -11,6 +11,8 @@ interface AuthState {
   authModalTab: 'login' | 'signup'
   pendingAction: string | null
   _hasHydrated: boolean
+  cartCount: number
+  notificationCount: number
 }
 
 interface AuthActions {
@@ -19,6 +21,8 @@ interface AuthActions {
   openAuthModal: (tab?: 'login' | 'signup', pendingAction?: string) => void
   closeAuthModal: () => void
   _setHasHydrated: (v: boolean) => void
+  setCartCount: (count: number) => void
+  setNotificationCount: (count: number) => void
 }
 
 type AuthStore = AuthState & AuthActions
@@ -33,9 +37,13 @@ export const useAuthStore = create<AuthStore>()(
       authModalTab: 'login',
       pendingAction: null,
       _hasHydrated: false,
+      cartCount: 0,
+      notificationCount: 0,
 
       // ─── Actions ──────────────────────────────────────────────────────────
       _setHasHydrated: (v) => set({ _hasHydrated: v }),
+      setCartCount: (count) => set({ cartCount: count }),
+      setNotificationCount: (count) => set({ notificationCount: count }),
 
       setUser: (user: User) =>
         set({
@@ -54,6 +62,8 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: false,
           isAuthModalOpen: false,
           pendingAction: null,
+          cartCount: 0,
+          notificationCount: 0,
         })
       },
 

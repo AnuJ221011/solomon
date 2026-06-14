@@ -58,8 +58,33 @@ export interface ProductsParams {
   limit?: number
   category?: string | string[]
   search?: string
+  /** 'newest' | 'popular' | 'price_asc' | 'price_desc' */
   sort?: string
   brandSlug?: string
+  /** Attribute filters: { [attrName]: string[] } — serialised to JSON for the API */
+  attrs?: Record<string, string[]>
+  /** Wholesale price range */
+  priceMin?: number
+  priceMax?: number
+  /** Brand minimum order value ceiling — only brands with MOV ≤ this value */
+  brandMaxMin?: number
+}
+
+function translateSort(sort?: string): { sortBy: string; sortOrder: string } {
+  switch (sort) {
+    case 'newest':
+      return { sortBy: 'createdAt', sortOrder: 'desc' }
+    case 'price_asc':
+    case 'price-asc':
+      return { sortBy: 'wholesalePriceInr', sortOrder: 'asc' }
+    case 'price_desc':
+    case 'price-desc':
+      return { sortBy: 'wholesalePriceInr', sortOrder: 'desc' }
+    case 'popular':
+    case 'featured':
+    default:
+      return { sortBy: 'rank', sortOrder: 'desc' }
+  }
 }
 
 export interface ProductsResult {
@@ -136,7 +161,22 @@ export function useProducts(params?: ProductsParams) {
   return useQuery<ProductsResult>({
     queryKey: ['products', params],
     queryFn: async () => {
-      const response = await api.get('/products', { params })
+      const { sort, attrs, priceMin, priceMax, brandMaxMin, ...rest } = params ?? {}
+      const { sortBy, sortOrder } = translateSort(sort)
+      const apiParams: Record<string, unknown> = { ...rest, sortBy, sortOrder }
+      if (priceMin !== undefined) apiParams.minPrice = priceMin
+      if (priceMax !== undefined) apiParams.maxPrice = priceMax
+      if (brandMaxMin !== undefined) apiParams.brandMaxMin = brandMaxMin
+      if (attrs && Object.keys(attrs).length > 0) {
+        // Strip empty arrays before sending
+        const cleaned = Object.fromEntries(
+          Object.entries(attrs).filter(([, v]) => v.length > 0)
+        )
+        if (Object.keys(cleaned).length > 0) {
+          apiParams.attrs = JSON.stringify(cleaned)
+        }
+      }
+      const response = await api.get('/products', { params: apiParams })
       const payload = response.data.data
       const rawProducts: Record<string, unknown>[] = payload.products ?? payload ?? []
       return {

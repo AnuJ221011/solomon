@@ -225,12 +225,21 @@ model BrandProfile {
 // PRODUCTS
 // ─────────────────────────────────────────────
 
+enum AttributeInputType {
+  SELECT
+  MULTI_SELECT
+  RANGE
+  BOOLEAN
+  TEXT
+}
+
 model Category {
   id          String     @id @default(cuid())
   name        String     @unique
   slug        String     @unique
   description String?
   imageUrl    String?
+  level       Int        @default(1)
   parentId    String?
   parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryTree")
@@ -239,9 +248,39 @@ model Category {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  attributes  CategoryAttribute[]
+
   @@index([slug])
   @@index([isActive])
   @@index([sortOrder])
+  @@index([level])
+}
+
+model CategoryAttribute {
+  id            String             @id @default(cuid())
+  categoryId    String
+  category      Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name          String
+  inputType     AttributeInputType @default(SELECT)
+  options       String[]
+  required      Boolean            @default(false)
+  sortOrder     Int                @default(0)
+
+  values        ProductAttributeValue[]
+
+  @@index([categoryId])
+}
+
+model ProductAttributeValue {
+  id                  String            @id @default(cuid())
+  productId           String
+  product             Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  categoryAttributeId String
+  attribute           CategoryAttribute @relation(fields: [categoryAttributeId], references: [id], onDelete: Cascade)
+  value               String
+
+  @@unique([productId, categoryAttributeId])
+  @@index([productId])
 }
 
 model Product {
@@ -269,6 +308,7 @@ model Product {
 
   photos            ProductPhoto[]
   variants          ProductVariant[]
+  attributeValues   ProductAttributeValue[]
   orderItems        OrderItem[]
   savedBy           SavedProduct[]
   reviews           ProductReview[]

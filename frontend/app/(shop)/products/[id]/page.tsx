@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { PhotoGallery } from '@/components/pdp/PhotoGallery'
@@ -12,6 +12,7 @@ import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useProduct, useProducts } from '@/hooks/queries/useProducts'
 import type { Product as HookProduct } from '@/hooks/queries/useProducts'
 import type { Product } from '@/types'
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 
 // ─── Map hook product → @/types Product ──────────────────────────────────────
 
@@ -155,6 +156,20 @@ function PDPSkeleton() {
 
 function ProductDetailInner({ slug }: { slug: string }) {
   const { data: rawProduct, isLoading, isError } = useProduct(slug)
+  const { track } = useRecentlyViewed()
+
+  useEffect(() => {
+    if (!rawProduct) return
+    track({
+      id: rawProduct.id,
+      slug: rawProduct.slug,
+      name: rawProduct.name,
+      imageUrl: rawProduct.photos?.[0]?.url ?? '',
+      price: rawProduct.wholesalePrice,
+      brandName: rawProduct.brandName,
+      brandSlug: rawProduct.brandSlug,
+    })
+  }, [rawProduct?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (

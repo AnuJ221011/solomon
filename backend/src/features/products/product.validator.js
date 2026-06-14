@@ -36,4 +36,6 @@ export const productQuerySchema = z.object({
   brandSlug: z.string().optional(),
   sortBy: z.enum(['rank', 'createdAt', 'wholesalePriceInr', 'name']).default('rank'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  // JSON-encoded { [attrName]: string[] } for attribute filtering
+  attrs: z.string().optional(),
 });
