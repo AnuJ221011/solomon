@@ -17,6 +17,18 @@ const sizeClass = {
   lg: 'text-lg font-semibold',
 }
 
+/** Returns a formatter function that converts INR → selected currency string. */
+export function useFormatPrice() {
+  const { currency, convertFromINR } = useCurrencyStore()
+  return (amountInr: number) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(convertFromINR(amountInr))
+}
+
 export function Price({ amountInr, className, size = 'md' }: PriceProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
@@ -26,7 +38,8 @@ export function Price({ amountInr, className, size = 'md' }: PriceProps) {
   const formatted = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
   }).format(converted)
 
   if (!isAuthenticated) {

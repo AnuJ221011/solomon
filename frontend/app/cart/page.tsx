@@ -10,15 +10,8 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 import { useBrandMinimums } from '@/hooks/queries/useBrands'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
+import { useFormatPrice } from '@/components/ui/Price'
 import type { CartItem } from '@/types'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(n)
-}
 
 // ─── Brand cart card ──────────────────────────────────────────────────────────
 
@@ -31,6 +24,7 @@ function BrandCartCard({
   onToggle: () => void
   minimumOrderValue: number
 }) {
+  const fmt = useFormatPrice()
   const router = useRouter()
   const brandName = items[0]?.brandName ?? ''
   const brandSlug = items[0]?.brandSlug
@@ -155,6 +149,7 @@ function BottomBar({
   onCheckout: () => void
   onDelete: () => void
 }) {
+  const fmt = useFormatPrice()
   const selected     = brandSummaries.filter((b) => selectedIds.has(b.brandId))
   const underMin     = selected.filter((b) => !b.met).length
   const itemTotal    = selected.reduce((s, b) => s + b.subtotal, 0)

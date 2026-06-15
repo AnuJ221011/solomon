@@ -8,6 +8,21 @@ import { sendSuccess } from '../../shared/utils/response.js';
 
 const router = Router();
 
+const updateProfileSchema = z.object({
+  businessName:      z.string().min(1).optional(),
+  phone:             z.string().optional(),
+  addressLine:       z.string().optional(),
+  city:              z.string().optional(),
+  state:             z.string().optional(),
+  postalCode:        z.string().optional(),
+  countryCode:       z.string().optional(),
+  preferredCurrency: z.string().length(3).optional(),
+  storeType:         z.string().optional(),
+  notifNewArrivals:  z.boolean().optional(),
+  notifOrderUpdates: z.boolean().optional(),
+  notifPromotions:   z.boolean().optional(),
+});
+
 const cartItemSchema = z.object({
   productId: z.string().min(1),
   variantId: z.string().optional(),  // required for products that have variants
@@ -16,6 +31,17 @@ const cartItemSchema = z.object({
 
 // All buyer routes require authentication
 router.use(authenticate, authorize('BUYER'));
+
+// Profile
+router.get('/profile', async (req, res) => {
+  const data = await buyerService.getProfile(req.user.id);
+  sendSuccess(res, data);
+});
+
+router.patch('/profile', requireVerified, validate(updateProfileSchema), async (req, res) => {
+  const data = await buyerService.updateProfile(req.user.id, req.body);
+  sendSuccess(res, data, 'Profile updated successfully.');
+});
 
 // Dashboard
 router.get('/dashboard', async (req, res) => {

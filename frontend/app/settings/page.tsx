@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { UserPlus, Trash2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 import { useAuthStore } from '@/lib/store/useAuthStore'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { useBuyerProfile, useUpdateBuyerProfile } from '@/hooks/queries/useBuyerProfile'
 
 interface TeamMember {
   id: string
@@ -39,8 +39,6 @@ const COUNTRIES = [
   'Germany', 'France', 'Japan', 'Singapore', 'India', 'UAE',
 ]
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
 function Section({
   title,
   description,
@@ -63,8 +61,6 @@ function Section({
   )
 }
 
-// ─── Form field ───────────────────────────────────────────────────────────────
-
 function Field({
   label,
   children,
@@ -86,8 +82,6 @@ function Field({
     </div>
   )
 }
-
-// ─── Input ────────────────────────────────────────────────────────────────────
 
 function Input({
   id,
@@ -123,8 +117,6 @@ function Input({
   )
 }
 
-// ─── Select ───────────────────────────────────────────────────────────────────
-
 function SelectField({
   id,
   value,
@@ -154,8 +146,6 @@ function SelectField({
     </select>
   )
 }
-
-// ─── Toggle row ───────────────────────────────────────────────────────────────
 
 function ToggleRow({
   label,
@@ -203,46 +193,66 @@ function ToggleRow({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function SettingsPage() {
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
 
-  // Store profile state — pre-filled from real auth user
-  const [businessName, setBusinessName] = useState(user?.name ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
+  const { data: profile, isSuccess: profileLoaded } = useBuyerProfile()
+  const updateProfile = useUpdateBuyerProfile()
+
+  const [businessName, setBusinessName] = useState('')
+  const [email] = useState(user?.email ?? '')
   const [phone, setPhone] = useState('')
+  const [addressLine, setAddressLine] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [postalCode, setPostalCode] = useState('')
   const [country, setCountry] = useState('United States')
   const [storeType, setStoreType] = useState('Boutique Retail')
-  const [profileSaved, setProfileSaved] = useState(false)
 
-  // Preferences state
   const [currency, setCurrency] = useState('USD')
 
-  // Notifications state
-  const [notifToggles, setNotifToggles] = useState<NotifToggle[]>([
+  const [notifNewArrivals, setNotifNewArrivals] = useState(true)
+  const [notifOrderUpdates, setNotifOrderUpdates] = useState(true)
+  const [notifPromotions, setNotifPromotions] = useState(false)
+
+  useEffect(() => {
+    if (!profileLoaded || !profile) return
+    setBusinessName(profile.businessName ?? '')
+    setPhone(profile.phone ?? '')
+    setAddressLine(profile.addressLine ?? '')
+    setCity(profile.city ?? '')
+    setState(profile.state ?? '')
+    setPostalCode(profile.postalCode ?? '')
+    if (profile.countryCode) setCountry(profile.countryCode)
+    if (profile.storeType) setStoreType(profile.storeType)
+    if (profile.preferredCurrency) setCurrency(profile.preferredCurrency)
+    setNotifNewArrivals(profile.notifNewArrivals ?? true)
+    setNotifOrderUpdates(profile.notifOrderUpdates ?? true)
+    setNotifPromotions(profile.notifPromotions ?? false)
+  }, [profileLoaded, profile])
+
+  const notifToggles: NotifToggle[] = [
     {
       id: 'n1',
       label: 'New arrivals from saved brands',
       description: 'Get notified when brands you follow add new products.',
-      enabled: true,
+      enabled: notifNewArrivals,
     },
     {
       id: 'n2',
       label: 'Order status updates',
       description: 'Confirmations, dispatch alerts, and delivery notifications.',
-      enabled: true,
+      enabled: notifOrderUpdates,
     },
     {
       id: 'n3',
       label: 'Platform promotions',
       description: 'Seasonal campaigns, special rates, and platform news.',
-      enabled: false,
+      enabled: notifPromotions,
     },
-  ])
+  ]
 
-  // Team — from API
   const { data: teamMembers = [], isLoading: teamLoading } = useQuery<TeamMember[]>({
     queryKey: ['buyer-team'],
     queryFn: () => api.get('/team').then((r) => r.data.data ?? []),
@@ -264,19 +274,27 @@ export default function SettingsPage() {
   })
 
   function saveProfile() {
-    setProfileSaved(true)
-    setTimeout(() => setProfileSaved(false), 2500)
+    updateProfile.mutate({
+      businessName,
+      phone,
+      addressLine,
+      city,
+      state,
+      postalCode,
+      countryCode: country,
+      storeType,
+      preferredCurrency: currency,
+    })
   }
 
   function toggleNotif(id: string, enabled: boolean) {
-    setNotifToggles((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, enabled } : n))
-    )
+    if (id === 'n1') { setNotifNewArrivals(enabled); updateProfile.mutate({ notifNewArrivals: enabled }) }
+    if (id === 'n2') { setNotifOrderUpdates(enabled); updateProfile.mutate({ notifOrderUpdates: enabled }) }
+    if (id === 'n3') { setNotifPromotions(enabled); updateProfile.mutate({ notifPromotions: enabled }) }
   }
 
   return (
-    <div>
-      {/* Header */}
+    <AccountPageWrapper>
       <div className="mb-6">
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
           Settings
@@ -287,19 +305,27 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Store Profile */}
-        <Section
-          title="Store Profile"
-          description="Your business details as they appear on orders and invoices."
-        >
+        <Section title="Store Profile" description="Your business details as they appear on orders and invoices.">
           <Field label="Business Name" htmlFor="business-name">
             <Input id="business-name" value={businessName} onChange={setBusinessName} placeholder="Your boutique name" />
           </Field>
           <Field label="Email Address" htmlFor="email">
-            <Input id="email" type="email" value={email} onChange={setEmail} />
+            <Input id="email" type="email" value={email} readOnly />
           </Field>
           <Field label="Phone" htmlFor="phone">
             <Input id="phone" type="tel" value={phone} onChange={setPhone} placeholder="+1 212 555 0000" />
+          </Field>
+          <Field label="Address" htmlFor="address-line">
+            <Input id="address-line" value={addressLine} onChange={setAddressLine} placeholder="Street address" />
+          </Field>
+          <Field label="City" htmlFor="city">
+            <Input id="city" value={city} onChange={setCity} placeholder="City" />
+          </Field>
+          <Field label="State / Region" htmlFor="state">
+            <Input id="state" value={state} onChange={setState} placeholder="State or region" />
+          </Field>
+          <Field label="Postal Code" htmlFor="postal-code">
+            <Input id="postal-code" value={postalCode} onChange={setPostalCode} placeholder="ZIP / Postal code" />
           </Field>
           <Field label="Country" htmlFor="country">
             <SelectField id="country" value={country} onChange={setCountry} options={COUNTRIES} />
@@ -309,22 +335,18 @@ export default function SettingsPage() {
           </Field>
 
           <div className="pt-2 flex items-center gap-3">
-            <Button variant="primary" size="md" onClick={saveProfile}>
-              Save Profile
+            <Button
+              variant="primary"
+              size="md"
+              onClick={saveProfile}
+              disabled={updateProfile.isPending}
+            >
+              {updateProfile.isPending ? 'Saving…' : 'Save Profile'}
             </Button>
-            {profileSaved && (
-              <span className="text-[13px] font-[500] font-public-sans text-success">
-                Saved successfully.
-              </span>
-            )}
           </div>
         </Section>
 
-        {/* Preferences */}
-        <Section
-          title="Preferences"
-          description="Adjust how Solomon Bharat works for your store."
-        >
+        <Section title="Preferences" description="Adjust how Solomon Bharat works for your store.">
           <Field label="Display Currency" htmlFor="currency">
             <SelectField id="currency" value={currency} onChange={setCurrency} options={CURRENCIES} />
           </Field>
@@ -343,11 +365,7 @@ export default function SettingsPage() {
           </Field>
         </Section>
 
-        {/* Notifications */}
-        <Section
-          title="Notifications"
-          description="Choose which emails you receive from us."
-        >
+        <Section title="Notifications" description="Choose which emails you receive from us.">
           <div className="space-y-4">
             {notifToggles.map((toggle) => (
               <ToggleRow
@@ -362,12 +380,7 @@ export default function SettingsPage() {
           </div>
         </Section>
 
-        {/* Team */}
-        <Section
-          title="Team"
-          description="Invite colleagues to browse and place orders on your behalf."
-        >
-          {/* Members table */}
+        <Section title="Team" description="Invite colleagues to browse and place orders on your behalf.">
           <div className="border border-border-warm rounded overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -400,23 +413,17 @@ export default function SettingsPage() {
                 {teamMembers.map((member) => (
                   <tr key={member.id} className="border-b border-border-warm last:border-0">
                     <td className="px-4 py-3">
-                      <span className="text-[14px] font-[600] font-public-sans text-primary">
-                        {member.name}
-                      </span>
+                      <span className="text-[14px] font-[600] font-public-sans text-primary">{member.name}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[13px] font-public-sans text-muted-text">
-                        {member.email}
-                      </span>
+                      <span className="text-[13px] font-public-sans text-muted-text">{member.email}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={cn(
                           'inline-flex items-center rounded px-2 py-0.5',
                           'text-[12px] font-[500] font-public-sans',
-                          member.role === 'Admin'
-                            ? 'bg-accent/10 text-accent-hover'
-                            : 'bg-muted-bg text-muted-text'
+                          member.role === 'Admin' ? 'bg-accent/10 text-accent-hover' : 'bg-muted-bg text-muted-text'
                         )}
                       >
                         {member.role}
@@ -448,7 +455,6 @@ export default function SettingsPage() {
             </table>
           </div>
 
-          {/* Invite row */}
           <div className="pt-2 flex flex-col sm:flex-row gap-2">
             <input
               type="email"
@@ -486,6 +492,6 @@ export default function SettingsPage() {
           </div>
         </Section>
       </div>
-    </div>
+    </AccountPageWrapper>
   )
 }

@@ -1,6 +1,5 @@
-import { Search, MessageSquare, Package } from 'lucide-react'
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
+import Link from 'next/link'
+import { Search, MessageSquare, Package, ArrowRight } from 'lucide-react'
 
 const STEPS = [
   {
@@ -8,63 +7,73 @@ const STEPS = [
     Icon: Search,
     heading: 'Discover Suppliers',
     description:
-      'Browse 500+ verified Indian manufacturers, artisan brands, and exporters. Filter by category, MOQ, certifications, and lead time to find the right match.',
+      'Browse 500+ verified Indian manufacturers, artisan brands, and exporters. Filter by category, MOQ, certifications, and lead time.',
   },
   {
     number: '02',
     Icon: MessageSquare,
     heading: 'Request Quotations',
     description:
-      'Send direct inquiries to multiple suppliers. No middlemen, no hidden fees — communicate directly with manufacturers for transparent, competitive pricing.',
+      'Send direct inquiries to multiple suppliers. No middlemen, no hidden fees — communicate directly with manufacturers for transparent pricing.',
   },
   {
     number: '03',
     Icon: Package,
     heading: 'Place Orders Globally',
     description:
-      'Place your opening order with confidence. Brands ship directly to your location with complete tracking and export documentation support.',
+      'Place your opening order with confidence. Brands ship directly to your location with full tracking and export documentation support.',
   },
 ]
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function HowItWorksSection() {
   return (
-    <section className="py-12 bg-surface">
+    <section className="py-16 lg:py-24 bg-surface">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
+        <div className="flex flex-col lg:flex-row">
 
-        {/* Header */}
-        <div className="max-w-xl mb-16">
-          <p className="font-public-sans text-[12px] font-[600] text-accent uppercase tracking-[0.08em] mb-3">
-            Simple Process
-          </p>
-          <h2 className="font-playfair font-[500] text-primary leading-[1.2] text-[28px] lg:text-[32px]">
-            From Discovery to Delivery in Three Steps
-          </h2>
-        </div>
+          {/* Header panel */}
+          <div className="lg:w-[300px] xl:w-[340px] flex-shrink-0 lg:pr-12 pb-12 lg:pb-0 flex flex-col justify-between">
+            <div>
+              <p className="font-public-sans text-[12px] font-[600] text-accent uppercase tracking-[0.08em] mb-4">
+                Simple Process
+              </p>
+              <h2 className="font-playfair font-[500] text-primary leading-[1.15] text-[28px] lg:text-[36px]">
+                From Discovery<br /> to Delivery in<br /> Three Steps
+              </h2>
+            </div>
+            <Link
+              href="/catalogue"
+              className="hidden lg:inline-flex items-center gap-1.5 font-public-sans text-[13px] font-[600] text-primary hover:text-accent transition-colors mt-10"
+            >
+              Start browsing <ArrowRight size={13} aria-hidden="true" />
+            </Link>
+          </div>
 
-        {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16">
-          {STEPS.map(({ number, Icon, heading, description }) => (
-            <div key={number} className="flex flex-col">
-              {/* Number + icon row */}
-              <div className="flex items-start gap-4 mb-6">
-                {/* Step number — label-sm style, muted */}
-                <span className="font-public-sans text-[12px] font-[600] text-muted-text/50 tracking-[0.05em] mt-0.5 w-7 flex-shrink-0">
-                  {number}
-                </span>
-                {/* Icon square — 4px radius, charcoal bg */}
-                <div className="w-11 h-11 rounded bg-primary flex items-center justify-center text-white flex-shrink-0">
-                  <Icon size={19} aria-hidden="true" />
-                </div>
+          {/* Steps */}
+          {STEPS.map(({ number, Icon, heading, description }, idx) => (
+            <div
+              key={number}
+              className="flex-1 border-t lg:border-t-0 lg:border-l border-border-warm pt-10 lg:pt-0 lg:pl-10 xl:pl-12 pb-10 lg:pb-0 last:pb-0"
+            >
+              {/* Step number */}
+              <span className="font-playfair text-[52px] lg:text-[64px] font-[500] leading-none text-primary/[0.08] select-none block mb-3">
+                {number}
+              </span>
+
+              {/* Icon badge */}
+              <div className="w-11 h-11 rounded bg-accent/10 flex items-center justify-center text-accent flex-shrink-0 mb-6">
+                <Icon size={19} aria-hidden="true" />
               </div>
 
-              {/* headline-md: 24px / 500 — using 18px for compactness at card level */}
-              <h3 className="font-playfair font-[500] text-[18px] text-primary mb-3 leading-snug">{heading}</h3>
-              {/* body-md: 16px / 400 / 1.5 */}
-              <p className="font-public-sans text-[14px] font-[400] leading-[1.7] text-muted-text">{description}</p>
+              <h3 className="font-playfair font-[500] text-[19px] text-primary mb-3 leading-snug">
+                {heading}
+              </h3>
+              <p className="font-public-sans text-[13px] font-[400] leading-[1.8] text-muted-text">
+                {description}
+              </p>
             </div>
           ))}
+
         </div>
       </div>
     </section>

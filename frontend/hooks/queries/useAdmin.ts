@@ -91,6 +91,8 @@ export interface AdminPayoutsParams {
   limit?: number
   isPaid?: boolean
   brandId?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
@@ -301,5 +303,241 @@ export function useAdminDisputes(params?: { page?: number; status?: string }) {
         total: res.data.meta?.total ?? payload.total ?? 0,
       }
     },
+  })
+}
+
+export function useResolveDispute() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, string>({
+    mutationFn: (id) => api.post(`/admin/disputes/${id}/resolve`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-disputes'] })
+      qc.invalidateQueries({ queryKey: ['admin-stats'] })
+      toast.success('Dispute resolved.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useCloseDispute() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, string>({
+    mutationFn: (id) => api.post(`/admin/disputes/${id}/close`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-disputes'] })
+      qc.invalidateQueries({ queryKey: ['admin-stats'] })
+      toast.success('Dispute closed.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+export interface AdminProduct {
+  id: string
+  name: string
+  brandName: string
+  brandSlug: string
+  availability: 'ACTIVE' | 'INACTIVE' | 'COMING_SOON'
+  photoUrl: string | null
+  wholesalePriceInr: number
+  moq: number
+  totalStock: number
+  variantCount: number
+  activeVariants: number
+  outOfStock: boolean
+  orderCount: number
+  viewCount: number
+  categories: string[]
+  createdAt: string
+}
+
+export function useAdminProducts(params?: { page?: number; search?: string; brandId?: string; availability?: string }) {
+  return useQuery<{ products: AdminProduct[]; total: number }>({
+    queryKey: ['admin-products', params],
+    queryFn: async () => {
+      const res = await api.get('/admin/products', { params })
+      const payload = res.data.data
+      return {
+        products: payload.products ?? payload ?? [],
+        total: payload.total ?? 0,
+      }
+    },
+  })
+}
+
+// ─── Returns ──────────────────────────────────────────────────────────────────
+
+export interface AdminReturn {
+  id: string
+  orderId: string
+  orderNumber: string
+  buyerName: string
+  brandName: string
+  reason: string
+  status: 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'LABEL_ISSUED' | 'RECEIVED' | 'REFUNDED'
+  photoUrls: string[]
+  adminNotes: string | null
+  returnLabelUrl: string | null
+  resolvedAt: string | null
+  createdAt: string
+}
+
+export function useAdminReturns(params?: { page?: number; status?: string }) {
+  return useQuery<{ returns: AdminReturn[]; total: number }>({
+    queryKey: ['admin-returns', params],
+    queryFn: async () => {
+      const res = await api.get('/admin/returns', { params })
+      const payload = res.data.data
+      return {
+        returns: payload.returns ?? payload ?? [],
+        total: payload.total ?? 0,
+      }
+    },
+  })
+}
+
+export function useApproveReturn() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, string>({
+    mutationFn: (id) => api.post(`/admin/returns/${id}/approve`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-returns'] }); toast.success('Return approved.') },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useRejectReturn() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; adminNotes?: string }>({
+    mutationFn: ({ id, adminNotes }) => api.post(`/admin/returns/${id}/reject`, { adminNotes }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-returns'] }); toast.success('Return rejected.') },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useRefundReturn() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, string>({
+    mutationFn: (id) => api.post(`/admin/returns/${id}/refund`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-returns'] }); toast.success('Return marked as refunded.') },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useIssueReturnLabel() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; returnLabelUrl?: string }>({
+    mutationFn: ({ id, returnLabelUrl }) => api.post(`/admin/returns/${id}/issue-label`, returnLabelUrl ? { returnLabelUrl } : {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-returns'] }); toast.success('Return label issued.') },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+// ─── Orders (platform-wide) ───────────────────────────────────────────────────
+
+export interface AdminOrder {
+  id: string
+  orderNumber: string
+  buyerName: string
+  buyerEmail: string
+  brandName: string
+  brandSlug: string
+  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED' | 'RETURN_REQUESTED'
+  totalInr: number
+  itemCount: number
+  notes: string | null
+  disputeReason: string | null
+  createdAt: string
+  deliveredAt: string | null
+}
+
+export function useAdminOrders(params?: {
+  page?: number
+  search?: string
+  status?: string
+  brandId?: string
+  dateFrom?: string
+  dateTo?: string
+}) {
+  return useQuery<{ orders: AdminOrder[]; total: number; totalPages: number }>({
+    queryKey: ['admin-orders', params],
+    queryFn: async () => {
+      const res = await api.get('/admin/orders', { params })
+      const payload = res.data.data
+      return {
+        orders: payload.orders ?? [],
+        total: payload.total ?? 0,
+        totalPages: payload.totalPages ?? 1,
+      }
+    },
+  })
+}
+
+// ─── Digest ───────────────────────────────────────────────────────────────────
+
+export function useSendDigest() {
+  return useMutation<{ sent: number }, Error, void>({
+    mutationFn: async () => {
+      const res = await api.post('/admin/digest/send')
+      return res.data.data
+    },
+    onSuccess: (data) => toast.success(`Digest sent to ${data.sent} buyers.`),
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+// ─── Revenue over time ────────────────────────────────────────────────────────
+
+export interface RevenueBucket { date: string; revenue: number }
+
+export function useAdminRevenueStats(days: number = 30) {
+  return useQuery<RevenueBucket[]>({
+    queryKey: ['admin-revenue', days],
+    queryFn: async () => {
+      const res = await api.get('/admin/stats/revenue', { params: { days } })
+      return res.data.data ?? []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// ─── Low stock ────────────────────────────────────────────────────────────────
+
+export interface LowStockVariant {
+  variantId: string
+  sku: string
+  stock: number
+  productId: string
+  productName: string
+  brandName: string
+  brandSlug: string
+  photoUrl: string | null
+  attributes: string
+}
+
+export function useAdminLowStock(threshold: number = 10) {
+  return useQuery<LowStockVariant[]>({
+    queryKey: ['admin-low-stock', threshold],
+    queryFn: async () => {
+      const res = await api.get('/admin/inventory/low-stock', { params: { threshold } })
+      return res.data.data ?? []
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+// ─── Category GMV ─────────────────────────────────────────────────────────────
+
+export interface CategoryGmv { category: string; gmvInr: number; unitsSold: number }
+
+export function useAdminCategoryStats() {
+  return useQuery<CategoryGmv[]>({
+    queryKey: ['admin-category-gmv'],
+    queryFn: async () => {
+      const res = await api.get('/admin/stats/categories')
+      return res.data.data ?? []
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }

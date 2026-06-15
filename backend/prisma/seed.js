@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import 'dotenv/config';
@@ -9,1149 +9,456 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const toSlug = (str) =>
   str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-// Categories are seeded separately via seed-taxonomy.js (L1 / L2 / L3 + attributes).
-
-// ─── Brands ───────────────────────────────────────────────────────────────────
+const W2 = 'ONE_TO_TWO_WEEKS';
+const W3 = 'TWO_TO_FOUR_WEEKS';
+const ACT = 'ACTIVE';
+const p = (kw, s, i) => ({ url: `https://picsum.photos/seed/${s}/800/600`, publicId: `seed/ph${s}`, position: i });
+const pics = (kw, s) => [p(kw,s,0), p(kw,s+1,1), p(kw,s+2,2), p(kw,s+3,3)];
 
 const BRANDS = [
+
+  // ── Brand 1: Jaipuri Candle Works — Home Décor > Candles & Holders ──────────
   {
-    email: 'contact@jaipuricraft.com',
-    password: 'Solomon@2025',
-    brandName: 'Jaipuri Craft Co.',
-    slug: 'jaipuri-craft-co',
-    city: 'Jaipur',
-    category: ['Home Décor & Living', 'Art & Craft Objects'],
-    description: 'Third-generation artisan workshop specialising in hand-block-printed home décor from the Pink City.',
-    brandStory: 'Founded in 1992 by Ramesh Sharma, Jaipuri Craft Co. carries forward the centuries-old block-printing tradition of Jaipur. Every piece is stamped by hand using carved wooden blocks and natural dyes.',
-    yearFounded: 1992,
-    logoUrl: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=1200&h=400&fit=crop',
-    pickupPincode: '302001',
-    instagramHandle: 'jaipuricraft',
-    achievementLevel: 'L4_ELITE',
-    confirmedOrderCount: 340,
-    avgRating: 4.8,
-    minimumOrderValue: 10000,
+    email: 'contact@jaipuricandle.com', password: 'Solomon@2025',
+    brandName: 'Jaipuri Candle Works', slug: 'jaipuri-candle-works', city: 'Jaipur', state: 'Rajasthan',
+    category: ['Home Décor & Living'], description: 'Artisan candle studio crafting hand-poured soy and beeswax candles in Jaipur.',
+    brandStory: 'Founded in 2015, we blend traditional Indian fragrance notes — sandalwood, jasmine, vetiver — into eco-conscious candles using pure plant waxes and lead-free cotton wicks.',
+    yearFounded: 2015, logoUrl: 'https://picsum.photos/seed/901/200/200', bannerUrl: 'https://picsum.photos/seed/951/1200/400',
+    pickupPincode: '302001', instagramHandle: 'jaipuricandleworks',
+    achievementLevel: 'L2_RISING', confirmedOrderCount: 85, avgRating: 4.6, minimumOrderValue: 5000,
     products: [
-      {
-        name: 'Sanganeri Block-Print Cushion Covers',
-        shortDescription: 'Set of 5 hand-block-printed cotton cushion covers in traditional floral motifs, 18×18 in.',
-        fullDescription: 'Each cover is stamped individually using heritage wooden blocks carved from sheesham wood. Printed with AZO-free dyes on 200-thread-count cotton. Set of 5 assorted motifs.',
-        wholesalePriceInr: 1200, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 400,
-        categories: ['Home Décor & Living'], tags: ['block-print', 'cotton', 'cushion', 'floral', 'jaipur'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800', publicId: 'seed/jcc-cus-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800', publicId: 'seed/jcc-cus-001-b', position: 1 },
-          { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', publicId: 'seed/jcc-cus-001-c', position: 2 },
-        ],
-        variants: [
-          { sku: 'JCC-CUS-001-IB', priceInr: 1200, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo Blue' }] },
-          { sku: 'JCC-CUS-001-TR', priceInr: 1200, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Terracotta Red' }] },
-          { sku: 'JCC-CUS-001-FG', priceInr: 1200, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Forest Green' }] },
-        ],
-      },
-      {
-        name: 'Bagru Hand-Printed Table Runner',
-        shortDescription: 'Mud-resist Bagru-printed cotton table runner, 14×72 in., natural beige and charcoal.',
-        fullDescription: 'Made using the Bagru mud-resist printing process, an ancient craft from Bagru village near Jaipur. Each runner is slightly unique. Sold individually.',
-        wholesalePriceInr: 850, moq: 20, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 250,
-        categories: ['Home Décor & Living', 'Ceramics & Pottery'], tags: ['bagru', 'table-runner', 'mud-resist', 'cotton'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800', publicId: 'seed/jcc-tbr-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800', publicId: 'seed/jcc-tbr-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'JCC-TBR-002-CB', priceInr: 850, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Charcoal on Beige' }] },
-          { sku: 'JCC-TBR-002-IN', priceInr: 850, stock: 250, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo on Natural' }] },
-        ],
-      },
-      {
-        name: 'Dabu-Print Cotton Throw Blanket',
-        shortDescription: 'Lightweight 100% cotton throw with traditional dabu geometric motifs, 50×60 in.',
-        fullDescription: 'Dabu printing uses a thick paste of clay and gum to create resist patterns before dyeing. The result is a distinctive crackled texture unique to each piece.',
-        wholesalePriceInr: 1800, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 600,
-        categories: ['Home Décor & Living', 'Textiles & Fabric'], tags: ['dabu', 'throw', 'geometric', 'cotton'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=800', publicId: 'seed/jcc-thr-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800', publicId: 'seed/jcc-thr-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'JCC-THR-003-SB', priceInr: 1800, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Slate Blue' }] },
-          { sku: 'JCC-THR-003-RO', priceInr: 1800, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Rust Orange' }] },
-        ],
-      },
-      {
-        name: 'Rajasthani Hand-Painted Tray',
-        shortDescription: 'Papier-mâché tray with hand-painted miniature art, 12×8 in. Gold and jewel tones.',
-        fullDescription: 'Each tray is crafted from recycled paper pulp, shaped, dried, and painted by miniature artists using fine brushes and natural pigments. Lacquered for durability.',
-        wholesalePriceInr: 650, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 180,
-        categories: ['Home Décor & Living', 'Art & Craft Objects'], tags: ['papier-mache', 'miniature-art', 'tray', 'gold'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'MIDDLE_EAST', 'NORTH_AMERICA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/jcc-try-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800', publicId: 'seed/jcc-try-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'JCC-TRY-004-PB', priceInr: 650, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Peacock Blue' }] },
-          { sku: 'JCC-TRY-004-CG', priceInr: 650, stock: 350, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Crimson & Gold' }] },
-          { sku: 'JCC-TRY-004-EG', priceInr: 650, stock: 280, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Emerald Green' }] },
-        ],
-      },
-      {
-        name: 'Block-Print Cotton Gift Wrap Set',
-        shortDescription: '10-sheet set of hand-block-printed cotton gift wrap sheets, mixed motifs, 20×28 in.',
-        fullDescription: 'Eco-friendly alternative to paper gift wrap. Each sheet is block-printed on unbleached cotton and is reusable. Supplied in a branded kraft box.',
-        wholesalePriceInr: 900, moq: 30, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 300,
-        categories: ['Art & Craft Objects', 'Textiles & Fabric'], tags: ['gift-wrap', 'block-print', 'eco', 'reusable'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1513201099705-a9746072228c?w=800', publicId: 'seed/jcc-gws-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=800', publicId: 'seed/jcc-gws-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'JCC-GWS-005-AF', priceInr: 900, stock: 500, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Assorted Floral' }] },
-          { sku: 'JCC-GWS-005-GM', priceInr: 900, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Geometric Mix' }] },
-        ],
-      },
+      { name: 'Rose & Sandalwood Soy Candle', shortDescription: 'Hand-poured 180ml soy wax candle, rose and sandalwood fragrance, 40-hour burn.', fullDescription: 'Pure soy wax, cotton wick, recycled glass jar. Rose absolute and Indian sandalwood fragrance. Burn time ≥ 40 hrs. No paraffin, no synthetic additives.',
+        wholesalePriceInr: 380, moq: 24, leadTime: W2, weightGrams: 350, categories: ['Home Décor & Living', 'Candles & Holders', 'Soy Candles'], tags: ['soy', 'candle', 'rose', 'sandalwood'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('candle,soy,wax', 1), variants: [{sku: 'JCW-SOY-001', priceInr: 380, stock: 300, status: ACT, attrs: [{name: 'Scent', value: 'Rose & Sandalwood'}]}] },
+      { name: 'Pure Beeswax Pillar Candle', shortDescription: 'Hand-rolled 100% beeswax pillar candle, jasmine-scented, 3×6 in., 60-hour burn.', fullDescription: 'Pure filtered beeswax scented with natural jasmine oil. Drip-resistant, slow-burning. Each candle is hand-rolled and hand-trimmed. No paraffin or synthetic waxes.',
+        wholesalePriceInr: 520, moq: 12, leadTime: W2, weightGrams: 450, categories: ['Home Décor & Living', 'Candles & Holders', 'Beeswax Candles'], tags: ['beeswax', 'candle', 'jasmine', 'pillar'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('beeswax,candle,yellow', 5), variants: [{sku: 'JCW-BEE-002', priceInr: 520, stock: 200, status: ACT, attrs: [{name: 'Size', value: '3×6 in'}]}] },
+      { name: 'Terracotta Candle Holder Set', shortDescription: 'Set of 3 hand-thrown terracotta candle holders for pillar and taper candles.', fullDescription: 'Wheel-thrown by Rajasthani potters, kiln-fired to a warm terracotta finish. Fits pillar candles 2–3 in. diameter. Three graduated sizes. Sold as a set.',
+        wholesalePriceInr: 650, moq: 10, leadTime: W2, weightGrams: 900, categories: ['Home Décor & Living', 'Candles & Holders', 'Candle Holders'], tags: ['terracotta', 'candle-holder', 'handmade'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('terracotta,candle,holder', 9), variants: [{sku: 'JCW-HOL-003', priceInr: 650, stock: 150, status: ACT, attrs: [{name: 'Finish', value: 'Natural Terracotta'}]}] },
+      { name: 'Mixed Soy Votives & Tealights Box', shortDescription: 'Box of 24 hand-poured soy votives and tealights in four fragrance blends.', fullDescription: '12 votives (30ml) + 12 tealights (15ml). Fragrances: lavender, geranium, vetiver, neroli. Cotton wicks, aluminium tealight cups. Shelf life 18 months.',
+        wholesalePriceInr: 490, moq: 24, leadTime: W2, weightGrams: 600, categories: ['Home Décor & Living', 'Candles & Holders', 'Votives & Tealights'], tags: ['votives', 'tealights', 'soy', 'gift-set'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('tealight,votive,candle', 13), variants: [{sku: 'JCW-VOT-004', priceInr: 490, stock: 400, status: ACT, attrs: [{name: 'Pack', value: 'Mixed 24 pc'}]}] },
+      { name: 'Vetiver & Amber Pillar Candle', shortDescription: 'Large soy-beeswax blend pillar candle, vetiver and amber fragrance, 4×8 in., 80-hour burn.', fullDescription: '70/30 soy-beeswax blend for a clean, long burn. Fragrance: Indian vetiver root and amber resin. No synthetic additives. Drip-resistant. Sold individually.',
+        wholesalePriceInr: 750, moq: 12, leadTime: W2, weightGrams: 700, categories: ['Home Décor & Living', 'Candles & Holders', 'Pillar Candles'], tags: ['pillar', 'vetiver', 'amber', 'candle'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('pillar,candle,large,wax', 17), variants: [{sku: 'JCW-PIL-005', priceInr: 750, stock: 180, status: ACT, attrs: [{name: 'Scent', value: 'Vetiver & Amber'}]}] },
+      { name: 'Sandalwood & Cedarwood Reed Diffuser', shortDescription: '100ml reed diffuser with Mysore sandalwood and cedarwood, 8 rattan reeds, 90-day fragrance life.', fullDescription: 'Sustainably sourced Mysore sandalwood and cedarwood essential oils in a dipropylene glycol base. Eight rattan reeds. Clear glass bottle with cork stopper. Fragrance lasts up to 90 days.',
+        wholesalePriceInr: 420, moq: 24, leadTime: W2, weightGrams: 300, categories: ['Home Décor & Living', 'Candles & Holders', 'Reed Diffusers'], tags: ['reed-diffuser', 'sandalwood', 'aromatherapy'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('reed,diffuser,fragrance', 21), variants: [{sku: 'JCW-RDF-006', priceInr: 420, stock: 250, status: ACT, attrs: [{name: 'Scent', value: 'Sandalwood & Cedarwood'}]}] },
     ],
   },
 
+  // ── Brand 2: Rajwada Furnishing — Home Décor (Wall, Storage, Tabletop, Soft Furnishings) ──
   {
-    email: 'hello@bluepotteryhouse.com',
-    password: 'Solomon@2025',
-    brandName: 'Blue Pottery House',
-    slug: 'blue-pottery-house',
-    city: 'Jaipur',
-    category: ['Home Décor & Living', 'Ceramics & Pottery'],
-    description: 'Authentic Jaipur blue pottery — ceramic tiles, vases, and tableware using the traditional Mughal technique.',
-    brandStory: 'Blue Pottery House was born from a mission to revive Jaipur\'s GI-tagged blue pottery craft and bring it to global wholesale buyers at fair prices.',
-    yearFounded: 2008,
-    logoUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=400&fit=crop',
-    pickupPincode: '302003',
-    instagramHandle: 'bluepotteryhouse',
-    achievementLevel: 'L3_TRUSTED',
-    confirmedOrderCount: 180,
-    avgRating: 4.6,
-    minimumOrderValue: 8000,
+    email: 'contact@rajwadafurnishing.com', password: 'Solomon@2025',
+    brandName: 'Rajwada Furnishing', slug: 'rajwada-furnishing', city: 'Jodhpur', state: 'Rajasthan',
+    category: ['Home Décor & Living'], description: 'Heritage home furnishing brand from Jodhpur offering wall décor, storage and soft furnishings.',
+    brandStory: 'Four generations of Jodhpur craftsmen weave, print and assemble home furnishings that carry the colours and patterns of Rajasthan into contemporary interiors worldwide.',
+    yearFounded: 1978, logoUrl: 'https://picsum.photos/seed/902/200/200', bannerUrl: 'https://picsum.photos/seed/952/1200/400',
+    pickupPincode: '342001', instagramHandle: 'rajwadafurnishing',
+    achievementLevel: 'L4_ELITE', confirmedOrderCount: 520, avgRating: 4.9, minimumOrderValue: 15000,
     products: [
-      {
-        name: 'Jaipur Blue Pottery Dinner Plate',
-        shortDescription: 'Hand-painted Jaipur blue pottery dinner plate, 10 in. diameter, traditional floral motif.',
-        fullDescription: 'Made from a unique dough of quartz stone powder, powdered glass, Fuller\'s earth, borax, and gum. Each piece is fired at low temperature, giving the distinctive soft-blue glaze.',
-        wholesalePriceInr: 750, moq: 12, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 320,
-        categories: ['Ceramics & Pottery', 'Home Décor & Living'], tags: ['blue-pottery', 'plate', 'ceramic', 'jaipur', 'gi-tag'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578926078693-4e7b6a0c3b37?w=800', publicId: 'seed/bph-plt-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', publicId: 'seed/bph-plt-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'BPH-PLT-001-BW', priceInr: 750, stock: 240, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Classic Blue & White' }] },
-          { sku: 'BPH-PLT-001-TF', priceInr: 780, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Turquoise Floral' }] },
-        ],
-      },
-      {
-        name: 'Blue Pottery Decorative Vase',
-        shortDescription: 'GI-certified Jaipur blue pottery vase, 8 in. tall, hand-painted peacock motif.',
-        fullDescription: 'A collector\'s piece and elegant home accent. Fired in traditional kilns and hand-painted by third-generation potters. Each vase varies slightly — a mark of handmade authenticity.',
-        wholesalePriceInr: 1100, moq: 6, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 500,
-        categories: ['Home Décor & Living'], tags: ['vase', 'blue-pottery', 'peacock', 'gi-tag'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/bph-vas-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800', publicId: 'seed/bph-vas-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'BPH-VAS-002-IP', priceInr: 1100, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo Peacock' }] },
-          { sku: 'BPH-VAS-002-TF', priceInr: 1100, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Teal Floral' }] },
-        ],
-      },
-      {
-        name: 'Blue Pottery Tea Cup Set',
-        shortDescription: 'Set of 6 blue pottery tea cups, 150 ml each, with floral border design.',
-        fullDescription: 'Perfect for boutique tea collections and café retail. Each cup is individually hand-painted. Sold as a set of 6 in a protective foam-lined export box.',
-        wholesalePriceInr: 2200, moq: 6, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 900,
-        categories: ['Ceramics & Pottery'], tags: ['tea-cups', 'blue-pottery', 'set', 'ceramic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800', publicId: 'seed/bph-tcs-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800', publicId: 'seed/bph-tcs-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'BPH-TCS-003-BF', priceInr: 2200, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Blue Floral' }] },
-          { sku: 'BPH-TCS-003-WT', priceInr: 2200, stock: 80, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'White & Turquoise' }] },
-        ],
-      },
-      {
-        name: 'Blue Pottery Mosaic Tile Set',
-        shortDescription: '25-piece set of 4×4 in. hand-painted blue pottery tiles for wall and backsplash installation.',
-        fullDescription: 'Ideal for interior designers, hotels, and retail décor projects. Each tile is individually crafted and signed by the artisan. Sold in sets of 25 in a sturdy export crate.',
-        wholesalePriceInr: 4500, moq: 4, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 3000,
-        categories: ['Home Décor & Living'], tags: ['tiles', 'mosaic', 'blue-pottery', 'wall-decor'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', publicId: 'seed/bph-tls-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1578926078693-4e7b6a0c3b37?w=800', publicId: 'seed/bph-tls-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'BPH-TLS-004-CB', priceInr: 4500, stock: 60, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Classic Blue' }] },
-          { sku: 'BPH-TLS-004-MM', priceInr: 4800, stock: 40, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Mixed Motifs' }] },
-        ],
-      },
-      {
-        name: 'Blue Pottery Bathroom Accessories Set',
-        shortDescription: 'Bathroom set: 1 soap dish and 1 toothbrush holder, matching blue floral pattern.',
-        fullDescription: 'A best-seller for boutique bathroom product lines. Waterproof glaze finish. Sold as a matching 2-piece set in a branded gift box.',
-        wholesalePriceInr: 950, moq: 12, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 420,
-        categories: ['Home Décor & Living', 'Art & Craft Objects'], tags: ['bathroom', 'blue-pottery', 'soap-dish', 'gift-set'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800', publicId: 'seed/bph-bth-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800', publicId: 'seed/bph-bth-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'BPH-BTH-005-CB', priceInr: 950, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Classic Blue' }] },
-          { sku: 'BPH-BTH-005-TG', priceInr: 950, stock: 160, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Teal Green' }] },
-        ],
-      },
+      // Wall Décor
+      { name: 'Phulkari Tapestry Wall Hanging', shortDescription: 'Hand-embroidered phulkari tapestry on cotton, 36×48 in., vibrant geometric florals.', fullDescription: 'Traditional phulkari embroidery from Punjab worked on natural cotton. Geometric floral patterns in vibrant silks. Wooden dowel included. Hand-wash only.',
+        wholesalePriceInr: 2800, moq: 5, leadTime: W3, weightGrams: 800, categories: ['Home Décor & Living', 'Wall Décor', 'Tapestries'], tags: ['tapestry', 'phulkari', 'wall', 'embroidery'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('tapestry,wall,bohemian', 25), variants: [{sku: 'RFP-TAP-001', priceInr: 2800, stock: 80, status: ACT, attrs: [{name: 'Size', value: '36×48 in'}]}] },
+      { name: 'Block-Print Framed Art Panel', shortDescription: 'Block-printed cotton art panel in teakwood frame, 18×24 in., indigo and natural motifs.', fullDescription: 'Hand block-printed on 200TC cotton using natural indigo dye. Mounted and framed in solid teak. Ready to hang. Each piece is unique due to the hand-printing process.',
+        wholesalePriceInr: 1800, moq: 6, leadTime: W2, weightGrams: 1200, categories: ['Home Décor & Living', 'Wall Décor', 'Framed Art'], tags: ['framed-art', 'blockprint', 'indigo', 'teak'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('framed,art,wall,decor', 29), variants: [{sku: 'RFP-FRA-002', priceInr: 1800, stock: 60, status: ACT, attrs: [{name: 'Style', value: 'Indigo Floral'}]}] },
+      { name: 'Rajasthani Textile Wall Hanging', shortDescription: 'Patchwork kantha-stitch wall hanging, cotton, 24×36 in., mirror-work accents.', fullDescription: 'Assembled from vintage sari cotton scraps stitched together in kantha style. Mirror-work accents catch the light. Brass ring for hanging. Sold individually.',
+        wholesalePriceInr: 1400, moq: 8, leadTime: W2, weightGrams: 500, categories: ['Home Décor & Living', 'Wall Décor', 'Wall Hangings'], tags: ['wall-hanging', 'kantha', 'mirror-work', 'patchwork'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('wall,hanging,textile,india', 33), variants: [{sku: 'RFP-WHG-003', priceInr: 1400, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Multicolour'}]}] },
+      { name: 'Carved Mango Wood Round Mirror', shortDescription: 'Handcarved mango wood frame round mirror, 24 in. diameter, antique gold finish.', fullDescription: 'Solid mango wood hand-carved with floral motifs, finished in antique gold. Mirror glass 18 in. Clear hanging hardware included. Wipe-clean wood finish.',
+        wholesalePriceInr: 3200, moq: 4, leadTime: W3, weightGrams: 3000, categories: ['Home Décor & Living', 'Wall Décor', 'Mirrors'], tags: ['mirror', 'carved', 'mango-wood', 'gold'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('mirror,wall,decor,wood', 37), variants: [{sku: 'RFP-MIR-004', priceInr: 3200, stock: 40, status: ACT, attrs: [{name: 'Finish', value: 'Antique Gold'}]}] },
+      { name: 'Boho Cotton Macramé Wall Art', shortDescription: 'Hand-knotted cotton macramé wall panel, 20×40 in., natural and terracotta tones.', fullDescription: 'Hand-knotted in Jaipur using 3mm recycled cotton rope. Dip-dyed in terracotta plant-based dye. Driftwood dowel included. Light and airy — perfect for gallery walls.',
+        wholesalePriceInr: 1200, moq: 10, leadTime: W2, weightGrams: 600, categories: ['Home Décor & Living', 'Wall Décor', 'Macramé Wall Art'], tags: ['macrame', 'boho', 'wall-art', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('macrame,wall,art,boho', 41), variants: [{sku: 'RFP-MAC-005', priceInr: 1200, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Natural & Terracotta'}]}] },
+      { name: 'Handwoven Wool Woven Panel', shortDescription: 'Handwoven wool woven panel wall art, 18×30 in., earthy geometric pattern.', fullDescription: 'Warp-and-weft woven by artisans in Kutch using undyed and naturally dyed wool. Geometric pattern in earthy browns, creams and ochre. Wooden dowel and jute hanging cord included.',
+        wholesalePriceInr: 2200, moq: 6, leadTime: W3, weightGrams: 700, categories: ['Home Décor & Living', 'Wall Décor', 'Woven Panels'], tags: ['woven-panel', 'wool', 'geometric', 'kutch'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('woven,panel,wall,textile', 45), variants: [{sku: 'RFP-WPN-006', priceInr: 2200, stock: 70, status: ACT, attrs: [{name: 'Color', value: 'Earth Tones'}]}] },
+      // Storage & Organisation
+      { name: 'Seagrass Storage Baskets Set', shortDescription: 'Set of 3 hand-woven seagrass baskets with cotton rope handles, nested sizes.', fullDescription: 'Hand-woven from natural seagrass and finished with braided cotton rope handles. Three nested sizes: 30cm, 24cm, 18cm diameter. Eco-certified seagrass. Wipe-clean.',
+        wholesalePriceInr: 1600, moq: 6, leadTime: W2, weightGrams: 1400, categories: ['Home Décor & Living', 'Storage & Organisation', 'Baskets'], tags: ['basket', 'seagrass', 'storage', 'eco'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('basket,seagrass,storage,wicker', 49), variants: [{sku: 'RFP-BSK-007', priceInr: 1600, stock: 90, status: ACT, attrs: [{name: 'Set', value: 'Set of 3'}]}] },
+      { name: 'Block-Print Decorative Box & Tray Set', shortDescription: 'Mango wood box and tray set with block-printed lining, 3 pieces.', fullDescription: 'Solid mango wood with dove-tail joints. Interior lined with block-printed cotton in indigo and white. Felt base. Set: 1 lidded box (25×15 cm) + 2 nesting trays.',
+        wholesalePriceInr: 2100, moq: 5, leadTime: W2, weightGrams: 1800, categories: ['Home Décor & Living', 'Storage & Organisation', 'Boxes & Trays'], tags: ['box', 'tray', 'mango-wood', 'blockprint'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('box,tray,wood,decor', 53), variants: [{sku: 'RFP-BOX-008', priceInr: 2100, stock: 60, status: ACT, attrs: [{name: 'Wood', value: 'Mango Wood'}]}] },
+      { name: 'Rattan Shelf Basket Set', shortDescription: 'Set of 2 open rattan shelf baskets, 30×20×15 cm each, natural finish.', fullDescription: 'Hand-woven rattan baskets ideal for shelf organisation. Sturdy base, natural finish. Fit standard 30cm deep shelves. Sold as a pair. Can hold up to 3kg each.',
+        wholesalePriceInr: 950, moq: 10, leadTime: W2, weightGrams: 600, categories: ['Home Décor & Living', 'Storage & Organisation', 'Shelving Accessories'], tags: ['rattan', 'shelf', 'basket', 'organizer'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('rattan,shelf,basket,organizer', 57), variants: [{sku: 'RFP-SHF-009', priceInr: 950, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Natural'}]}] },
+      { name: 'Jute Wall Organiser with Pockets', shortDescription: 'Hand-stitched jute wall organiser, 5 pockets, 40×60 cm, with leather strap hanger.', fullDescription: 'Natural jute canvas with 5 varying-size pockets. Reinforced stitching. Leather strap hanger with brass buckle. Great for entryways, home offices and kids rooms.',
+        wholesalePriceInr: 780, moq: 12, leadTime: W2, weightGrams: 450, categories: ['Home Décor & Living', 'Storage & Organisation', 'Wall Organisers'], tags: ['wall-organizer', 'jute', 'pockets', 'storage'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('wall,organizer,jute,pocket', 61), variants: [{sku: 'RFP-WOR-010', priceInr: 780, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Natural Jute'}]}] },
+      { name: 'Cotton Rope Storage Bin', shortDescription: 'Hand-woven cotton rope storage bin, 35cm diameter × 25cm tall, natural white.', fullDescription: 'Coiled cotton rope construction, no glue or synthetic adhesives. Sturdy base holds shape when filled. Holds blankets, toys or laundry. Machine-washable. Natural undyed cotton.',
+        wholesalePriceInr: 1100, moq: 10, leadTime: W2, weightGrams: 900, categories: ['Home Décor & Living', 'Storage & Organisation', 'Storage Bins'], tags: ['storage-bin', 'cotton-rope', 'laundry', 'handwoven'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('storage,bin,cotton,rope', 65), variants: [{sku: 'RFP-BIN-011', priceInr: 1100, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Natural White'}]}] },
+      // Tabletop & Dining
+      { name: 'Block-Print Linen Placemats Set of 6', shortDescription: 'Set of 6 block-printed linen placemats, 14×18 in., indigo botanical motifs.', fullDescription: 'Hand block-printed on 55% linen 45% cotton blend using AZO-free indigo dye. Machine washable at 30°C. Each placemat 14×18 in. Set of 6.',
+        wholesalePriceInr: 1800, moq: 8, leadTime: W2, weightGrams: 600, categories: ['Home Décor & Living', 'Tabletop & Dining', 'Placemats'], tags: ['placemat', 'blockprint', 'linen', 'indigo'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('placemat,table,linen,dining', 69), variants: [{sku: 'RFP-PLM-012', priceInr: 1800, stock: 80, status: ACT, attrs: [{name: 'Color', value: 'Indigo on Natural'}]}] },
+      { name: 'Kantha-Stitch Table Runner', shortDescription: 'Kantha-stitch cotton table runner, 14×72 in., multicolour running-stitch pattern.', fullDescription: 'Made from layered vintage sari cotton secured with traditional kantha running stitch. Each runner is unique — slight variations are hallmarks of handmade authenticity. 14×72 in.',
+        wholesalePriceInr: 950, moq: 12, leadTime: W2, weightGrams: 350, categories: ['Home Décor & Living', 'Tabletop & Dining', 'Table Runners'], tags: ['table-runner', 'kantha', 'sari', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('table,runner,kantha,india', 73), variants: [{sku: 'RFP-TRN-013', priceInr: 950, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Multicolour'}]}] },
+      { name: 'Embroidered Linen Napkin Set with Rings', shortDescription: 'Set of 6 embroidered linen napkins with matching silver-brass napkin rings.', fullDescription: '100% linen napkins with white-on-white satin-stitch botanical border. 6 matching silver-plated brass napkin rings with floral motif. 18×18 in. each.',
+        wholesalePriceInr: 2400, moq: 6, leadTime: W2, weightGrams: 700, categories: ['Home Décor & Living', 'Tabletop & Dining', 'Napkins & Napkin Rings'], tags: ['napkin', 'napkin-ring', 'linen', 'embroidered'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('napkin,ring,linen,table', 77), variants: [{sku: 'RFP-NAP-014', priceInr: 2400, stock: 60, status: ACT, attrs: [{name: 'Color', value: 'White on Ivory'}]}] },
+      { name: 'Blue Pottery Ceramic Coasters Set', shortDescription: 'Set of 6 hand-painted blue pottery coasters, 4 in. round, cork-backed.', fullDescription: 'Authentic Jaipur blue pottery coasters painted by hand using traditional blue and white pigments. Cork backing protects surfaces. Fade-resistant glaze. 4 in. diameter.',
+        wholesalePriceInr: 900, moq: 12, leadTime: W2, weightGrams: 800, categories: ['Home Décor & Living', 'Tabletop & Dining', 'Coasters'], tags: ['coaster', 'blue-pottery', 'ceramic', 'jaipur'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('coaster,ceramic,blue,pottery', 81), variants: [{sku: 'RFP-CST-015', priceInr: 900, stock: 120, status: ACT, attrs: [{name: 'Pattern', value: 'Blue Floral'}]}] },
+      { name: 'Ajrakh Block-Print Tablecloth', shortDescription: 'Ajrakh block-printed cotton tablecloth, 60×90 in., deep teal and rust.', fullDescription: 'Printed using the traditional ajrakh resist-print method with natural dyes — deep teal (indigo) and rust (madder). 100% cotton, 180TC. Seats 6. Hand or machine wash cold.',
+        wholesalePriceInr: 2200, moq: 6, leadTime: W2, weightGrams: 1000, categories: ['Home Décor & Living', 'Tabletop & Dining', 'Table Cloths'], tags: ['tablecloth', 'ajrakh', 'blockprint', 'natural-dye'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('tablecloth,blockprint,dining', 85), variants: [{sku: 'RFP-TCL-016', priceInr: 2200, stock: 70, status: ACT, attrs: [{name: 'Size', value: '60×90 in'}]}] },
+      // Soft Furnishings
+      { name: 'Sanganeri Block-Print Cushion Covers Set of 5', shortDescription: 'Set of 5 hand block-printed cotton cushion covers, 18×18 in., traditional floral.', fullDescription: 'Stamped individually using heritage sheesham-wood blocks, AZO-free dyes on 200TC cotton. Set of 5 assorted floral motifs in coordinating indigo, terracotta and sage.',
+        wholesalePriceInr: 1200, moq: 10, leadTime: W2, weightGrams: 400, categories: ['Home Décor & Living', 'Soft Furnishings', 'Cushion Covers'], tags: ['cushion', 'blockprint', 'cotton', 'floral'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('cushion,cover,blockprint,india', 89), variants: [{sku: 'RFP-CUC-017', priceInr: 1200, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'Indigo Mix'}]}] },
+      { name: 'Tufted Cotton Throw Pillow', shortDescription: 'Handmade tufted cotton throw pillow, 20×20 in., with insert, geometric pattern.', fullDescription: 'Cover woven on handlooms with raised tuft pattern in undyed and terracotta cotton. Insert: 100% cotton fill. Zipper closure. 20×20 in. Cover removable for washing.',
+        wholesalePriceInr: 950, moq: 12, leadTime: W2, weightGrams: 600, categories: ['Home Décor & Living', 'Soft Furnishings', 'Throw Pillows'], tags: ['throw-pillow', 'tufted', 'cotton', 'geometric'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('throw,pillow,tufted,sofa', 93), variants: [{sku: 'RFP-THP-018', priceInr: 950, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Terracotta & Natural'}]}] },
+      { name: 'Dabu-Print Cotton Throw Blanket', shortDescription: 'Lightweight 100% cotton dabu-print throw, 50×60 in., crackled resist pattern.', fullDescription: 'Dabu mud-resist printing creates a distinctive crackled texture unique to each piece. 100% cotton, 180gsm. Machine wash cold. Each throw has slight variations — authentically handmade.',
+        wholesalePriceInr: 1800, moq: 8, leadTime: W2, weightGrams: 700, categories: ['Home Décor & Living', 'Soft Furnishings', 'Throws & Blankets'], tags: ['throw', 'dabu', 'blockprint', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('throw,blanket,cotton,india', 97), variants: [{sku: 'RFP-THB-019', priceInr: 1800, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Charcoal on Beige'}]}] },
+      { name: 'Hand-Woven Wool Dhurrie Rug', shortDescription: 'Hand-woven flat-weave wool dhurrie rug, 4×6 ft., geometric stripes, reversible.', fullDescription: 'Warp cotton, weft natural-dyed wool. Flat-weave dhurrie technique from Rajasthan. Geometric stripe pattern. Reversible. 4×6 ft. Spot-clean or professional wash.',
+        wholesalePriceInr: 4500, moq: 3, leadTime: W3, weightGrams: 3000, categories: ['Home Décor & Living', 'Soft Furnishings', 'Rugs & Dhurries'], tags: ['dhurrie', 'rug', 'wool', 'flatweave'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('rug,dhurrie,flatweave,india', 101), variants: [{sku: 'RFP-RUG-020', priceInr: 4500, stock: 50, status: ACT, attrs: [{name: 'Size', value: '4×6 ft'}]}] },
+      { name: 'Patchwork Kantha Floor Cushion', shortDescription: 'Round patchwork floor cushion, 24 in. diameter, vintage sari cotton, kantha-stitched, with insert.', fullDescription: 'Cover assembled from hand-selected vintage sari cotton patches, hand-stitched with kantha running stitch. Cotton-fill insert included. Zipper closure. 24 in. diameter, 6 in. thick.',
+        wholesalePriceInr: 1400, moq: 8, leadTime: W2, weightGrams: 1200, categories: ['Home Décor & Living', 'Soft Furnishings', 'Floor Cushions'], tags: ['floor-cushion', 'kantha', 'patchwork', 'boho'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('floor,cushion,pouf,kantha', 105), variants: [{sku: 'RFP-FLC-021', priceInr: 1400, stock: 90, status: ACT, attrs: [{name: 'Color', value: 'Multicolour Patchwork'}]}] },
     ],
   },
 
+  // ── Brand 3: Blue Pottery House — Ceramics & Pottery ────────────────────────
   {
-    email: 'export@rajwadafurnishing.in',
-    password: 'Solomon@2025',
-    brandName: 'Rajwada Furnishing',
-    slug: 'rajwada-furnishing',
-    city: 'Jodhpur',
-    category: ['Home Décor & Living', 'Home Décor & Living'],
-    description: 'Solid sheesham and mango wood furniture with hand-carved inlay work, crafted in Jodhpur\'s furniture belt.',
-    brandStory: 'Operating from Jodhpur\'s industrial export hub since 2001, Rajwada Furnishing supplies hand-carved solid-wood furniture to retailers across Europe and North America.',
-    yearFounded: 2001,
-    logoUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1200&h=400&fit=crop',
-    pickupPincode: '342001',
-    instagramHandle: 'rajwadafurnishing',
-    achievementLevel: 'L4_ELITE',
-    confirmedOrderCount: 520,
-    avgRating: 4.9,
-    minimumOrderValue: 25000,
+    email: 'contact@bluepotteryhouse.com', password: 'Solomon@2025',
+    brandName: 'Blue Pottery House', slug: 'blue-pottery-house', city: 'Jaipur', state: 'Rajasthan',
+    category: ['Ceramics & Pottery'], description: 'Traditional Jaipur blue pottery studio producing tableware, vases and decorative ceramics.',
+    brandStory: 'A family studio in the walled city of Jaipur preserving the 400-year-old art of blue pottery — a unique technique using quartz paste fired at low temperatures and hand-painted in cobalt blue and turquoise.',
+    yearFounded: 1963, logoUrl: 'https://picsum.photos/seed/903/200/200', bannerUrl: 'https://picsum.photos/seed/953/1200/400',
+    pickupPincode: '302002', instagramHandle: 'bluepotteryhouse',
+    achievementLevel: 'L3_TRUSTED', confirmedOrderCount: 210, avgRating: 4.7, minimumOrderValue: 8000,
     products: [
-      {
-        name: 'Sheesham Wood Side Table',
-        shortDescription: 'Solid sheesham wood side table with hand-carved floral inlay, 18×18×22 in.',
-        fullDescription: 'Crafted from sustainably sourced Indian sheesham (rosewood). Each table features a hand-carved top panel. Assembled with mortise-and-tenon joints. Knock-down for container shipping.',
-        wholesalePriceInr: 8500, moq: 5, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 8000,
-        categories: ['Home Décor & Living'], tags: ['sheesham', 'side-table', 'hand-carved', 'solid-wood'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', publicId: 'seed/rwf-st-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800', publicId: 'seed/rwf-st-001-b', position: 1 },
-          { url: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800', publicId: 'seed/rwf-st-001-c', position: 2 },
-        ],
-        variants: [
-          { sku: 'RWF-ST-001-NT', priceInr: 8500, stock: 40, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Natural Teak' }] },
-          { sku: 'RWF-ST-001-WB', priceInr: 8500, stock: 35, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Walnut Brown' }] },
-          { sku: 'RWF-ST-001-WW', priceInr: 9000, stock: 25, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Whitewash' }] },
-        ],
-      },
-      {
-        name: 'Mango Wood Console Table',
-        shortDescription: 'Reclaimed mango wood console table with iron hairpin legs, 48×14×30 in.',
-        fullDescription: 'Made from reclaimed mango wood slabs sourced from aged orchard trees. The live-edge top is hand-finished with natural oil. Paired with matte-black powder-coated iron hairpin legs.',
-        wholesalePriceInr: 14000, moq: 3, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 18000,
-        categories: ['Home Décor & Living'], tags: ['mango-wood', 'console', 'live-edge', 'hairpin-legs'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800', publicId: 'seed/rwf-ct-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', publicId: 'seed/rwf-ct-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'RWF-CT-002-NO', priceInr: 14000, stock: 20, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Natural Oil' }] },
-          { sku: 'RWF-CT-002-DW', priceInr: 14500, stock: 18, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Dark Walnut' }] },
-        ],
-      },
-      {
-        name: 'Carved Sheesham Bookshelf',
-        shortDescription: '4-shelf solid sheesham bookshelf with jali carved side panels, 32×12×60 in.',
-        fullDescription: 'Traditional jali (lattice) carving on side panels adds ornamental appeal. Three adjustable shelves. Finished with beeswax polish. Flat-packed for container export with assembly hardware.',
-        wholesalePriceInr: 18500, moq: 2, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 30000,
-        categories: ['Home Décor & Living'], tags: ['bookshelf', 'sheesham', 'jali', 'carved'],
-        enabledZones: ['DOMESTIC', 'EUROPE'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800', publicId: 'seed/rwf-bs-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', publicId: 'seed/rwf-bs-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'RWF-BS-003-HT', priceInr: 18500, stock: 15, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Honey Teak' }] },
-          { sku: 'RWF-BS-003-DE', priceInr: 19000, stock: 12, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Dark Ebony' }] },
-        ],
-      },
-      {
-        name: 'Wooden Dressing Mirror',
-        shortDescription: 'Solid sheesham dressing mirror with carved frame, 24×36 in., free-standing.',
-        fullDescription: 'Full-length free-standing mirror with a solid sheesham carved frame. Bevelled glass. Adjustable tilt mechanism. Each frame is individually carved and waxed by Jodhpur craftsmen.',
-        wholesalePriceInr: 11000, moq: 4, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 12000,
-        categories: ['Home Décor & Living', 'Home Décor & Living'], tags: ['mirror', 'sheesham', 'dressing', 'carved-frame'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', publicId: 'seed/rwf-mr-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800', publicId: 'seed/rwf-mr-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'RWF-MR-004-NS', priceInr: 11000, stock: 22, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Natural Sheesham' }] },
-          { sku: 'RWF-MR-004-CW', priceInr: 11500, stock: 16, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Painted Chalk White' }] },
-        ],
-      },
-      {
-        name: 'Hand-Carved Photo Frames Set of 3',
-        shortDescription: 'Set of 3 hand-carved sheesham photo frames: 4×6, 5×7, and 8×10 in.',
-        fullDescription: 'Each frame is individually carved with floral border motifs and polished with natural beeswax. Set of 3 graduating sizes. Includes glass fronts and easel backs. Packaged in branded export box.',
-        wholesalePriceInr: 2400, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 1800,
-        categories: ['Home Décor & Living', 'Art & Craft Objects'], tags: ['photo-frame', 'sheesham', 'carved', 'set'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1513201099705-a9746072228c?w=800', publicId: 'seed/rwf-pf-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/rwf-pf-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'RWF-PF-005-DW', priceInr: 2400, stock: 80, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Dark Walnut' }] },
-          { sku: 'RWF-PF-005-NW', priceInr: 2400, stock: 90, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Natural Wood' }] },
-        ],
-      },
+      // Tableware
+      { name: 'Blue Pottery Chai Mugs Set of 4', shortDescription: 'Set of 4 hand-painted blue pottery chai mugs, 200ml, cobalt blue floral motifs.', fullDescription: 'Authentic Jaipur blue pottery: quartz paste body, lead-free cobalt oxide paint, low-fire glaze. Food safe and microwave safe. 200ml capacity. Each mug is handmade so slight variations occur.',
+        wholesalePriceInr: 1200, moq: 6, leadTime: W2, weightGrams: 900, categories: ['Ceramics & Pottery', 'Tableware', 'Mugs & Cups'], tags: ['mug', 'blue-pottery', 'chai', 'handpainted'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('blue,pottery,mug,ceramic', 109), variants: [{sku: 'BPH-MUG-001', priceInr: 1200, stock: 150, status: ACT, attrs: [{name: 'Capacity', value: '200ml'}]}] },
+      { name: 'Blue Pottery Serving Bowls Set of 3', shortDescription: 'Set of 3 nesting blue pottery bowls, 15/20/25 cm, hand-painted with peacock motifs.', fullDescription: 'Hand-painted blue pottery in three graduated sizes. Peacock and lotus motifs. Food safe, dishwasher safe (top rack). Sold as a set. Makes a complete table centrepiece.',
+        wholesalePriceInr: 1800, moq: 4, leadTime: W2, weightGrams: 1400, categories: ['Ceramics & Pottery', 'Tableware', 'Bowls'], tags: ['bowl', 'blue-pottery', 'peacock', 'set'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('ceramic,bowl,blue,handpainted', 113), variants: [{sku: 'BPH-BWL-002', priceInr: 1800, stock: 100, status: ACT, attrs: [{name: 'Motif', value: 'Peacock'}]}] },
+      { name: 'Blue Pottery Dinner Plates Set of 6', shortDescription: 'Set of 6 handmade blue pottery dinner plates, 10 in., geometric blue-on-white patterns.', fullDescription: 'Classic blue pottery dinner plates with geometric floral border. Food safe, low-fire glaze. Hand wash recommended for longevity. 10 in. diameter. Set of 6.',
+        wholesalePriceInr: 2800, moq: 3, leadTime: W2, weightGrams: 3000, categories: ['Ceramics & Pottery', 'Tableware', 'Plates'], tags: ['plate', 'blue-pottery', 'dinner', 'geometric'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('pottery,plate,blue,ceramic', 117), variants: [{sku: 'BPH-PLT-003', priceInr: 2800, stock: 60, status: ACT, attrs: [{name: 'Size', value: '10 in'}]}] },
+      { name: 'Blue Pottery Oval Serving Platter', shortDescription: 'Handmade blue pottery oval platter, 14×9 in., floral and bird motifs.', fullDescription: 'Large oval serving platter hand-painted with intricate floral and bird motifs. Food safe. Ideal for mezze, charcuterie or dessert. 14×9 in. Wipe-clean or hand wash.',
+        wholesalePriceInr: 1400, moq: 6, leadTime: W2, weightGrams: 900, categories: ['Ceramics & Pottery', 'Tableware', 'Serving Platters'], tags: ['platter', 'blue-pottery', 'serving', 'oval'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('platter,ceramic,blue,serving', 121), variants: [{sku: 'BPH-PLR-004', priceInr: 1400, stock: 90, status: ACT, attrs: [{name: 'Size', value: '14×9 in'}]}] },
+      { name: 'Blue Pottery Teapot & Cup Set', shortDescription: 'Blue pottery teapot (700ml) with 4 matching cups (150ml), lotus motif.', fullDescription: 'Classic Jaipur blue pottery tea service: 700ml teapot with stainless steel infuser basket + 4 matching 150ml cups. Lotus and vine motif in cobalt and turquoise. Sold as set of 5 pieces.',
+        wholesalePriceInr: 3500, moq: 3, leadTime: W2, weightGrams: 2000, categories: ['Ceramics & Pottery', 'Tableware', 'Teapots & Tea Sets'], tags: ['teapot', 'tea-set', 'blue-pottery', 'lotus'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('teapot,ceramic,blue,tea', 125), variants: [{sku: 'BPH-TEA-005', priceInr: 3500, stock: 40, status: ACT, attrs: [{name: 'Pieces', value: '5-piece set'}]}] },
+      { name: 'Blue Pottery Side Plates Set of 6', shortDescription: 'Set of 6 blue pottery side plates, 7 in., classic blue-on-white fish-scale border.', fullDescription: 'Handmade 7 in. side plates with traditional fish-scale border in cobalt blue on white. Food safe. Perfect as bread plates, dessert plates or appetiser plates. Set of 6.',
+        wholesalePriceInr: 1800, moq: 4, leadTime: W2, weightGrams: 1800, categories: ['Ceramics & Pottery', 'Tableware', 'Side Plates'], tags: ['side-plate', 'blue-pottery', 'fish-scale'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('side,plate,ceramic,blue', 129), variants: [{sku: 'BPH-SID-006', priceInr: 1800, stock: 80, status: ACT, attrs: [{name: 'Size', value: '7 in'}]}] },
+      // Storage & Vases
+      { name: 'Blue Pottery Flower Vase', shortDescription: 'Hand-painted blue pottery vase, 25 cm tall, flared neck, peacock feather motif.', fullDescription: 'Wheel-thrown blue pottery vase with flared neck. Hand-painted peacock feather motif in cobalt and turquoise. Waterproof glaze interior. 25 cm tall, 12 cm base diameter.',
+        wholesalePriceInr: 1100, moq: 8, leadTime: W2, weightGrams: 800, categories: ['Ceramics & Pottery', 'Storage & Vases', 'Vases'], tags: ['vase', 'blue-pottery', 'peacock', 'flower'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('vase,ceramic,blue,flower', 133), variants: [{sku: 'BPH-VAS-007', priceInr: 1100, stock: 120, status: ACT, attrs: [{name: 'Height', value: '25 cm'}]}] },
+      { name: 'Blue Pottery Hanging Planter', shortDescription: 'Hand-painted blue pottery hanging planter, 15 cm diameter, with jute hanger.', fullDescription: 'Blue pottery planter with drainage hole and matching saucer. Jute hanger with three-point suspension included. 15 cm diameter. For indoor plants up to 12 cm pot.',
+        wholesalePriceInr: 850, moq: 12, leadTime: W2, weightGrams: 500, categories: ['Ceramics & Pottery', 'Storage & Vases', 'Planters'], tags: ['planter', 'blue-pottery', 'hanging', 'indoor'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('planter,pottery,ceramic,hanging', 137), variants: [{sku: 'BPH-PLN-008', priceInr: 850, stock: 100, status: ACT, attrs: [{name: 'Size', value: '15 cm'}]}] },
+      { name: 'Blue Pottery Kitchen Canister Set', shortDescription: 'Set of 3 blue pottery kitchen canisters with lids, 600/400/250ml, floral motif.', fullDescription: 'Airtight rubber-gasketed lids in three graduated sizes: 600ml, 400ml, 250ml. Hand-painted with blue floral motifs. Food safe. Perfect for tea, coffee, spices. Set of 3.',
+        wholesalePriceInr: 2200, moq: 4, leadTime: W2, weightGrams: 1500, categories: ['Ceramics & Pottery', 'Storage & Vases', 'Jars & Canisters'], tags: ['canister', 'jar', 'blue-pottery', 'kitchen'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('jar,canister,ceramic,kitchen', 141), variants: [{sku: 'BPH-CAN-009', priceInr: 2200, stock: 70, status: ACT, attrs: [{name: 'Set', value: '3-piece set'}]}] },
+      { name: 'Blue Pottery Bread Bin', shortDescription: 'Hand-painted blue pottery bread bin, 30×18×18 cm, with bamboo lid.', fullDescription: 'Large blue pottery bread bin with hand-painted floral vine motif. Fitted bamboo lid with ceramic handle. 30×18×18 cm. Food safe interior. Keeps bread fresh for 2–3 days.',
+        wholesalePriceInr: 2800, moq: 4, leadTime: W2, weightGrams: 2500, categories: ['Ceramics & Pottery', 'Storage & Vases', 'Bread Bins'], tags: ['bread-bin', 'blue-pottery', 'bamboo', 'kitchen'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('bread,bin,ceramic,kitchen', 145), variants: [{sku: 'BPH-BRD-010', priceInr: 2800, stock: 40, status: ACT, attrs: [{name: 'Lid', value: 'Bamboo'}]}] },
+      // Decorative Ceramics
+      { name: 'Blue Pottery Ganesha Figurine', shortDescription: 'Hand-painted blue pottery seated Ganesha figurine, 15 cm, cobalt and gold.', fullDescription: 'Wheel-thrown and hand-sculpted seated Ganesha. Painted in classic cobalt blue with 22k gold lustre accents. 15 cm tall. Display or gifting. Velvet base.',
+        wholesalePriceInr: 1400, moq: 8, leadTime: W2, weightGrams: 600, categories: ['Ceramics & Pottery', 'Decorative Ceramics', 'Figurines'], tags: ['figurine', 'ganesha', 'blue-pottery', 'decorative'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('figurine,ceramic,blue,handpainted', 149), variants: [{sku: 'BPH-FIG-011', priceInr: 1400, stock: 80, status: ACT, attrs: [{name: 'Height', value: '15 cm'}]}] },
+      { name: 'Blue Pottery Decorative Wall Plate', shortDescription: 'Hand-painted decorative wall plate, 30 cm diameter, peacock in garden motif.', fullDescription: 'Show-stopping blue pottery wall plate with intricate peacock-in-garden hand painting. 30 cm diameter. Hanging wire attached at back. Not for food use — decorative only.',
+        wholesalePriceInr: 1800, moq: 6, leadTime: W2, weightGrams: 900, categories: ['Ceramics & Pottery', 'Decorative Ceramics', 'Wall Plates'], tags: ['wall-plate', 'decorative', 'blue-pottery', 'peacock'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('wall,plate,decorative,pottery', 153), variants: [{sku: 'BPH-WPL-012', priceInr: 1800, stock: 60, status: ACT, attrs: [{name: 'Diameter', value: '30 cm'}]}] },
+      { name: 'Blue Pottery Pillar Candle Holder', shortDescription: 'Hand-painted blue pottery candle holder for 3 in. pillar candles, 12 cm tall.', fullDescription: 'Solid blue pottery base with deep recessed well for 3 in. pillar candles. Cobalt vine motif. 12 cm tall, 10 cm base. Decorative piece — not a hanging fixture.',
+        wholesalePriceInr: 650, moq: 12, leadTime: W2, weightGrams: 500, categories: ['Ceramics & Pottery', 'Decorative Ceramics', 'Candle Holders'], tags: ['candle-holder', 'blue-pottery', 'pillar', 'ceramic'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('ceramic,candle,holder,blue', 157), variants: [{sku: 'BPH-CDH-013', priceInr: 650, stock: 140, status: ACT, attrs: [{name: 'Fit', value: '3 in pillar'}]}] },
+      { name: 'Blue Pottery Incense Holder', shortDescription: 'Hand-painted blue pottery incense stick and cone holder, 15 cm long, with ash tray.', fullDescription: 'Elongated blue pottery incense holder with three incense holes and integrated ash tray. Painted with floral motif. 15 cm long. Works with standard incense sticks and cones.',
+        wholesalePriceInr: 350, moq: 24, leadTime: W2, weightGrams: 200, categories: ['Ceramics & Pottery', 'Decorative Ceramics', 'Incense Holders'], tags: ['incense', 'holder', 'blue-pottery', 'ceramic'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('incense,holder,ceramic,blue', 161), variants: [{sku: 'BPH-INC-014', priceInr: 350, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'Classic Blue'}]}] },
+      { name: 'Blue Pottery Decorative Tile Set of 4', shortDescription: 'Set of 4 hand-painted blue pottery tiles, 10×10 cm, for display or installation.', fullDescription: 'Each tile hand-painted with a unique motif (fish, lotus, elephant, peacock). 10×10 cm, 8mm thick. Can be mounted on wall or displayed on easels. Sold as set of 4.',
+        wholesalePriceInr: 800, moq: 10, leadTime: W2, weightGrams: 600, categories: ['Ceramics & Pottery', 'Decorative Ceramics', 'Decorative Tiles'], tags: ['tile', 'decorative', 'blue-pottery', 'handpainted'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('tile,decorative,blue,ceramic', 165), variants: [{sku: 'BPH-TIL-015', priceInr: 800, stock: 100, status: ACT, attrs: [{name: 'Motif', value: 'Assorted 4-pack'}]}] },
     ],
   },
 
+  // ── Brand 4: Delhi Leather Craft — Leather & Bags ────────────────────────────
   {
-    email: 'trade@delhileathercraft.com',
-    password: 'Solomon@2025',
-    brandName: 'Delhi Leather Craft',
-    slug: 'delhi-leather-craft',
-    city: 'Delhi',
-    category: ['Leather & Bags'],
-    description: 'Premium vegetable-tanned leather goods — bags, wallets, and belts — handstitched in Old Delhi.',
-    brandStory: 'For over 25 years Delhi Leather Craft has been supplying hand-stitched leather goods to boutiques in the UK, France, and the UAE.',
-    yearFounded: 1999,
-    logoUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1200&h=400&fit=crop',
-    pickupPincode: '110006',
-    instagramHandle: 'delhileathercraft',
-    achievementLevel: 'L3_TRUSTED',
-    confirmedOrderCount: 290,
-    avgRating: 4.7,
-    minimumOrderValue: 15000,
+    email: 'contact@delhileathercraft.com', password: 'Solomon@2025',
+    brandName: 'Delhi Leather Craft', slug: 'delhi-leather-craft', city: 'Delhi', state: 'Delhi',
+    category: ['Leather & Bags'], description: 'Full-grain leather bags, accessories and footwear hand-crafted in Delhi since 1985.',
+    brandStory: 'Third-generation leather artisans working from a single workshop in Jhandewalan. We source full-grain buffalo and vegetable-tanned leather from certified tanneries and construct every piece by hand — no assembly lines.',
+    yearFounded: 1985, logoUrl: 'https://picsum.photos/seed/904/200/200', bannerUrl: 'https://picsum.photos/seed/954/1200/400',
+    pickupPincode: '110055', instagramHandle: 'delhileathercraft',
+    achievementLevel: 'L3_TRUSTED', confirmedOrderCount: 178, avgRating: 4.7, minimumOrderValue: 10000,
     products: [
-      {
-        name: 'Full-Grain Leather Tote Bag',
-        shortDescription: 'Handstitched full-grain vegetable-tanned leather tote bag, 16×5×13 in., 2 interior pockets.',
-        fullDescription: 'Cut and stitched by hand from full-grain vegetable-tanned leather. Saddle-stitched with waxed thread. Solid brass hardware. The leather develops a rich patina with use.',
-        wholesalePriceInr: 4200, moq: 6, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 900,
-        categories: ['Leather & Bags'], tags: ['tote', 'leather', 'handstitched', 'vegetable-tanned'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800', publicId: 'seed/dlc-tb-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', publicId: 'seed/dlc-tb-001-b', position: 1 },
-          { url: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800', publicId: 'seed/dlc-tb-001-c', position: 2 },
-        ],
-        variants: [
-          { sku: 'DLC-TB-001-CT', priceInr: 4200, stock: 60, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Cognac Tan' }] },
-          { sku: 'DLC-TB-001-VB', priceInr: 4200, stock: 55, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Vintage Black' }] },
-          { sku: 'DLC-TB-001-CB', priceInr: 4200, stock: 48, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Chestnut Brown' }] },
-        ],
-      },
-      {
-        name: 'Slim Bifold Leather Wallet',
-        shortDescription: 'Minimalist vegetable-tanned leather bifold wallet, 8 card slots, cash compartment.',
-        fullDescription: 'Slim profile with room for 8 cards and a folded cash section. Saddle-stitched with waxed linen thread. Unlined for minimal bulk. Comes in a recycled kraft gift box.',
-        wholesalePriceInr: 950, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 60,
-        categories: ['Leather & Bags'], tags: ['wallet', 'bifold', 'slim', 'vegetable-tanned'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', publicId: 'seed/dlc-wl-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800', publicId: 'seed/dlc-wl-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'DLC-WL-002-NT', priceInr: 950, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Natural Tan' }] },
-          { sku: 'DLC-WL-002-MB', priceInr: 950, stock: 280, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Midnight Black' }] },
-          { sku: 'DLC-WL-002-MH', priceInr: 950, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Mahogany Brown' }] },
-        ],
-      },
-      {
-        name: 'Hand-Stitched Leather Backpack',
-        shortDescription: '20L hand-stitched vegetable-tanned leather backpack with laptop sleeve and brass buckles.',
-        fullDescription: 'Made from 2 mm thick full-grain leather. Padded laptop sleeve (up to 15 in.), 3 exterior pockets, adjustable shoulder straps. Solid brass buckle hardware. Each pack takes 12 hours to hand-stitch.',
-        wholesalePriceInr: 8500, moq: 4, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 1400,
-        categories: ['Leather & Bags'], tags: ['backpack', 'leather', 'laptop', 'brass-buckle'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800', publicId: 'seed/dlc-bp-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', publicId: 'seed/dlc-bp-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'DLC-BP-003-CG', priceInr: 8500, stock: 35, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Cognac' }] },
-          { sku: 'DLC-BP-003-DB', priceInr: 8500, stock: 30, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Dark Brown' }] },
-        ],
-      },
-      {
-        name: 'Leather Passport Holder',
-        shortDescription: 'Vegetable-tanned leather travel wallet: passport slot, 6 card slots, boarding-pass window.',
-        fullDescription: 'Sized for all standard passports. Features a boarding-pass window, 6 card slots, and a zippered coin pocket. RFID-blocking inner lining. Presented in a muslin dust bag.',
-        wholesalePriceInr: 1600, moq: 12, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 110,
-        categories: ['Leather & Bags', 'Art & Craft Objects'], tags: ['passport', 'travel-wallet', 'rfid', 'leather'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/dlc-ph-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800', publicId: 'seed/dlc-ph-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'DLC-PH-004-TN', priceInr: 1600, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Tan' }] },
-          { sku: 'DLC-PH-004-BK', priceInr: 1600, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Black' }] },
-        ],
-      },
-      {
-        name: 'Leather Belt — Reversible',
-        shortDescription: 'Hand-stitched 35 mm reversible leather belt, tan/black, solid brass pin-buckle.',
-        fullDescription: 'Crafted from a single piece of 3.5 mm full-grain leather. Reversible to black or tan. Traditional pin-buckle in solid brass. Available in waist sizes 30–44 in.',
-        wholesalePriceInr: 1400, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 200,
-        categories: ['Leather & Bags'], tags: ['belt', 'reversible', 'brass-buckle', 'leather'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', publicId: 'seed/dlc-bl-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800', publicId: 'seed/dlc-bl-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'DLC-BL-005-30', priceInr: 1400, stock: 80,  status: 'ACTIVE', attrs: [{ name: 'Size', value: '30"' }] },
-          { sku: 'DLC-BL-005-32', priceInr: 1400, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Size', value: '32"' }] },
-          { sku: 'DLC-BL-005-34', priceInr: 1400, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Size', value: '34"' }] },
-          { sku: 'DLC-BL-005-36', priceInr: 1400, stock: 90,  status: 'ACTIVE', attrs: [{ name: 'Size', value: '36"' }] },
-        ],
-      },
+      // Bags
+      { name: 'Full-Grain Leather Tote Bag', shortDescription: 'Structured full-grain buffalo leather tote, 38×30×12 cm, tan, with interior pockets.', fullDescription: 'Vegetable-tanned full-grain buffalo leather. Two open interior pockets + one zip pocket. Solid brass hardware. 50 cm drop handles. Natural tan patinas beautifully with use.',
+        wholesalePriceInr: 3800, moq: 5, leadTime: W2, weightGrams: 1200, categories: ['Leather & Bags', 'Bags', 'Tote Bags'], tags: ['leather', 'tote', 'full-grain', 'tan'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,tote,bag,tan', 169), variants: [{sku: 'DLC-TOT-001', priceInr: 3800, stock: 60, status: ACT, attrs: [{name: 'Color', value: 'Natural Tan'}]}] },
+      { name: 'Waxed Canvas & Leather Backpack', shortDescription: 'Waxed canvas and leather-trim backpack, 22L, antique brass zips, padded laptop sleeve.', fullDescription: 'Body: waxed cotton canvas. Trim, base and straps: full-grain leather. 22-litre capacity. 15-inch laptop sleeve. Antique brass YKK zips. Roll-top closure. Lifetime hardware warranty.',
+        wholesalePriceInr: 5200, moq: 4, leadTime: W3, weightGrams: 900, categories: ['Leather & Bags', 'Bags', 'Backpacks'], tags: ['backpack', 'leather', 'canvas', 'laptop'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,backpack,canvas,bag', 173), variants: [{sku: 'DLC-BPK-002', priceInr: 5200, stock: 40, status: ACT, attrs: [{name: 'Color', value: 'Olive Canvas / Tan Leather'}]}] },
+      { name: 'Classic Leather Shoulder Bag', shortDescription: 'Classic full-grain leather shoulder bag with flap, 28×20×8 cm, cognac, adjustable strap.', fullDescription: 'Single main compartment with press-stud flap. Adjustable 120 cm strap. Inside slip pocket. Full-grain leather in cognac. Solid brass hardware. Weighs 550g empty.',
+        wholesalePriceInr: 3200, moq: 5, leadTime: W2, weightGrams: 700, categories: ['Leather & Bags', 'Bags', 'Shoulder Bags'], tags: ['shoulder-bag', 'leather', 'cognac', 'flap'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('leather,shoulder,bag,women', 177), variants: [{sku: 'DLC-SHB-003', priceInr: 3200, stock: 60, status: ACT, attrs: [{name: 'Color', value: 'Cognac'}]}] },
+      { name: 'Full-Grain Leather Messenger Bag', shortDescription: 'Hand-stitched leather messenger bag, 38×28×10 cm, black, with buckle strap closure.', fullDescription: 'Saddle-stitched full-grain black leather. Front organiser pocket, main compartment fits 14-inch laptop. Adjustable padded shoulder strap. Brass buckle closure. Unisex.',
+        wholesalePriceInr: 4200, moq: 4, leadTime: W2, weightGrams: 1000, categories: ['Leather & Bags', 'Bags', 'Messenger Bags'], tags: ['messenger', 'leather', 'black', 'laptop'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,messenger,bag,men', 181), variants: [{sku: 'DLC-MSG-004', priceInr: 4200, stock: 45, status: ACT, attrs: [{name: 'Color', value: 'Black'}]}] },
+      { name: 'Vegetable-Tanned Leather Duffel Bag', shortDescription: 'Large vegetable-tanned leather duffel, 50×28×28 cm, tan, weekend bag.', fullDescription: 'Full-size weekend duffel in heavy vegetable-tanned leather. Main zip compartment + end zip pocket. Removable padded shoulder strap + carry handles. 50×28×28 cm, 40-litre capacity.',
+        wholesalePriceInr: 6800, moq: 3, leadTime: W3, weightGrams: 2000, categories: ['Leather & Bags', 'Bags', 'Duffel Bags'], tags: ['duffel', 'leather', 'weekend', 'travel'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,duffel,travel,bag', 185), variants: [{sku: 'DLC-DUF-005', priceInr: 6800, stock: 25, status: ACT, attrs: [{name: 'Color', value: 'Natural Tan'}]}] },
+      // Small Accessories
+      { name: 'Hand-Stitched Bifold Leather Wallet', shortDescription: 'Saddle-stitched full-grain leather bifold wallet, 8 card slots, note and coin pockets.', fullDescription: 'Full-grain vegetable-tanned leather. 8 card slots, 2 note compartments, 1 coin pocket with press stud. Saddle-stitched with waxed linen thread. Slim profile: 10mm when loaded.',
+        wholesalePriceInr: 1200, moq: 10, leadTime: W2, weightGrams: 120, categories: ['Leather & Bags', 'Small Accessories', 'Wallets'], tags: ['wallet', 'leather', 'bifold', 'handstitched'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,wallet,bifold,brown', 189), variants: [{sku: 'DLC-WAL-006', priceInr: 1200, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Tan'}]}] },
+      { name: 'Minimalist Leather Card Holder', shortDescription: 'Ultra-slim 4-slot leather card holder with RFID blocking, 9×6 cm, 3mm thin.', fullDescription: 'Full-grain leather card holder with RFID-blocking aluminium inner layer. 4 card slots. 9×6 cm, only 3mm thick when loaded with 4 cards. Available in tan, black and cognac.',
+        wholesalePriceInr: 650, moq: 20, leadTime: W2, weightGrams: 40, categories: ['Leather & Bags', 'Small Accessories', 'Card Holders'], tags: ['card-holder', 'leather', 'rfid', 'minimalist'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,card,holder,slim', 193), variants: [
+          {sku: 'DLC-CDH-007-TN', priceInr: 650, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'Tan'}]},
+          {sku: 'DLC-CDH-007-BK', priceInr: 650, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'Black'}]} ] },
+      { name: 'Handmade Leather Belt', shortDescription: 'Hand-cut 3.5cm wide full-grain leather belt with solid brass roller buckle, 90–115 cm.', fullDescription: 'Single-piece full-grain leather strap, hand-burnished edges, solid brass roller buckle. Width 3.5 cm. Sizes: 90, 95, 100, 105, 110, 115 cm (waist measurement). Unisex.',
+        wholesalePriceInr: 1400, moq: 10, leadTime: W2, weightGrams: 250, categories: ['Leather & Bags', 'Small Accessories', 'Belts'], tags: ['belt', 'leather', 'brass', 'handmade'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,belt,brown,fashion', 197), variants: [
+          {sku: 'DLC-BLT-008-TN', priceInr: 1400, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Tan'}, {name: 'Size', value: '95 cm'}]},
+          {sku: 'DLC-BLT-008-BK', priceInr: 1400, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Black'}, {name: 'Size', value: '95 cm'}]} ] },
+      { name: 'Vegetable-Tanned Key Fob Set of 2', shortDescription: 'Set of 2 hand-stamped leather key fobs with brass D-rings, personalisation available.', fullDescription: 'Two key fobs from thick vegetable-tanned leather, 10×3 cm. Solid brass D-ring and split ring. Hand-stamped with geometric motif. Personalisable (initials, text) on request at no extra cost.',
+        wholesalePriceInr: 420, moq: 24, leadTime: W2, weightGrams: 80, categories: ['Leather & Bags', 'Small Accessories', 'Key Fobs'], tags: ['key-fob', 'leather', 'personalised', 'gift'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,keychain,key,fob', 201), variants: [{sku: 'DLC-KFB-009', priceInr: 420, stock: 300, status: ACT, attrs: [{name: 'Color', value: 'Natural Tan'}]}] },
+      { name: 'Snap-Closure Leather Phone Case', shortDescription: 'Full-grain leather phone case with card slot and magnetic snap, fits most 6–6.7 in. phones.', fullDescription: 'Full-grain leather folio case with press-stud magnetic snap. 1 card slot, 1 cash pocket. Fits phones 6–6.7 in. (iPhone 15 Plus, Samsung S24+, etc.). Available in tan and black.',
+        wholesalePriceInr: 950, moq: 12, leadTime: W2, weightGrams: 90, categories: ['Leather & Bags', 'Small Accessories', 'Phone Cases'], tags: ['phone-case', 'leather', 'folio', 'card-slot'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,phone,case,tan', 205), variants: [
+          {sku: 'DLC-PHC-010-TN', priceInr: 950, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Tan'}]},
+          {sku: 'DLC-PHC-010-BK', priceInr: 950, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Black'}]} ] },
+      // Footwear
+      { name: 'Hand-Embroidered Mojari Shoes', shortDescription: 'Men\'s hand-embroidered leather mojari shoes, pointed toe, US 7–11.', fullDescription: 'Genuine leather upper embroidered by hand with silk thread in floral motifs. Leather sole with rubber heel patch. Traditional Rajasthani mojari construction. Sizes US 7–11.',
+        wholesalePriceInr: 1800, moq: 6, leadTime: W3, weightGrams: 600, categories: ['Leather & Bags', 'Footwear', 'Mojaris'], tags: ['mojari', 'embroidered', 'leather', 'traditional'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('mojari,shoe,indian,embroidered', 209), variants: [
+          {sku: 'DLC-MOJ-011-8', priceInr: 1800, stock: 50, status: ACT, attrs: [{name: 'Size US', value: '8'}]},
+          {sku: 'DLC-MOJ-011-9', priceInr: 1800, stock: 50, status: ACT, attrs: [{name: 'Size US', value: '9'}]} ] },
+      { name: 'Handmade Kolhapuri Leather Sandals', shortDescription: 'Women\'s handmade Kolhapuri leather sandals with ankle strap, US 5–9.', fullDescription: 'Authentic Kolhapuri chappal: full-grain buffalo leather upper, leather sole with carved heel. Braided ankle strap with brass buckle. Traditional double-layered construction. Sizes US 5–9.',
+        wholesalePriceInr: 1400, moq: 6, leadTime: W3, weightGrams: 500, categories: ['Leather & Bags', 'Footwear', 'Kolhapuri Sandals'], tags: ['kolhapuri', 'sandal', 'leather', 'traditional'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('kolhapuri,sandal,leather,india', 213), variants: [
+          {sku: 'DLC-KOL-012-6', priceInr: 1400, stock: 50, status: ACT, attrs: [{name: 'Size US', value: '6'}]},
+          {sku: 'DLC-KOL-012-7', priceInr: 1400, stock: 50, status: ACT, attrs: [{name: 'Size US', value: '7'}]} ] },
+      { name: 'Vegetable-Tanned Leather Ballet Flats', shortDescription: 'Women\'s vegetable-tanned leather ballet flats, round toe, US 5–9.', fullDescription: 'Full-grain vegetable-tanned leather upper, leather lining and sole. Classic round-toe ballet flat silhouette. Elastic gore at instep for secure fit. Sizes US 5–9.',
+        wholesalePriceInr: 1600, moq: 6, leadTime: W2, weightGrams: 400, categories: ['Leather & Bags', 'Footwear', 'Flats'], tags: ['flats', 'leather', 'ballet', 'women'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,flat,ballet,shoe,women', 217), variants: [
+          {sku: 'DLC-FLT-013-6', priceInr: 1600, stock: 60, status: ACT, attrs: [{name: 'Size US', value: '6'}]},
+          {sku: 'DLC-FLT-013-7', priceInr: 1600, stock: 60, status: ACT, attrs: [{name: 'Size US', value: '7'}]} ] },
+      { name: 'Hand-Stitched Leather Loafers', shortDescription: 'Men\'s and women\'s hand-stitched moccasin-style leather loafers, US 6–11.', fullDescription: 'Full-grain leather moccasin construction: one-piece upper wrapping into sole. Hand saddle-stitched with waxed thread. Rubber-soled for durability. Unisex sizing, US 6–11.',
+        wholesalePriceInr: 2200, moq: 5, leadTime: W3, weightGrams: 650, categories: ['Leather & Bags', 'Footwear', 'Loafers'], tags: ['loafer', 'leather', 'moccasin', 'handstitched'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('leather,loafer,shoe,handmade', 221), variants: [
+          {sku: 'DLC-LOA-014-7', priceInr: 2200, stock: 40, status: ACT, attrs: [{name: 'Size US', value: '7'}]},
+          {sku: 'DLC-LOA-014-8', priceInr: 2200, stock: 40, status: ACT, attrs: [{name: 'Size US', value: '8'}]} ] },
     ],
   },
 
+  // ── Brand 5: Mumbai Textile Studio — Textiles & Fabric (Block Print + Handwoven) ──
   {
-    email: 'wholesale@mumbaitextilestudio.co',
-    password: 'Solomon@2025',
-    brandName: 'Mumbai Textile Studio',
-    slug: 'mumbai-textile-studio',
-    city: 'Mumbai',
-    category: ['Textiles & Fabric'],
-    description: 'Contemporary block-print and resist-dye fabrics combining Mumbai\'s design sensibility with traditional craft.',
-    brandStory: 'Mumbai Textile Studio bridges traditional Indian resist-dyeing with modern silhouettes, working with a network of 60+ artisans from Maharashtra and Gujarat.',
-    yearFounded: 2014,
-    logoUrl: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=1200&h=400&fit=crop',
-    pickupPincode: '400001',
-    instagramHandle: 'mumbaitextilestudio',
-    achievementLevel: 'L3_TRUSTED',
-    confirmedOrderCount: 210,
-    avgRating: 4.5,
-    minimumOrderValue: 12000,
+    email: 'contact@mumbaitextilestudio.com', password: 'Solomon@2025',
+    brandName: 'Mumbai Textile Studio', slug: 'mumbai-textile-studio', city: 'Mumbai', state: 'Maharashtra',
+    category: ['Textiles & Fabric'], description: 'Block-print and handwoven textile studio supplying wholesale fabric and home textiles from Maharashtra.',
+    brandStory: 'Founded by textile designer Priya Nair in 2010, we collaborate directly with block-printers in Bagru and weavers in Yeola to create fabrics that are both export-quality and fairly traded.',
+    yearFounded: 2010, logoUrl: 'https://picsum.photos/seed/905/200/200', bannerUrl: 'https://picsum.photos/seed/955/1200/400',
+    pickupPincode: '400013', instagramHandle: 'mumbaitextilestudio',
+    achievementLevel: 'L3_TRUSTED', confirmedOrderCount: 290, avgRating: 4.8, minimumOrderValue: 8000,
     products: [
-      {
-        name: 'Ajrakh Block-Print Stole',
-        shortDescription: 'Hand-block-printed Ajrakh stole in natural dyes, 28×80 in., 100% cotton.',
-        fullDescription: 'Ajrakh is a traditional resist-printing technique using natural dyes from indigo, pomegranate, and madder. Each stole takes 3–4 days to complete and features a double-sided print.',
-        wholesalePriceInr: 1800, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 200,
-        categories: ['Textiles & Fabric'], tags: ['ajrakh', 'stole', 'block-print', 'natural-dye'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=800', publicId: 'seed/mts-st-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=800', publicId: 'seed/mts-st-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MTS-ST-001-IM', priceInr: 1800, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo & Madder' }] },
-          { sku: 'MTS-ST-001-DI', priceInr: 1800, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Deep Indigo' }] },
-          { sku: 'MTS-ST-001-MR', priceInr: 1800, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Madder Red' }] },
-        ],
-      },
-      {
-        name: 'Shibori Tie-Dye Cotton Bedsheet',
-        shortDescription: 'King-size shibori tie-dye cotton bedsheet (108×108 in.) with 2 matching pillowcases.',
-        fullDescription: 'Indigo shibori dyed on 400-thread-count cotton. The three-piece set includes a king flat sheet and 2 pillowcases. Each piece is unique — no two sets are identical.',
-        wholesalePriceInr: 3200, moq: 5, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 1800,
-        categories: ['Textiles & Fabric', 'Home Décor & Living'], tags: ['shibori', 'bedsheet', 'indigo', 'tie-dye'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800', publicId: 'seed/mts-bs-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=800', publicId: 'seed/mts-bs-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MTS-BS-002-IB', priceInr: 3200, stock: 80, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo Blue' }] },
-          { sku: 'MTS-BS-002-SG', priceInr: 3200, stock: 65, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Slate Grey' }] },
-        ],
-      },
-      {
-        name: 'Kalamkari Printed Kurta Fabric',
-        shortDescription: 'Hand-painted kalamkari cotton fabric, 2.5 m length, myth-inspired narrative print.',
-        fullDescription: 'Each length is hand-painted by kalamkari artists using kalam (pen) and natural dyes. Features scenes from Indian mythology. Suitable for kurtas, tops, or home décor sewing projects.',
-        wholesalePriceInr: 2400, moq: 10, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 350,
-        categories: ['Textiles & Fabric'], tags: ['kalamkari', 'fabric', 'hand-painted', 'cotton'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=800', publicId: 'seed/mts-kf-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?w=800', publicId: 'seed/mts-kf-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MTS-KF-003-EO', priceInr: 2400, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Earthy Ochre' }] },
-          { sku: 'MTS-KF-003-RB', priceInr: 2400, stock: 90,  status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Rust & Black' }] },
-        ],
-      },
-      {
-        name: 'Hand-Woven Ikat Cushion Covers',
-        shortDescription: 'Set of 4 hand-woven ikat cotton cushion covers, 20×20 in., geometric chevron pattern.',
-        fullDescription: 'Woven on traditional frame looms by weavers in Maharashtra. The ikat technique involves resist-dyeing the yarn before weaving to create the distinctive blurred geometric motif.',
-        wholesalePriceInr: 2800, moq: 5, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 600,
-        categories: ['Textiles & Fabric', 'Home Décor & Living'], tags: ['ikat', 'cushion', 'woven', 'chevron'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800', publicId: 'seed/mts-ic-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800', publicId: 'seed/mts-ic-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MTS-IC-004-CI', priceInr: 2800, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Cobalt & Ivory' }] },
-          { sku: 'MTS-IC-004-TN', priceInr: 2800, stock: 80,  status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Terracotta & Natural' }] },
-        ],
-      },
-      {
-        name: 'Natural Dye Linen Table Napkins',
-        shortDescription: 'Set of 8 plant-dyed linen dinner napkins, 20×20 in., assorted earthy tones.',
-        fullDescription: 'Made from European linen, dyed with natural extracts: turmeric, madder, indigo, and onion skin. Each set of 8 includes 2 napkins in each of 4 shades. Presented in a reusable cotton bag.',
-        wholesalePriceInr: 2200, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 500,
-        categories: ['Textiles & Fabric', 'Ceramics & Pottery'], tags: ['napkins', 'linen', 'natural-dye', 'table-linen'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800', publicId: 'seed/mts-np-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800', publicId: 'seed/mts-np-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MTS-NP-005-EA', priceInr: 2200, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Earth Tones Assorted' }] },
-          { sku: 'MTS-NP-005-IA', priceInr: 2200, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Indigo Assorted' }] },
-        ],
-      },
+      // Block Print Textiles
+      { name: 'Indigo Block-Print Cushion Covers Set of 5', shortDescription: 'Set of 5 hand block-printed cotton cushion covers, 18×18 in., indigo resist-print.', fullDescription: 'Bagru resist block-print on 200TC cotton. Five coordinating indigo-on-natural motifs. Zip closure. Machine-washable. Covers only, no insert.',
+        wholesalePriceInr: 1100, moq: 10, leadTime: W2, weightGrams: 350, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Cushion Covers'], tags: ['cushion', 'blockprint', 'indigo', 'bagru'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('blockprint,cushion,fabric,indigo', 225), variants: [{sku: 'MTS-CUS-001', priceInr: 1100, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'Indigo'}]}] },
+      { name: 'Floral Block-Print Table Linen Set', shortDescription: 'Block-printed cotton table linen set: 1 tablecloth (60×90 in.) + 6 napkins.', fullDescription: 'AZO-free natural dyes on 160TC cotton. Matching tablecloth (60×90 in.) and 6 napkins (18×18 in.). Sold as a 7-piece set. Machine wash at 30°C. Hem-stitched edges.',
+        wholesalePriceInr: 3200, moq: 6, leadTime: W2, weightGrams: 1400, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Table Linen'], tags: ['table-linen', 'blockprint', 'floral', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('blockprint,table,linen,fabric', 229), variants: [{sku: 'MTS-TBL-002', priceInr: 3200, stock: 80, status: ACT, attrs: [{name: 'Color', value: 'Terracotta Floral'}]}] },
+      { name: 'Geometric Block-Print Bed Linen Set', shortDescription: 'Block-printed cotton bed linen set for king bed: duvet cover + 2 pillowcases.', fullDescription: 'Hand block-printed geometric pattern in slate blue and white. 220TC cotton. King duvet cover 220×230 cm + two king pillowcases 50×75 cm. Button closure. Machine-washable.',
+        wholesalePriceInr: 4500, moq: 4, leadTime: W2, weightGrams: 2200, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Bed Linen'], tags: ['bed-linen', 'blockprint', 'geometric', 'king'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('blockprint,bedding,bed,linen', 233), variants: [
+          {sku: 'MTS-BED-003-KG', priceInr: 4500, stock: 60, status: ACT, attrs: [{name: 'Size', value: 'King'}]},
+          {sku: 'MTS-BED-003-QN', priceInr: 3800, stock: 60, status: ACT, attrs: [{name: 'Size', value: 'Queen'}]} ] },
+      { name: 'Sanganeri Block-Print Dress Material', shortDescription: 'Sanganeri block-printed dress material, 2.5m unstitched cotton fabric, floral motifs.', fullDescription: '2.5m unstitched 100% cotton fabric, 44 in. wide. Traditional Sanganeri floral block-print in rose pink on natural. AZO-free dyes. Suitable for kurtas, dresses and blouses.',
+        wholesalePriceInr: 850, moq: 20, leadTime: W2, weightGrams: 350, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Dress Material'], tags: ['dress-material', 'sanganeri', 'blockprint', 'floral'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('blockprint,fabric,dress,india', 237), variants: [{sku: 'MTS-DRS-004', priceInr: 850, stock: 300, status: ACT, attrs: [{name: 'Color', value: 'Rose on Natural'}]}] },
+      { name: 'Ajrakh Block-Print Apparel Fabric', shortDescription: 'Ajrakh resist block-print apparel fabric, per metre, 44 in. wide, deep teal and rust.', fullDescription: 'Traditional ajrakh two-pass resist printing on 100% cotton. Deep teal (indigo) background with rust (madder) motifs. 44 in. wide, sold per metre. Minimum 5 metres per order.',
+        wholesalePriceInr: 480, moq: 50, leadTime: W2, weightGrams: 180, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Apparel Fabric'], tags: ['apparel-fabric', 'ajrakh', 'blockprint', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('ajrakh,fabric,blockprint,textile', 241), variants: [{sku: 'MTS-APP-005', priceInr: 480, stock: 500, status: ACT, attrs: [{name: 'Width', value: '44 in, per metre'}]}] },
+      { name: 'Bagru Running Fabric by the Bolt', shortDescription: 'Bagru mud-resist block-print cotton running fabric, 30m bolt, 44 in. wide.', fullDescription: 'Full 30m bolt of Bagru mud-resist printed cotton. Classic charcoal-on-natural geometric repeat. 44 in. wide. Wholesale pricing for apparel manufacturers and home textile makers.',
+        wholesalePriceInr: 280, moq: 100, leadTime: W2, weightGrams: 140, categories: ['Textiles & Fabric', 'Block Print Textiles', 'Running Fabric'], tags: ['running-fabric', 'bagru', 'bolt', 'wholesale'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('fabric,yardage,bolt,textile', 245), variants: [{sku: 'MTS-RUN-006', priceInr: 280, stock: 200, status: ACT, attrs: [{name: 'Length', value: '30m bolt, per metre price'}]}] },
+      // Handwoven Textiles
+      { name: 'Handwoven Cotton Silk Stole', shortDescription: 'Handwoven cotton-silk stole, 28×80 in., Yeola loom, iridescent shimmer.', fullDescription: 'Woven on pit looms in Yeola, Maharashtra, using 70% cotton 30% silk blend. Plain tabby weave catches light for a subtle shimmer. 28×80 in. Fringe-finished ends.',
+        wholesalePriceInr: 1400, moq: 10, leadTime: W2, weightGrams: 200, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Stoles & Scarves'], tags: ['stole', 'handwoven', 'cotton-silk', 'yeola'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('stole,scarf,handwoven,silk', 249), variants: [{sku: 'MTS-STL-007', priceInr: 1400, stock: 150, status: ACT, attrs: [{name: 'Fiber', value: 'Cotton-Silk'}]}] },
+      { name: 'Handwoven Wool-Cotton Shawl', shortDescription: 'Handwoven wool-cotton shawl, 28×80 in., herringbone twill, earthy tones.', fullDescription: '60% wool 40% cotton, woven in twill weave creating a classic herringbone pattern. Warm but lightweight at 280gsm. 28×80 in. Fringe-finished. Dry clean only.',
+        wholesalePriceInr: 2200, moq: 8, leadTime: W2, weightGrams: 400, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Shawls'], tags: ['shawl', 'handwoven', 'herringbone', 'wool'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('shawl,handwoven,wool,wrap', 253), variants: [{sku: 'MTS-SHW-008', priceInr: 2200, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Earth Tones'}]}] },
+      { name: 'Handwoven Cotton Throw & Blanket', shortDescription: 'Handwoven 100% cotton throw, 50×65 in., open-weave lattice pattern, reversible.', fullDescription: 'Woven on frame looms by Maharashtra weavers. Open lattice weave in undyed and naturally dyed cotton stripes. 50×65 in., 220gsm. Reversible. Machine wash cold.',
+        wholesalePriceInr: 1800, moq: 10, leadTime: W2, weightGrams: 800, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Throws & Blankets'], tags: ['throw', 'handwoven', 'cotton', 'lattice'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('throw,blanket,handwoven,cotton', 257), variants: [{sku: 'MTS-THW-009', priceInr: 1800, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Stripes, Natural'}]}] },
+      { name: 'Handwoven Khadi by the Metre', shortDescription: 'Handspun handwoven khadi cotton fabric, per metre, 36 in. wide, natural undyed.', fullDescription: '100% handspun handwoven khadi cotton. Natural undyed. 36 in. wide, approximately 120gsm. Suitable for kurtas, shirts, casual trousers. KVIC certified. Sold per metre, minimum 10m.',
+        wholesalePriceInr: 320, moq: 100, leadTime: W2, weightGrams: 130, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Yardage / By Metre'], tags: ['khadi', 'handwoven', 'yardage', 'kvic'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('khadi,fabric,handloom,yardage', 261), variants: [{sku: 'MTS-YRD-010', priceInr: 320, stock: 500, status: ACT, attrs: [{name: 'Width', value: '36 in, per metre'}]}] },
+      { name: 'Ikat Handwoven Table Runner', shortDescription: 'Ikat-pattern handwoven cotton table runner, 14×72 in., deep blue and ivory.', fullDescription: 'Woven using pre-dyed ikat yarns on handlooms in Maharashtra. Each runner has distinctive ikat blur at pattern edges — a hallmark of authenticity. 14×72 in. Machine wash cold.',
+        wholesalePriceInr: 1100, moq: 12, leadTime: W2, weightGrams: 300, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Table Runners'], tags: ['table-runner', 'ikat', 'handwoven', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('table,runner,ikat,handwoven', 265), variants: [{sku: 'MTS-TRN-011', priceInr: 1100, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Indigo & Ivory'}]}] },
+      { name: 'Jute & Cotton Handwoven Floor Mat', shortDescription: 'Handwoven jute-cotton floor mat, 24×36 in., natural stripe, non-slip backing.', fullDescription: 'Warp: cotton. Weft: natural jute. Flat-weave with 3-stripe pattern. 24×36 in. Non-slip latex backing. For indoor use. Wipe or spot-clean. Eco-certified jute.',
+        wholesalePriceInr: 680, moq: 15, leadTime: W2, weightGrams: 700, categories: ['Textiles & Fabric', 'Handwoven Textiles', 'Floor Mats'], tags: ['floor-mat', 'jute', 'handwoven', 'non-slip'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('floor,mat,jute,woven', 269), variants: [{sku: 'MTS-FLM-012', priceInr: 680, stock: 200, status: ACT, attrs: [{name: 'Size', value: '24×36 in'}]}] },
     ],
   },
 
+  // ── Brand 6: Surat Eco Weaves — Textiles (Embroidered + Specialty) ──────────
   {
-    email: 'b2b@pureearth.in',
-    password: 'Solomon@2025',
-    brandName: 'Pure Earth Organics',
-    slug: 'pure-earth-organics',
-    city: 'Bengaluru',
-    category: ['Food & Wellness', 'Beauty & Ritual'],
-    description: 'USDA and FSSAI certified organic spices, superfoods, and Ayurvedic wellness products sourced direct from Karnataka farms.',
-    brandStory: 'Pure Earth Organics was founded by Priya Nair in 2017 to give smallholder organic farmers in Karnataka a fair and direct route to global markets.',
-    yearFounded: 2017,
-    logoUrl: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=1200&h=400&fit=crop',
-    pickupPincode: '560001',
-    instagramHandle: 'pureearth_in',
-    achievementLevel: 'L2_RISING',
-    confirmedOrderCount: 95,
-    avgRating: 4.6,
-    minimumOrderValue: 5000,
+    email: 'contact@suratecoweaves.com', password: 'Solomon@2025',
+    brandName: 'Surat Eco Weaves', slug: 'surat-eco-weaves', city: 'Surat', state: 'Gujarat',
+    category: ['Textiles & Fabric'], description: 'Surat studio specialising in embroidered and specialty textiles — ajrakh, ikat, batik and kalamkari.',
+    brandStory: 'Born from a collective of 40 weavers and embroiderers in Surat, we bridge traditional craft techniques with contemporary wholesale buyers. Every fabric is GOTS-certified organic and fairly traded.',
+    yearFounded: 2008, logoUrl: 'https://picsum.photos/seed/906/200/200', bannerUrl: 'https://picsum.photos/seed/956/1200/400',
+    pickupPincode: '395003', instagramHandle: 'suratecoweaves',
+    achievementLevel: 'L3_TRUSTED', confirmedOrderCount: 240, avgRating: 4.7, minimumOrderValue: 10000,
     products: [
-      {
-        name: 'Organic Spice Gift Box — 12 Jars',
-        shortDescription: 'Set of 12 certified organic spices in 50 g glass jars: turmeric, cardamom, cumin, and more.',
-        fullDescription: 'USDA Organic and India Organic certified. Spices are sourced from single-farm estates, stone-ground to order, and packed in airtight borosilicate glass jars.',
-        wholesalePriceInr: 2800, moq: 6, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 1200,
-        categories: ['Food & Wellness', 'Art & Craft Objects'], tags: ['spices', 'organic', 'gift-set', 'glass-jars'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'SOUTHEAST_ASIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/peo-sg-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/peo-sg-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'PEO-SG-001-CI', priceInr: 2800, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Pack', value: 'Classic Indian Spices' }] },
-          { sku: 'PEO-SG-001-BS', priceInr: 2800, stock: 90,  status: 'ACTIVE', attrs: [{ name: 'Pack', value: 'Baking Spices' }] },
-        ],
-      },
-      {
-        name: 'Cold-Pressed Coconut Oil 500 ml',
-        shortDescription: 'Raw, cold-pressed virgin coconut oil from Kerala estates, 500 ml glass bottle.',
-        fullDescription: 'Wood-pressed in small batches from fresh mature coconuts. Unrefined, unbleached, and undeodorised. Suitable for cooking, skincare, and hair care. FSSAI certified.',
-        wholesalePriceInr: 650, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 620,
-        categories: ['Food & Wellness', 'Beauty & Ritual'], tags: ['coconut-oil', 'cold-pressed', 'organic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'SOUTHEAST_ASIA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/peo-co-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/peo-co-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'PEO-CO-002-SM', priceInr: 650,  stock: 500, status: 'ACTIVE', attrs: [{ name: 'Size', value: '500 ml' }] },
-          { sku: 'PEO-CO-002-LG', priceInr: 1100, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Size', value: '1 Litre' }] },
-        ],
-      },
-      {
-        name: 'Ashwagandha Root Powder 250 g',
-        shortDescription: 'Certified organic ashwagandha root powder, 250 g kraft pouch.',
-        fullDescription: 'Sun-dried and stone-ground from organically cultivated ashwagandha roots grown in Madhya Pradesh. Lab-tested for withanolide content, heavy metals, and microbial safety.',
-        wholesalePriceInr: 480, moq: 48, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 280,
-        categories: ['Beauty & Ritual', 'Food & Wellness'], tags: ['ashwagandha', 'adaptogen', 'ayurveda', 'powder'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/peo-aw-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/peo-aw-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'PEO-AW-003-SM', priceInr: 480,  stock: 600, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '250 g' }] },
-          { sku: 'PEO-AW-003-MD', priceInr: 880,  stock: 400, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '500 g' }] },
-          { sku: 'PEO-AW-003-LG', priceInr: 1600, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '1 kg' }] },
-        ],
-      },
-      {
-        name: 'Moringa Leaf Powder 200 g',
-        shortDescription: 'Organic moringa leaf powder, air-dried, 200 g resealable pouch.',
-        fullDescription: 'Leaves are harvested in the morning and air-dried at low temperature to preserve nutrients. Rich in iron, calcium, and antioxidants. Ideal for health food brands and supplement manufacturers.',
-        wholesalePriceInr: 380, moq: 48, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 220,
-        categories: ['Beauty & Ritual', 'Food & Wellness'], tags: ['moringa', 'superfood', 'powder', 'organic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/peo-mg-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/peo-mg-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'PEO-MG-004-SM', priceInr: 380, stock: 700, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '200 g' }] },
-          { sku: 'PEO-MG-004-MD', priceInr: 850, stock: 500, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '500 g' }] },
-        ],
-      },
-      {
-        name: 'Turmeric Latte Blend 150 g',
-        shortDescription: 'Golden milk spice blend: organic turmeric, ginger, black pepper, cinnamon, 150 g tin.',
-        fullDescription: 'Small-batch blended from 100% organic single-origin ingredients. The black pepper activates curcumin absorption. Packaged in a reusable airtight tin.',
-        wholesalePriceInr: 520, moq: 36, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 200,
-        categories: ['Food & Wellness', 'Beauty & Ritual'], tags: ['turmeric-latte', 'golden-milk', 'blend', 'organic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/peo-tl-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/peo-tl-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'PEO-TL-005-SM', priceInr: 520, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Size', value: '150 g Tin' }] },
-          { sku: 'PEO-TL-005-MD', priceInr: 950, stock: 250, status: 'ACTIVE', attrs: [{ name: 'Size', value: '300 g Tin' }] },
-        ],
-      },
+      // Embroidered Textiles
+      { name: 'Kantha Embroidered Tablecloth', shortDescription: 'Hand-kantha-stitched cotton tablecloth, 60×90 in., multicolour running stitch.', fullDescription: 'Layered vintage cotton secured with traditional kantha running stitch in multicolour threads. Each cloth is unique. 60×90 in., seats 6. Hand wash recommended.',
+        wholesalePriceInr: 2400, moq: 6, leadTime: W2, weightGrams: 1100, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Tablecloths'], tags: ['tablecloth', 'kantha', 'embroidered', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('embroidered,tablecloth,kantha', 273), variants: [{sku: 'SEW-TCL-001', priceInr: 2400, stock: 80, status: ACT, attrs: [{name: 'Color', value: 'Multicolour'}]}] },
+      { name: 'Phulkari Embroidered Cushion Covers Set of 3', shortDescription: 'Set of 3 phulkari-embroidered cotton cushion covers, 18×18 in., vibrant silk thread.', fullDescription: 'Traditional phulkari embroidery worked in silk thread on cotton base. Three coordinating geometric floral designs. Zip closure. 18×18 in. Dry clean recommended.',
+        wholesalePriceInr: 1800, moq: 8, leadTime: W3, weightGrams: 450, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Cushion Covers'], tags: ['cushion', 'phulkari', 'embroidered', 'silk'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('phulkari,embroidered,cushion', 277), variants: [{sku: 'SEW-CUS-002', priceInr: 1800, stock: 100, status: ACT, attrs: [{name: 'Color', value: 'Vibrant Mix'}]}] },
+      { name: 'Chikankari Embroidered Kurta Fabric', shortDescription: 'Chikankari embroidered muslin kurta fabric, 2.5m, white-on-white floral.', fullDescription: 'Traditional Lucknowi chikankari embroidery on 70-count muslin. White-on-white shadow-work floral pattern. 2.5m × 44 in. wide. Suitable for women\'s kurtas and men\'s kurtas.',
+        wholesalePriceInr: 1200, moq: 15, leadTime: W3, weightGrams: 300, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Kurta Fabric'], tags: ['kurta-fabric', 'chikankari', 'muslin', 'embroidered'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('chikankari,embroidered,fabric,kurta', 281), variants: [{sku: 'SEW-KRT-003', priceInr: 1200, stock: 200, status: ACT, attrs: [{name: 'Color', value: 'White on White'}]}] },
+      { name: 'Mirror-Work Embroidered Wall Hanging', shortDescription: 'Kutch mirror-work embroidered cotton wall hanging, 24×36 in., geometric pattern.', fullDescription: 'Kutch embroidery with hand-set circular mirrors (shisha) and coloured cotton thread on natural cotton. Geometric patterns. 24×36 in. Wooden dowel and jute cord included.',
+        wholesalePriceInr: 2200, moq: 5, leadTime: W3, weightGrams: 550, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Wall Hangings'], tags: ['wall-hanging', 'mirror-work', 'kutch', 'embroidered'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('mirror,work,embroidered,kutch', 285), variants: [{sku: 'SEW-WHG-004', priceInr: 2200, stock: 70, status: ACT, attrs: [{name: 'Color', value: 'Multicolour'}]}] },
+      { name: 'Suzani Embroidered Canvas Tote Bag', shortDescription: 'Hand-embroidered suzani-style cotton tote bag, 35×40 cm, colourful floral on natural.', fullDescription: 'Heavy-duty 400gsm cotton canvas with suzani-inspired chain-stitch embroidery in red, orange and turquoise. Reinforced handles, 50 cm drop. Flat base, 35×40×10 cm.',
+        wholesalePriceInr: 1100, moq: 10, leadTime: W2, weightGrams: 450, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Tote Bags'], tags: ['tote', 'embroidered', 'suzani', 'canvas'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('embroidered,tote,bag,canvas', 289), variants: [{sku: 'SEW-TOT-005', priceInr: 1100, stock: 150, status: ACT, attrs: [{name: 'Color', value: 'Natural with Floral'}]}] },
+      { name: 'Zari-Embroidered Dupatta', shortDescription: 'Sheer georgette dupatta with zari (gold thread) border embroidery, 28×90 in.', fullDescription: 'Georgette base fabric with hand-stitched zari thread running border. Light and airy for draping. 28×90 in. Dry clean. Suitable for salwar suits and lehenga sets.',
+        wholesalePriceInr: 1600, moq: 12, leadTime: W2, weightGrams: 200, categories: ['Textiles & Fabric', 'Embroidered Textiles', 'Dupatta'], tags: ['dupatta', 'zari', 'georgette', 'embroidered'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('dupatta,zari,embroidered,sheer', 293), variants: [{sku: 'SEW-DUP-006', priceInr: 1600, stock: 180, status: ACT, attrs: [{name: 'Color', value: 'Gold on Ivory'}]}] },
+      // Specialty Textiles
+      { name: 'Ikat Woven Fabric Yardage', shortDescription: 'Double ikat woven cotton yardage, per metre, 44 in. wide, geometric pattern.', fullDescription: 'True double ikat: both warp and weft yarns resist-dyed before weaving. Geometric pattern in deep indigo and rust. 44 in. wide, 180gsm. Sold per metre, minimum 10 metres.',
+        wholesalePriceInr: 620, moq: 100, leadTime: W2, weightGrams: 200, categories: ['Textiles & Fabric', 'Specialty Textiles', 'Yardage'], tags: ['ikat', 'yardage', 'double-ikat', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('ikat,fabric,yardage,weave', 297), variants: [{sku: 'SEW-YRD-007', priceInr: 620, stock: 400, status: ACT, attrs: [{name: 'Width', value: '44 in, per metre'}]}] },
+      { name: 'Ajrakh Block-Print Modal Stole', shortDescription: 'Ajrakh resist block-printed modal stole, 28×80 in., deep indigo and madder rust.', fullDescription: 'Two-pass ajrakh resist printing on soft 100% modal. Deep indigo and madder rust geometric tile pattern. 28×80 in. Fringe ends. Modal drapes beautifully and is machine washable.',
+        wholesalePriceInr: 1800, moq: 10, leadTime: W2, weightGrams: 280, categories: ['Textiles & Fabric', 'Specialty Textiles', 'Stoles'], tags: ['stole', 'ajrakh', 'modal', 'resist-print'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('ajrakh,stole,modal,fabric', 301), variants: [{sku: 'SEW-STL-008', priceInr: 1800, stock: 120, status: ACT, attrs: [{name: 'Fiber', value: 'Modal'}]}] },
+      { name: 'Shibori-Dyed Silk Dupatta', shortDescription: 'Hand-folded and resist-dyed shibori silk dupatta, 28×90 in., indigo on ivory.', fullDescription: 'Pure silk dupatta hand-resist-dyed using Japanese-inspired shibori fold-and-dye technique. Indigo blue on ivory base. Unique pattern on each piece. 28×90 in. Dry clean.',
+        wholesalePriceInr: 2200, moq: 8, leadTime: W3, weightGrams: 180, categories: ['Textiles & Fabric', 'Specialty Textiles', 'Dupatta'], tags: ['dupatta', 'shibori', 'silk', 'indigo'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
+        photos: pics('shibori,silk,dupatta,indigo', 305), variants: [{sku: 'SEW-DPS-009', priceInr: 2200, stock: 100, status: ACT, attrs: [{name: 'Fiber', value: 'Pure Silk'}]}] },
+      { name: 'Kalamkari Hand-Painted Silk Saree', shortDescription: 'Kalamkari hand-painted pure silk saree, 6m, mythological motifs, Machilipatnam style.', fullDescription: 'Machilipatnam kalamkari: vegetable-dyed hand-painting on pure mulberry silk. Mythological panel narrative. 6m length, 44 in. width. Unstitched blouse piece included. Dry clean only.',
+        wholesalePriceInr: 7500, moq: 2, leadTime: W3, weightGrams: 700, categories: ['Textiles & Fabric', 'Specialty Textiles', 'Sarees'], tags: ['saree', 'kalamkari', 'silk', 'handpainted'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('saree,kalamkari,silk,india', 309), variants: [{sku: 'SEW-SAR-010', priceInr: 7500, stock: 30, status: ACT, attrs: [{name: 'Fabric', value: 'Pure Silk'}]}] },
+      { name: 'Batik Cotton Running Fabric', shortDescription: 'Batik wax-resist printed cotton running fabric, 30m bolt, 44 in. wide.', fullDescription: 'Traditional batik wax-resist printing on 100% cotton using natural and synthetic dyes. Classic floral crackle pattern in indigo, rust and cream. 30m bolt, 44 in. wide, 140gsm.',
+        wholesalePriceInr: 320, moq: 120, leadTime: W2, weightGrams: 140, categories: ['Textiles & Fabric', 'Specialty Textiles', 'Running Fabric'], tags: ['batik', 'running-fabric', 'cotton', 'wax-resist'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('batik,fabric,cotton,print', 313), variants: [{sku: 'SEW-RUN-011', priceInr: 320, stock: 200, status: ACT, attrs: [{name: 'Length', value: '30m bolt, per metre price'}]}] },
     ],
   },
 
+  // ── Brand 7: Ahmedabad Silver Works — Jewellery & Accessories ────────────────
   {
-    email: 'sales@ahmedabadsilver.com',
-    password: 'Solomon@2025',
-    brandName: 'Ahmedabad Silver Works',
-    slug: 'ahmedabad-silver-works',
-    city: 'Ahmedabad',
-    category: ['Jewellery & Accessories'],
-    description: 'Sterling silver tribal and contemporary jewellery made by master craftsmen in the heart of Gujarat.',
-    brandStory: 'Ahmedabad Silver Works has been exporting hand-crafted sterling silver jewellery since 1985, combining Kutchi tribal motifs with modern jewellery design.',
-    yearFounded: 1985,
-    logoUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&h=400&fit=crop',
-    pickupPincode: '380001',
-    instagramHandle: 'ahmedabadsilver',
-    achievementLevel: 'L5_LEGEND',
-    confirmedOrderCount: 780,
-    avgRating: 4.9,
-    minimumOrderValue: 20000,
+    email: 'contact@ahmedabadsilver.com', password: 'Solomon@2025',
+    brandName: 'Ahmedabad Silver Works', slug: 'ahmedabad-silver-works', city: 'Ahmedabad', state: 'Gujarat',
+    category: ['Jewellery & Accessories'], description: 'Ahmedabad silversmith collective crafting fine, fashion and accessory jewellery using traditional Gujarati techniques.',
+    brandStory: 'Three generations of Gujarati silver-smiths working from a collective workshop in Ahmedabad. We produce hallmarked sterling silver fine jewellery, oxidised fashion jewellery, and fabric accessories for boutiques worldwide.',
+    yearFounded: 1972, logoUrl: 'https://picsum.photos/seed/907/200/200', bannerUrl: 'https://picsum.photos/seed/957/1200/400',
+    pickupPincode: '380001', instagramHandle: 'ahmedabadsilverworks',
+    achievementLevel: 'L4_ELITE', confirmedOrderCount: 480, avgRating: 4.9, minimumOrderValue: 12000,
     products: [
-      {
-        name: 'Kutchi Tribal Silver Cuff Bracelet',
-        shortDescription: 'Sterling silver Kutchi tribal cuff bracelet with embossed camel and mirror motifs, adjustable.',
-        fullDescription: 'Handcrafted by Kutchi silversmiths using traditional embossing and chasing techniques. 92.5% sterling silver. Features classic camel motifs and mirror-inlay typical of Kutchi tribal jewellery.',
-        wholesalePriceInr: 2400, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 60,
-        categories: ['Jewellery & Accessories'], tags: ['silver', 'cuff', 'kutchi', 'tribal', 'bracelet'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', publicId: 'seed/asw-cb-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', publicId: 'seed/asw-cb-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'ASW-CB-001-OS', priceInr: 2400, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Oxidised Silver' }] },
-          { sku: 'ASW-CB-001-BS', priceInr: 2400, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Bright Silver' }] },
-        ],
-      },
-      {
-        name: 'Sterling Silver Jhumka Earrings',
-        shortDescription: 'Traditional silver jhumka earrings with turquoise stone drops, 5 cm drop, hook fastening.',
-        fullDescription: 'Cast and finished by hand. Features a dome-shaped upper bell set with a turquoise cabochon, with a fringe of small silver drops. 92.5% sterling silver.',
-        wholesalePriceInr: 1600, moq: 12, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 30,
-        categories: ['Jewellery & Accessories'], tags: ['jhumka', 'earrings', 'silver', 'turquoise', 'traditional'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', publicId: 'seed/asw-je-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', publicId: 'seed/asw-je-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'ASW-JE-002-TQ', priceInr: 1600, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Stone', value: 'Turquoise' }] },
-          { sku: 'ASW-JE-002-CR', priceInr: 1600, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Stone', value: 'Coral Red' }] },
-          { sku: 'ASW-JE-002-LB', priceInr: 1700, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Stone', value: 'Lapis Blue' }] },
-        ],
-      },
-      {
-        name: 'Filigree Silver Pendant Necklace',
-        shortDescription: 'Handmade silver filigree pendant on sterling silver chain, 18 in., lotus motif.',
-        fullDescription: 'Each pendant is built from fine silver wire twisted and soldered by hand — the ancient filigree art of Gujarat. Lotus motif, 3 cm diameter pendant. Paired with a 45 cm cable chain.',
-        wholesalePriceInr: 2800, moq: 8, leadTime: 'TWO_TO_FOUR_WEEKS', weightGrams: 15,
-        categories: ['Jewellery & Accessories'], tags: ['pendant', 'filigree', 'silver', 'lotus', 'necklace'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', publicId: 'seed/asw-pn-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', publicId: 'seed/asw-pn-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'ASW-PN-003-BS', priceInr: 2800, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Bright Silver' }] },
-          { sku: 'ASW-PN-003-OS', priceInr: 2800, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Oxidised Silver' }] },
-        ],
-      },
-      {
-        name: 'Silver Nose Ring Set',
-        shortDescription: '3-piece set of sterling silver nose rings: 1 stud, 1 hoop, 1 L-bend, all 20G.',
-        fullDescription: 'All 20-gauge sterling silver. Set includes a beaded stud (2 mm ball), a plain seamless hoop (8 mm inner diameter), and an L-bend pin. Packed in a branded jewellery card.',
-        wholesalePriceInr: 750, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 5,
-        categories: ['Jewellery & Accessories'], tags: ['nose-ring', 'silver', 'stud', 'hoop', 'piercing'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', publicId: 'seed/asw-nr-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', publicId: 'seed/asw-nr-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'ASW-NR-004-PS', priceInr: 750, stock: 500, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Plain Silver' }] },
-          { sku: 'ASW-NR-004-BD', priceInr: 800, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Beaded Silver' }] },
-        ],
-      },
-      {
-        name: 'Oxidised Silver Stackable Rings Set',
-        shortDescription: 'Set of 3 oxidised silver stackable rings: plain band, twisted, and textured.',
-        fullDescription: 'Three complementary stackable rings in oxidised sterling silver. Sold as a coordinated set. Each ring is individually hand-polished to achieve the oxidised patina. Available in sizes 5–10.',
-        wholesalePriceInr: 1200, moq: 12, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 18,
-        categories: ['Jewellery & Accessories'], tags: ['rings', 'stackable', 'oxidised', 'silver', 'set'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', publicId: 'seed/asw-rs-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', publicId: 'seed/asw-rs-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'ASW-RS-005-S5', priceInr: 1200, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Size', value: 'Size 5' }] },
-          { sku: 'ASW-RS-005-S6', priceInr: 1200, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Size', value: 'Size 6' }] },
-          { sku: 'ASW-RS-005-S7', priceInr: 1200, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Size', value: 'Size 7' }] },
-          { sku: 'ASW-RS-005-S8', priceInr: 1200, stock: 160, status: 'ACTIVE', attrs: [{ name: 'Size', value: 'Size 8' }] },
-        ],
-      },
+      // Fine Jewellery
+      { name: 'Sterling Silver Kundan Necklace', shortDescription: 'Handcrafted sterling silver kundan-set necklace with uncut diamonds, 18 in. chain.', fullDescription: 'Sterling silver with 22k gold plating. Kundan setting with uncut polki diamonds and semi-precious stones. BIS hallmarked. 18 in. chain with lobster clasp. Velvet box included.',
+        wholesalePriceInr: 8500, moq: 2, leadTime: W3, weightGrams: 45, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Necklaces'], tags: ['necklace', 'kundan', 'sterling-silver', 'fine-jewellery'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('gold,necklace,jewellery,kundan', 317), variants: [{sku: 'ASW-FNK-001', priceInr: 8500, stock: 20, status: ACT, attrs: [{name: 'Metal', value: 'Sterling Silver, Gold Plated'}]}] },
+      { name: 'Silver Jhumka Drop Earrings', shortDescription: 'Handcrafted sterling silver jhumka drop earrings with pearl drops, hallmarked.', fullDescription: 'Traditional jhumka (bell-drop) earrings in sterling silver with granulation detail. Two freshwater pearl drops per earring. BIS hallmarked. Push-back fitting. Weight approx 12g per pair.',
+        wholesalePriceInr: 2800, moq: 6, leadTime: W2, weightGrams: 24, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Earrings'], tags: ['earrings', 'jhumka', 'silver', 'pearl'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('jhumka,earrings,silver,india', 321), variants: [{sku: 'ASW-FEJ-002', priceInr: 2800, stock: 60, status: ACT, attrs: [{name: 'Stone', value: 'Freshwater Pearl'}]}] },
+      { name: 'Silver Filigree Bangle Set', shortDescription: 'Set of 3 sterling silver filigree bangles, 2.6 in. inner diameter.', fullDescription: 'Hand-twisted silver wire worked into traditional Odisha filigree patterns. 92.5 sterling silver, BIS hallmarked. Inner diameter 2.6 in. (fits wrist 6–7 in.). Set of 3 graduated widths.',
+        wholesalePriceInr: 3500, moq: 4, leadTime: W3, weightGrams: 40, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Bracelets & Bangles'], tags: ['bangle', 'filigree', 'silver', 'sterling'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('silver,bangle,filigree,bracelet', 325), variants: [{sku: 'ASW-FBG-003', priceInr: 3500, stock: 40, status: ACT, attrs: [{name: 'Diameter', value: '2.6 in, set of 3'}]}] },
+      { name: 'Silver Turquoise Statement Ring', shortDescription: 'Handcrafted sterling silver ring with genuine turquoise, adjustable size 6–9.', fullDescription: 'Bezel-set genuine Persian turquoise in hand-hammered sterling silver band. Adjustable size 6–9. BIS hallmarked. Each stone is unique in colour and pattern.',
+        wholesalePriceInr: 1800, moq: 8, leadTime: W2, weightGrams: 15, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Rings'], tags: ['ring', 'turquoise', 'silver', 'adjustable'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('silver,ring,turquoise,gemstone', 329), variants: [{sku: 'ASW-FRG-004', priceInr: 1800, stock: 80, status: ACT, attrs: [{name: 'Stone', value: 'Persian Turquoise'}]}] },
+      { name: 'Silver Lotus Pendant with Chain', shortDescription: 'Sterling silver hand-engraved lotus pendant, 2 cm, with 18 in. box chain.', fullDescription: 'Hand-engraved sterling silver lotus motif pendant, 2 cm diameter. Paired with an 18 in. sterling silver box chain, spring ring clasp. BIS hallmarked. Organza gift pouch included.',
+        wholesalePriceInr: 1400, moq: 10, leadTime: W2, weightGrams: 10, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Pendants'], tags: ['pendant', 'lotus', 'silver', 'chain'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('silver,pendant,lotus,necklace', 333), variants: [{sku: 'ASW-FPD-005', priceInr: 1400, stock: 120, status: ACT, attrs: [{name: 'Metal', value: 'Sterling Silver'}]}] },
+      { name: 'Silver Ghungroo Anklet Pair', shortDescription: 'Traditional sterling silver ghungroo anklet pair, adjustable 9–10 in.', fullDescription: 'Sterling silver chain anklets with hand-set ghungroo (silver bells). BIS hallmarked. Adjustable length 9–10 in. Lobster clasp. Set of 2 matching anklets. Traditional Indian bridal style.',
+        wholesalePriceInr: 2200, moq: 6, leadTime: W2, weightGrams: 35, categories: ['Jewellery & Accessories', 'Fine Jewellery', 'Anklets'], tags: ['anklet', 'ghungroo', 'silver', 'traditional'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('anklet,silver,ghungroo,india', 337), variants: [{sku: 'ASW-FAK-006', priceInr: 2200, stock: 70, status: ACT, attrs: [{name: 'Size', value: '9–10 in, pair'}]}] },
+      // Fashion Jewellery
+      { name: 'Oxidised Brass Layered Necklace', shortDescription: 'Oxidised brass layered statement necklace with tribal motifs, 16–20 in.', fullDescription: 'Three-layer oxidised brass necklace with tribal geometric pendants. Adjustable chain 16–20 in. Nickel-free. Antique silver finish. Lightweight at 80g. Hypoallergenic coating.',
+        wholesalePriceInr: 850, moq: 12, leadTime: W2, weightGrams: 80, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Necklaces'], tags: ['necklace', 'oxidised', 'brass', 'tribal'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('oxidised,brass,necklace,tribal', 341), variants: [{sku: 'ASW-FJN-007', priceInr: 850, stock: 150, status: ACT, attrs: [{name: 'Finish', value: 'Antique Silver'}]}] },
+      { name: 'Enamel & Brass Jhumka Earrings', shortDescription: 'Hand-painted enamel jhumka earrings in brass, meenakari style, hook fitting.', fullDescription: 'Brass jhumka earrings with hand-applied meenakari enamel in royal blue and green. Hook fitting. Nickel-free. Weight 15g per pair. Available in 3 colourways.',
+        wholesalePriceInr: 650, moq: 15, leadTime: W2, weightGrams: 30, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Earrings'], tags: ['earrings', 'meenakari', 'enamel', 'jhumka'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('meenakari,jhumka,enamel,earrings', 345), variants: [
+          {sku: 'ASW-FJE-008-BL', priceInr: 650, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Royal Blue'}]},
+          {sku: 'ASW-FJE-008-GR', priceInr: 650, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Emerald Green'}]} ] },
+      { name: 'German Silver Bead Bracelet', shortDescription: 'Hand-strung German silver and semi-precious bead bracelet, adjustable.', fullDescription: 'German silver spacer beads alternating with faceted amethyst, turquoise or onyx. Adjustable macramé closure. One size fits most. Nickel-free silver plate.',
+        wholesalePriceInr: 480, moq: 20, leadTime: W2, weightGrams: 25, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Bracelets'], tags: ['bracelet', 'german-silver', 'beads', 'semi-precious'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('bracelet,silver,beads,gemstone', 349), variants: [
+          {sku: 'ASW-FJB-009-AM', priceInr: 480, stock: 150, status: ACT, attrs: [{name: 'Stone', value: 'Amethyst'}]},
+          {sku: 'ASW-FJB-009-TQ', priceInr: 480, stock: 150, status: ACT, attrs: [{name: 'Stone', value: 'Turquoise'}]} ] },
+      { name: 'Oxidised Brass Kada Bangles Set of 2', shortDescription: 'Set of 2 oxidised brass kadas (thick bangles), tribal motif engraving, 2.6 in.', fullDescription: 'Heavy cast brass kadas with hand-engraved tribal motifs. Oxidised finish with highlight polishing. 2.6 in. inner diameter. Set of 2 matching kadas. Nickel-free.',
+        wholesalePriceInr: 750, moq: 10, leadTime: W2, weightGrams: 120, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Bangles & Kadas'], tags: ['kada', 'bangle', 'brass', 'oxidised'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('bangle,kada,brass,oxidised', 353), variants: [{sku: 'ASW-FJK-010', priceInr: 750, stock: 100, status: ACT, attrs: [{name: 'Diameter', value: '2.6 in, set of 2'}]}] },
+      { name: 'Kundan Maang Tikka', shortDescription: 'Kundan-set brass maang tikka with pearl drop, adjustable chain.', fullDescription: 'Central kundan-set stone with pearl drop pendant. Adjustable silk-cord chain for placement at hair parting. Brass with gold-tone plating. Nickel-free. Gift box included.',
+        wholesalePriceInr: 950, moq: 10, leadTime: W2, weightGrams: 20, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Maang Tikkas'], tags: ['maang-tikka', 'kundan', 'pearl', 'bridal'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('maang,tikka,kundan,bridal', 357), variants: [{sku: 'ASW-FMT-011', priceInr: 950, stock: 80, status: ACT, attrs: [{name: 'Stone', value: 'Kundan with Pearl'}]}] },
+      { name: 'Tribal Oxidised Nose Ring (Nath)', shortDescription: 'Oxidised brass tribal nath (nose ring) with hook, 2 cm diameter, no piercing needed.', fullDescription: 'Traditional Rajasthani nath with clip-on hook (no piercing required). Oxidised brass with hand-stamped floral motif. 2 cm outer diameter. Available with and without side chains.',
+        wholesalePriceInr: 350, moq: 24, leadTime: W2, weightGrams: 8, categories: ['Jewellery & Accessories', 'Fashion Jewellery', 'Nose Rings'], tags: ['nose-ring', 'nath', 'tribal', 'oxidised'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('nose,ring,nath,tribal,india', 361), variants: [{sku: 'ASW-FNR-012', priceInr: 350, stock: 200, status: ACT, attrs: [{name: 'Fitting', value: 'Clip-on, no piercing'}]}] },
+      // Hair Accessories
+      { name: 'Brass Floral Hair Pins Set of 6', shortDescription: 'Set of 6 antique brass floral hair pins, bobby-pin style, assorted motifs.', fullDescription: 'Hand-stamped brass hair pins with floral, leaf and bird motifs. Gold-tone antique finish. Bobby-pin grip. 7 cm long. Set of 6 assorted designs. Hair-safe coating.',
+        wholesalePriceInr: 420, moq: 20, leadTime: W2, weightGrams: 40, categories: ['Jewellery & Accessories', 'Hair Accessories', 'Hair Pins & Clips'], tags: ['hair-pin', 'brass', 'floral', 'set'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('hair,pin,clip,brass,floral', 365), variants: [{sku: 'ASW-HPN-013', priceInr: 420, stock: 200, status: ACT, attrs: [{name: 'Pack', value: 'Set of 6'}]}] },
+      { name: 'Embroidered Fabric Headband', shortDescription: 'Embroidered cotton fabric headband, 2 cm wide, adjustable elastic back.', fullDescription: 'Cotton canvas headband with hand chain-stitch embroidery in multicolour. 2 cm width at front. Adjustable elastic at back fits head circumference 52–60 cm.',
+        wholesalePriceInr: 280, moq: 30, leadTime: W2, weightGrams: 30, categories: ['Jewellery & Accessories', 'Hair Accessories', 'Headbands'], tags: ['headband', 'embroidered', 'cotton', 'elastic'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('headband,fabric,embroidered,hair', 369), variants: [{sku: 'ASW-HDB-014', priceInr: 280, stock: 250, status: ACT, attrs: [{name: 'Color', value: 'Multicolour'}]}] },
+      { name: 'Block-Print Satin Scrunchie Set of 5', shortDescription: 'Set of 5 block-printed satin scrunchies, assorted prints, ponytail-size.', fullDescription: 'Satin scrunchies with block-printed cotton overlay in indigo, terracotta, sage and mustard prints. Covered elastic, ponytail-size. Set of 5 assorted colours. Machine washable.',
+        wholesalePriceInr: 350, moq: 25, leadTime: W2, weightGrams: 50, categories: ['Jewellery & Accessories', 'Hair Accessories', 'Scrunchies'], tags: ['scrunchie', 'blockprint', 'satin', 'set'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('scrunchie,hair,fabric,blockprint', 373), variants: [{sku: 'ASW-SCR-015', priceInr: 350, stock: 300, status: ACT, attrs: [{name: 'Pack', value: 'Set of 5'}]}] },
+      { name: 'Carved Sandalwood Hair Comb', shortDescription: 'Hand-carved sandalwood hair comb, 12 cm, floral motif, wide tooth.', fullDescription: 'Solid Mysore sandalwood carved into a wide-tooth comb with floral edge motif. 12 cm length, 5 cm height. Gentle on hair, naturally fragrant. Anti-static. Packaged in cotton pouch.',
+        wholesalePriceInr: 550, moq: 15, leadTime: W2, weightGrams: 35, categories: ['Jewellery & Accessories', 'Hair Accessories', 'Hair Combs'], tags: ['hair-comb', 'sandalwood', 'carved', 'wide-tooth'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('hair,comb,wood,carved,sandalwood', 377), variants: [{sku: 'ASW-HCM-016', priceInr: 550, stock: 150, status: ACT, attrs: [{name: 'Wood', value: 'Sandalwood'}]}] },
+      { name: 'Silk Ribbon Hair Ties Set of 10', shortDescription: 'Set of 10 silk ribbon hair ties in block-printed cotton, assorted prints.', fullDescription: 'Covered elastic hair ties wrapped in block-printed cotton-silk ribbon. Gentle on hair. 10 cm ribbon tail for tying. Set of 10 assorted prints. Suitable for all hair types.',
+        wholesalePriceInr: 380, moq: 25, leadTime: W2, weightGrams: 40, categories: ['Jewellery & Accessories', 'Hair Accessories', 'Hair Ties'], tags: ['hair-tie', 'silk', 'blockprint', 'set'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('hair,tie,ribbon,silk,fabric', 381), variants: [{sku: 'ASW-HTI-017', priceInr: 380, stock: 350, status: ACT, attrs: [{name: 'Pack', value: 'Set of 10'}]}] },
+      // Bags & Clutches
+      { name: 'Embroidered Potli Bag', shortDescription: 'Hand-embroidered silk potli bag with drawstring, 20×20 cm, kundan-embellished.', fullDescription: 'Pure silk base with hand-done zardozi embroidery and kundan stone embellishments. Drawstring closure with tassel. 20×20 cm. Interior silk lining. Perfect as bridal bag or festival gift.',
+        wholesalePriceInr: 1800, moq: 8, leadTime: W3, weightGrams: 150, categories: ['Jewellery & Accessories', 'Bags & Clutches', 'Potli Bags'], tags: ['potli', 'embroidered', 'silk', 'kundan'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('potli,bag,embroidered,silk,india', 385), variants: [{sku: 'ASW-POT-018', priceInr: 1800, stock: 80, status: ACT, attrs: [{name: 'Color', value: 'Gold on Red'}]}] },
+      { name: 'Beaded Evening Clutch', shortDescription: 'Hand-beaded evening clutch, 22×12 cm, geometric pattern, satin interior.', fullDescription: 'Hand-applied seed beads in geometric diamond pattern on canvas base. Satin interior with mirror pocket. Kisslock frame closure. 22×12 cm. Wrist chain strap.',
+        wholesalePriceInr: 2200, moq: 6, leadTime: W3, weightGrams: 350, categories: ['Jewellery & Accessories', 'Bags & Clutches', 'Clutches'], tags: ['clutch', 'beaded', 'evening', 'geometric'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
+        photos: pics('clutch,beaded,evening,bag', 389), variants: [{sku: 'ASW-CLT-019', priceInr: 2200, stock: 50, status: ACT, attrs: [{name: 'Color', value: 'Multicolour Geometric'}]}] },
+      { name: 'Kantha Patchwork Tote Bag', shortDescription: 'Kantha patchwork cotton tote bag, 35×40 cm, with interior zip pocket.', fullDescription: 'Assembled from kantha-stitched sari cotton patches. Interior zip pocket, cotton lining. Two 50 cm cotton handles. 35×40×8 cm. Machine washable. Each bag is unique.',
+        wholesalePriceInr: 950, moq: 12, leadTime: W2, weightGrams: 400, categories: ['Jewellery & Accessories', 'Bags & Clutches', 'Tote Bags'], tags: ['tote', 'kantha', 'patchwork', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('tote,bag,kantha,patchwork,cotton', 393), variants: [{sku: 'ASW-TOT-020', priceInr: 950, stock: 120, status: ACT, attrs: [{name: 'Color', value: 'Multicolour Patchwork'}]}] },
+      { name: 'Block-Print Canvas Crossbody Bag', shortDescription: 'Block-printed canvas crossbody bag with leather strap, 25×20 cm.', fullDescription: 'Heavy canvas body with indigo block-print motif. Adjustable leather crossbody strap, 90–140 cm. Single main compartment with zip, exterior slip pocket. 25×20×6 cm.',
+        wholesalePriceInr: 1400, moq: 8, leadTime: W2, weightGrams: 450, categories: ['Jewellery & Accessories', 'Bags & Clutches', 'Crossbody Bags'], tags: ['crossbody', 'blockprint', 'canvas', 'leather-strap'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('crossbody,bag,canvas,blockprint', 397), variants: [{sku: 'ASW-CRB-021', priceInr: 1400, stock: 80, status: ACT, attrs: [{name: 'Color', value: 'Indigo Print'}]}] },
+      { name: 'Embroidered Fabric Backpack', shortDescription: 'Hand-embroidered cotton backpack, 30×40 cm, drawstring with flap, 18L.', fullDescription: 'Cotton canvas backpack with hand-done chain-stitch embroidery on front panel. Drawstring top with embroidered flap cover. Two padded shoulder straps. 18 litre capacity. 30×40 cm.',
+        wholesalePriceInr: 1800, moq: 6, leadTime: W3, weightGrams: 700, categories: ['Jewellery & Accessories', 'Bags & Clutches', 'Backpacks'], tags: ['backpack', 'embroidered', 'canvas', 'cotton'], enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA'],
+        photos: pics('backpack,embroidered,fabric,canvas', 401), variants: [{sku: 'ASW-BPK-022', priceInr: 1800, stock: 60, status: ACT, attrs: [{name: 'Color', value: 'Natural with Multicolour Embroidery'}]}] },
     ],
   },
 
-  {
-    email: 'export@suratecoweaves.com',
-    password: 'Solomon@2025',
-    brandName: 'Surat Eco Weaves',
-    slug: 'surat-eco-weaves',
-    city: 'Surat',
-    category: ['Textiles & Fabric', 'Textiles & Fabric'],
-    description: 'Handwoven sustainable textiles using recycled yarn and natural fibres from Surat\'s artisan weaver collectives.',
-    brandStory: 'Surat Eco Weaves works with a cooperative of 120 weavers to transform post-industrial fabric waste into premium sustainable textiles for global conscious retailers.',
-    yearFounded: 2019,
-    logoUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&h=400&fit=crop',
-    pickupPincode: '395001',
-    instagramHandle: 'surateco',
-    achievementLevel: 'L2_RISING',
-    confirmedOrderCount: 75,
-    avgRating: 4.4,
-    minimumOrderValue: 8000,
-    products: [
-      {
-        name: 'Recycled Cotton Yoga Mat Bag',
-        shortDescription: 'Hand-woven yoga mat carrier bag from recycled cotton yarn, drawstring closure, 28×8 in.',
-        fullDescription: 'Woven from post-industrial cotton mill waste. Fits standard 24 in. yoga mats. Drawstring closure with a wooden bead toggle. Certified by GRS (Global Recycled Standard).',
-        wholesalePriceInr: 680, moq: 20, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 150,
-        categories: ['Textiles & Fabric'], tags: ['yoga', 'recycled', 'cotton', 'bag', 'eco'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/sew-yb-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=800', publicId: 'seed/sew-yb-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'SEW-YB-001-NI', priceInr: 680, stock: 250, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Natural & Indigo' }] },
-          { sku: 'SEW-YB-001-TS', priceInr: 680, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Terracotta Stripe' }] },
-        ],
-      },
-      {
-        name: 'Upcycled Fabric Storage Basket Set',
-        shortDescription: 'Set of 3 nesting storage baskets hand-woven from upcycled cotton rope, sizes S/M/L.',
-        fullDescription: 'Made from braided cotton rope reclaimed from textile mills. Coiled and hand-stitched. Each set nests inside the other for compact display. GOTS certified cotton.',
-        wholesalePriceInr: 1600, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 800,
-        categories: ['Textiles & Fabric', 'Home Décor & Living'], tags: ['basket', 'storage', 'upcycled', 'cotton-rope'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800', publicId: 'seed/sew-sb-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800', publicId: 'seed/sew-sb-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'SEW-SB-002-NW', priceInr: 1600, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Natural White' }] },
-          { sku: 'SEW-SB-002-GS', priceInr: 1600, stock: 140, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Grey Stripe' }] },
-        ],
-      },
-      {
-        name: 'Zero-Waste Cotton Produce Bags',
-        shortDescription: 'Pack of 5 hand-woven mesh produce bags from organic cotton, assorted sizes.',
-        fullDescription: 'A plastic-bag alternative for grocery and produce shopping. Woven mesh allows produce to breathe. Pack of 5 (2 small, 2 medium, 1 large). Tare weight tag included. GOTS certified.',
-        wholesalePriceInr: 450, moq: 30, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 120,
-        categories: ['Textiles & Fabric'], tags: ['produce-bags', 'mesh', 'zero-waste', 'organic-cotton'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/sew-pb-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=800', publicId: 'seed/sew-pb-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'SEW-PB-003-NT', priceInr: 450, stock: 600, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Natural' }] },
-          { sku: 'SEW-PB-003-DA', priceInr: 480, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Dyed Assorted' }] },
-        ],
-      },
-      {
-        name: 'Handwoven Jute & Cotton Tote',
-        shortDescription: 'Durable jute-and-cotton blend tote bag, hand-woven, 14×16 in., reinforced handles.',
-        fullDescription: 'A sturdy market tote woven from a jute-cotton blend (60% jute, 40% recycled cotton). Reinforced cotton webbing handles. A low-carbon alternative to synthetic bags.',
-        wholesalePriceInr: 580, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 220,
-        categories: ['Textiles & Fabric'], tags: ['tote', 'jute', 'cotton', 'handwoven', 'market-bag'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800', publicId: 'seed/sew-jt-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', publicId: 'seed/sew-jt-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'SEW-JT-004-NJ', priceInr: 580, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Natural Jute' }] },
-          { sku: 'SEW-JT-004-BS', priceInr: 580, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Color', value: 'Black Stripe' }] },
-        ],
-      },
-      {
-        name: 'Organic Cotton Beeswax Wrap Set',
-        shortDescription: 'Set of 3 beeswax-infused organic cotton wraps (S/M/L) to replace cling film.',
-        fullDescription: 'Organic cotton coated with a blend of beeswax, jojoba oil, and tree resin. Reusable up to 1 year. Washes clean with cold water. Set of 3 (25×25, 30×30, 35×35 cm). Assorted block-print patterns.',
-        wholesalePriceInr: 780, moq: 20, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 100,
-        categories: ['Textiles & Fabric', 'Ceramics & Pottery'], tags: ['beeswax-wrap', 'zero-waste', 'organic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800', publicId: 'seed/sew-bw-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800', publicId: 'seed/sew-bw-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'SEW-BW-005-FM', priceInr: 780, stock: 350, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Floral Mix' }] },
-          { sku: 'SEW-BW-005-GM', priceInr: 780, stock: 280, status: 'ACTIVE', attrs: [{ name: 'Pattern', value: 'Geometric Mix' }] },
-        ],
-      },
-    ],
-  },
-
-  {
-    email: 'trade@moradabadbrass.com',
-    password: 'Solomon@2025',
-    brandName: 'Moradabad Brass Emporium',
-    slug: 'moradabad-brass-emporium',
-    city: 'Moradabad',
-    category: ['Home Décor & Living', 'Ceramics & Pottery', 'Art & Craft Objects'],
-    description: 'Handcrafted brassware — vases, trays, candle holders, and tableware — from India\'s Brass City.',
-    brandStory: 'With roots going back to 1978, Moradabad Brass Emporium is a family-owned export house that supplies handcrafted brassware to retailers across 35 countries.',
-    yearFounded: 1978,
-    logoUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=1200&h=400&fit=crop',
-    pickupPincode: '244001',
-    instagramHandle: 'moradabadbrass',
-    achievementLevel: 'L4_ELITE',
-    confirmedOrderCount: 460,
-    avgRating: 4.7,
-    minimumOrderValue: 15000,
-    products: [
-      {
-        name: 'Handcrafted Brass Candle Holders',
-        shortDescription: 'Set of 3 graduated hand-cast brass pillar candle holders, 3, 5, and 7 in. heights.',
-        fullDescription: 'Cast in lost-wax and hand-finished with a satin brass polish. Weighted bases prevent tipping. Fits standard pillar candles. Ideal for hospitality, wedding retail, and home décor buyers.',
-        wholesalePriceInr: 1800, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 1200,
-        categories: ['Home Décor & Living'], tags: ['brass', 'candle-holder', 'set', 'hand-cast'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/mbe-ch-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800', publicId: 'seed/mbe-ch-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MBE-CH-001-SB', priceInr: 1800, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Satin Brass' }] },
-          { sku: 'MBE-CH-001-AB', priceInr: 1900, stock: 160, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Antique Brass' }] },
-          { sku: 'MBE-CH-001-HB', priceInr: 2000, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Hammered Brass' }] },
-        ],
-      },
-      {
-        name: 'Engraved Brass Serving Tray',
-        shortDescription: 'Hand-engraved round brass serving tray, 14 in. diameter, floral mandala pattern.',
-        fullDescription: 'Each tray is individually engraved by craftsmen using traditional chisel tools. The mandala pattern is unique to each piece. Lacquered for easy cleaning. Two fixed handles for carrying.',
-        wholesalePriceInr: 2200, moq: 8, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 800,
-        categories: ['Ceramics & Pottery', 'Home Décor & Living'], tags: ['tray', 'brass', 'engraved', 'mandala', 'serving'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/mbe-tr-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800', publicId: 'seed/mbe-tr-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MBE-TR-002-PB', priceInr: 2200, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Polished Brass' }] },
-          { sku: 'MBE-TR-002-AB', priceInr: 2300, stock: 100, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Antique Bronze' }] },
-        ],
-      },
-      {
-        name: 'Brass Oil Diffuser Burner',
-        shortDescription: 'Traditional brass oil-burner with filigree cut-outs, 5 in. tall, includes a tea-light tray.',
-        fullDescription: 'Hand-cast and filed. The filigree side panels create a lantern effect when lit. Upper bowl holds 10 ml of essential oil or wax melts. Tea-light tray at base.',
-        wholesalePriceInr: 1100, moq: 12, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 400,
-        categories: ['Home Décor & Living', 'Beauty & Ritual'], tags: ['diffuser', 'brass', 'oil-burner', 'filigree'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800', publicId: 'seed/mbe-ob-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/mbe-ob-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MBE-OB-003-PB', priceInr: 1100, stock: 250, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Polished Brass' }] },
-          { sku: 'MBE-OB-003-AB', priceInr: 1150, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Antique Brass' }] },
-        ],
-      },
-      {
-        name: 'Hammered Brass Flower Vase',
-        shortDescription: 'Hand-hammered brass flower vase, 10 in. tall, narrow-neck tulip form, watertight.',
-        fullDescription: 'Each vase is shaped over an iron mandrel and hammered by hand to create a uniform dimple pattern. Sealed inside with food-grade lacquer to hold water.',
-        wholesalePriceInr: 1400, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 600,
-        categories: ['Home Décor & Living'], tags: ['vase', 'brass', 'hammered', 'flower'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800', publicId: 'seed/mbe-vs-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', publicId: 'seed/mbe-vs-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MBE-VS-004-RB', priceInr: 1400, stock: 180, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Raw Brass' }] },
-          { sku: 'MBE-VS-004-AB', priceInr: 1500, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Antique Brass' }] },
-        ],
-      },
-      {
-        name: 'Brass Diya Set — Festival Collection',
-        shortDescription: 'Set of 6 hand-cast brass diyas (oil lamps) in graduated sizes, traditional lotus design.',
-        fullDescription: 'A perennial best-seller during Diwali and festive seasons. Each diya is cast in brass, hand-polished, and lacquer-coated. Popular with Indian grocery, lifestyle, and gift-shop buyers worldwide.',
-        wholesalePriceInr: 1200, moq: 20, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 700,
-        categories: ['Home Décor & Living', 'Art & Craft Objects'], tags: ['diya', 'brass', 'diwali', 'festival', 'lamp'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'SOUTHEAST_ASIA', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800', publicId: 'seed/mbe-dy-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800', publicId: 'seed/mbe-dy-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'MBE-DY-005-PB', priceInr: 1200, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Polished Brass' }] },
-          { sku: 'MBE-DY-005-AB', priceInr: 1300, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Finish', value: 'Antique Brass' }] },
-        ],
-      },
-    ],
-  },
-
-  {
-    email: 'wholesale@kochiherbs.in',
-    password: 'Solomon@2025',
-    brandName: 'Kochi Herb & Spice Co.',
-    slug: 'kochi-herb-spice-co',
-    city: 'Kochi',
-    category: ['Food & Wellness', 'Beauty & Ritual'],
-    description: 'Single-origin Kerala spices, herbal teas, and Ayurvedic herb blends sourced from estate farms in the Western Ghats.',
-    brandStory: 'Rooted in Kerala\'s spice-trade heritage, Kochi Herb & Spice Co. sources directly from small estate farms in the Western Ghats to deliver the purest spices to world markets.',
-    yearFounded: 2011,
-    logoUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&h=200&fit=crop',
-    bannerUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1200&h=400&fit=crop',
-    pickupPincode: '682001',
-    instagramHandle: 'kochiherbs',
-    achievementLevel: 'L3_TRUSTED',
-    confirmedOrderCount: 230,
-    avgRating: 4.8,
-    minimumOrderValue: 5000,
-    products: [
-      {
-        name: 'Single-Origin Kerala Black Pepper',
-        shortDescription: 'Premium Malabar black pepper from single-estate Wayanad farm, 250 g glass jar.',
-        fullDescription: 'Piper nigrum harvested at full maturity, sun-dried for 7 days. Bold heat, citrus top note. Tested for piperine content. Minimum 5.5% piperine. Resealable glass jar.',
-        wholesalePriceInr: 580, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 320,
-        categories: ['Food & Wellness'], tags: ['black-pepper', 'malabar', 'single-origin', 'kerala'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/khs-bp-001-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/khs-bp-001-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'KHS-BP-001-SM', priceInr: 580,  stock: 600, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '250 g' }] },
-          { sku: 'KHS-BP-001-MD', priceInr: 1050, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '500 g' }] },
-        ],
-      },
-      {
-        name: 'Kerala Cardamom Pods 100 g',
-        shortDescription: 'Large plump green cardamom pods (7 mm+) from Idukki district, 100 g resealable tin.',
-        fullDescription: 'Hand-harvested from high-altitude (900 m) farms in Idukki. Dried slowly to retain the volatile oils. Bold, camphor-sweet aroma. GI-certified Alleppey Green Grade.',
-        wholesalePriceInr: 1200, moq: 12, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 150,
-        categories: ['Food & Wellness'], tags: ['cardamom', 'kerala', 'gi-certified', 'idukki'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/khs-cd-002-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/khs-cd-002-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'KHS-CD-002-SM', priceInr: 1200, stock: 400, status: 'ACTIVE', attrs: [{ name: 'Size', value: '100 g Tin' }] },
-          { sku: 'KHS-CD-002-MD', priceInr: 2800, stock: 250, status: 'ACTIVE', attrs: [{ name: 'Size', value: '250 g Tin' }] },
-        ],
-      },
-      {
-        name: 'Kerala Herbal Tea Sampler — 8 Blends',
-        shortDescription: 'Curated sampler of 8 Kerala herbal teas: tulsi, moringa, ginger-turmeric, and more, 25 bags each.',
-        fullDescription: 'Eight certified organic herbal blends, each in a 25-bag kraft-paper inner box, all housed in a branded slide-out tin. Blends include Tulsi-Lemon, Moringa-Mint, Ginger-Turmeric, and Ashwagandha Night.',
-        wholesalePriceInr: 2600, moq: 10, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 600,
-        categories: ['Food & Wellness', 'Beauty & Ritual'], tags: ['herbal-tea', 'sampler', 'tulsi', 'kerala'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800', publicId: 'seed/khs-ht-003-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800', publicId: 'seed/khs-ht-003-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'KHS-HT-003-SS', priceInr: 2600, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Pack', value: 'Standard Sampler' }] },
-          { sku: 'KHS-HT-003-WF', priceInr: 2800, stock: 150, status: 'ACTIVE', attrs: [{ name: 'Pack', value: 'Wellness Focus Pack' }] },
-        ],
-      },
-      {
-        name: 'Lakadong Organic Turmeric Powder',
-        shortDescription: 'Lakadong variety organic turmeric powder, 6%+ curcumin content, 500 g kraft pouch.',
-        fullDescription: 'Sourced exclusively from Lakadong farmers in Meghalaya — the highest-curcumin turmeric variety available. Min. 6% curcumin by HPLC. Stone-ground, no fillers. USDA Organic certified.',
-        wholesalePriceInr: 680, moq: 24, leadTime: 'ONE_TO_THREE_DAYS', weightGrams: 560,
-        categories: ['Food & Wellness', 'Beauty & Ritual'], tags: ['turmeric', 'lakadong', 'curcumin', 'organic'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA', 'REST_OF_WORLD'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/khs-tm-004-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', publicId: 'seed/khs-tm-004-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'KHS-TM-004-MD', priceInr: 680,  stock: 500, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '500 g' }] },
-          { sku: 'KHS-TM-004-LG', priceInr: 1250, stock: 300, status: 'ACTIVE', attrs: [{ name: 'Weight', value: '1 kg' }] },
-        ],
-      },
-      {
-        name: 'Kerala Vanilla Beans Grade A',
-        shortDescription: '10–12 premium Grade A Kerala vanilla beans, 16–18 cm long, oily and supple, 50 g pack.',
-        fullDescription: 'Grown in Idukki under the shade of spice trees. Hand-pollinated and slow-cured for 6 months. Vanilla planifolia, Grade A: 14 cm+ length, 35%+ moisture, rich floral bouquet.',
-        wholesalePriceInr: 3200, moq: 6, leadTime: 'ONE_TO_TWO_WEEKS', weightGrams: 80,
-        categories: ['Food & Wellness'], tags: ['vanilla', 'grade-a', 'kerala', 'beans', 'baking'],
-        enabledZones: ['DOMESTIC', 'EUROPE', 'NORTH_AMERICA', 'MIDDLE_EAST', 'OCEANIA'],
-        photos: [
-          { url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800', publicId: 'seed/khs-vb-005-a', position: 0 },
-          { url: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=800', publicId: 'seed/khs-vb-005-b', position: 1 },
-        ],
-        variants: [
-          { sku: 'KHS-VB-005-SM', priceInr: 3200, stock: 200, status: 'ACTIVE', attrs: [{ name: 'Pack', value: '50 g (10–12 beans)' }] },
-          { sku: 'KHS-VB-005-MD', priceInr: 6000, stock: 120, status: 'ACTIVE', attrs: [{ name: 'Pack', value: '100 g (22–24 beans)' }] },
-        ],
-      },
-    ],
-  },
 ];
 
-// ─── Extra photos for padding products to minimum 4 ──────────────────────────
-
-const EXTRA_PHOTOS = {
-  'Home Décor & Living': [
-    'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800',
-    'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800',
-    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800',
-    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800',
-  ],
-  'Ceramics & Pottery': [
-    'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800',
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
-    'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800',
-    'https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=800',
-  ],
-  'Textiles & Fabric': [
-    'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800',
-    'https://images.unsplash.com/photo-1594938298603-c8148c4b2afa?w=800',
-    'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800',
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
-  ],
-  'Home Décor & Living': [
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
-    'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800',
-    'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800',
-    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800',
-  ],
-  'Jewellery & Accessories': [
-    'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800',
-    'https://images.unsplash.com/photo-1573408301185-9519f94697c2?w=800',
-    'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800',
-    'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800',
-  ],
-  'Leather & Bags': [
-    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800',
-    'https://images.unsplash.com/photo-1611010344444-5f9e4d86a6e1?w=800',
-    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800',
-    'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800',
-  ],
-  'Food & Wellness': [
-    'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800',
-    'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800',
-    'https://images.unsplash.com/photo-1506484381205-f7945653044d?w=800',
-    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800',
-  ],
-  'Beauty & Ritual': [
-    'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800',
-    'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=800',
-    'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=800',
-    'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?w=800',
-  ],
-  'Art & Craft Objects': [
-    'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=800',
-    'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=800',
-    'https://images.unsplash.com/photo-1513201099705-a9746072228c?w=800',
-    'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800',
-  ],
-  'Textiles & Fabric': [
-    'https://images.unsplash.com/photo-1542601906897-ecd68e87f3f0?w=800',
-    'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
-    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800',
-    'https://images.unsplash.com/photo-1567761609153-87e6b28ed700?w=800',
-  ],
-}
-
-const FALLBACK_EXTRAS = [
-  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
-  'https://images.unsplash.com/photo-1504274066651-8d31a536b11a?w=800',
-  'https://images.unsplash.com/photo-1467043198406-dc953a3defa0?w=800',
-  'https://images.unsplash.com/photo-1535913989690-f90e1c2d4cfa?w=800',
-]
-
-function padPhotos(photos, categories = []) {
-  if (photos.length >= 4) return photos
-  const result = [...photos]
-  const pool = categories.flatMap((cat) => EXTRA_PHOTOS[cat] ?? [])
-  const finalPool = pool.length > 0 ? pool : FALLBACK_EXTRAS
-  let i = 0
-  while (result.length < 4) {
-    const pos = result.length
-    result.push({
-      url: finalPool[i % finalPool.length],
-      publicId: `auto-pad-${pos}-${i}`,
-      position: pos,
-    })
-    i++
-  }
-  return result
-}
-
-// ─── Main seed function ────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
   console.log('\n🌱 Starting seed...\n');
 
-  // ── 0. Wipe all existing data ──────────────────────────────────────────────
   console.log('🗑  Truncating all tables...');
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
@@ -1169,78 +476,41 @@ async function main() {
   `);
   console.log('   Done.\n');
 
-  // ── 1. Admin user ──────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash('Admin@12345', 12);
   await prisma.user.upsert({
     where: { email: 'admin@solomonbharat.com' },
     update: {},
-    create: {
-      email: 'admin@solomonbharat.com',
-      passwordHash: adminHash,
-      name: 'Platform Admin',
-      role: 'ADMIN',
-      isEmailVerified: true,
-    },
+    create: { email: 'admin@solomonbharat.com', passwordHash: adminHash, name: 'Platform Admin', role: 'ADMIN', isEmailVerified: true },
   });
   console.log('  ✔ Admin user');
 
-  // ── 2. Sample buyer ────────────────────────────────────────────────────────
   const buyerHash = await bcrypt.hash('Buyer@12345', 12);
   await prisma.user.upsert({
     where: { email: 'buyer@example.com' },
     update: {},
     create: {
-      email: 'buyer@example.com',
-      passwordHash: buyerHash,
-      name: 'Jane Smith',
-      role: 'BUYER',
-      isEmailVerified: true,
-      buyerProfile: {
-        create: {
-          businessName: 'Little Boutique NYC',
-          countryCode: 'US',
-          preferredCurrency: 'USD',
-          storeType: 'boutique',
-          aesthetic: 'artisan',
-          categoryInterests: ['Home Décor & Living', 'Jewellery & Accessories', 'Textiles & Fabric'],
-        },
-      },
-      wallet: { create: {} },
-      cart: { create: {} },
+      email: 'buyer@example.com', passwordHash: buyerHash, name: 'Jane Smith', role: 'BUYER', isEmailVerified: true,
+      buyerProfile: { create: { businessName: 'Little Boutique NYC', countryCode: 'US', preferredCurrency: 'USD', storeType: 'boutique', aesthetic: 'artisan', categoryInterests: ['Home Décor & Living', 'Jewellery & Accessories', 'Textiles & Fabric'] } },
+      wallet: { create: {} }, cart: { create: {} },
     },
   });
   console.log('  ✔ Sample buyer');
 
-  // ── 3. Brands + Products + Variants ───────────────────────────────────────
   console.log('\nSeeding brands, products, and variants...');
-
-  let totalProducts = 0;
-  let totalVariants = 0;
-  let totalPhotos = 0;
+  let totalProducts = 0, totalVariants = 0, totalPhotos = 0;
 
   for (const brandData of BRANDS) {
-    const { email, password, brandName, slug, products, city, achievementLevel, confirmedOrderCount, avgRating, ...brandFields } = brandData;
-
+    const { email, password, brandName, slug, products, achievementLevel, confirmedOrderCount, avgRating, ...brandFields } = brandData;
     const hash = await bcrypt.hash(password, 12);
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
       create: {
-        email,
-        passwordHash: hash,
-        name: brandName,
-        role: 'BRAND',
-        isEmailVerified: true,
+        email, passwordHash: hash, name: brandName, role: 'BRAND', isEmailVerified: true,
         brandProfile: {
           create: {
-            brandName,
-            slug,
-            status: 'APPROVED',
-            achievementLevel,
-            confirmedOrderCount,
-            avgRating,
-            countryOfOrigin: 'IN',
-            approvedAt: new Date(),
+            brandName, slug, status: 'APPROVED', achievementLevel, confirmedOrderCount, avgRating,
+            countryOfOrigin: 'IN', approvedAt: new Date(),
             socialLinks: { instagram: `https://instagram.com/${brandFields.instagramHandle}` },
             ...brandFields,
           },
@@ -1250,53 +520,31 @@ async function main() {
     });
 
     const brand = user.brandProfile ?? await prisma.brandProfile.findUnique({ where: { userId: user.id } });
-
-    console.log(`  Brand: ${brandName} (${city})`);
+    console.log(`  Brand: ${brandName} (${brandFields.city ?? ''})`);
 
     for (const productData of products) {
       const { variants: variantDefs, photos, ...productFields } = productData;
-
       const productSlug = `${toSlug(productData.name)}-${brand.id.slice(-6)}`;
-
       const product = await prisma.product.upsert({
         where: { slug: productSlug },
         update: {},
-        create: {
-          ...productFields,
-          slug: productSlug,
-          brandProfileId: brand.id,
-          availability: 'ACTIVE',
-          countryOfOrigin: 'IN',
-        },
+        create: { ...productFields, slug: productSlug, brandProfileId: brand.id, availability: 'ACTIVE', countryOfOrigin: 'IN' },
       });
-
       totalProducts++;
 
-      // Photos — pad to minimum 4, delete and recreate for idempotency
-      const paddedPhotos = padPhotos(photos ?? [], productData.categories ?? []);
+      const productPhotos = photos ?? [];
       await prisma.productPhoto.deleteMany({ where: { productId: product.id } });
       await prisma.productPhoto.createMany({
-        data: paddedPhotos.map((p) => ({ productId: product.id, url: p.url, publicId: p.publicId, position: p.position })),
+        data: productPhotos.map((ph) => ({ productId: product.id, url: ph.url, publicId: ph.publicId, position: ph.position })),
       });
-      totalPhotos += paddedPhotos.length;
+      totalPhotos += productPhotos.length;
 
-      // Variants + VariantAttributes
       if (variantDefs && variantDefs.length > 0) {
         for (const v of variantDefs) {
           const exists = await prisma.productVariant.findUnique({ where: { sku: v.sku } });
           if (exists) continue;
-
           await prisma.productVariant.create({
-            data: {
-              productId: product.id,
-              sku: v.sku,
-              priceInr: v.priceInr,
-              stock: v.stock,
-              status: v.status,
-              attributes: {
-                create: v.attrs.map((a) => ({ name: a.name, value: a.value })),
-              },
-            },
+            data: { productId: product.id, sku: v.sku, priceInr: v.priceInr, stock: v.stock, status: v.status, attributes: { create: v.attrs.map((a) => ({ name: a.name, value: a.value })) } },
           });
           totalVariants++;
         }
@@ -1304,7 +552,6 @@ async function main() {
     }
   }
 
-  // ── Summary ────────────────────────────────────────────────────────────────
   console.log('\n' + '─'.repeat(50));
   console.log('✅ Seed complete!\n');
   console.log(`  Categories : seeded via seed-taxonomy.js`);
@@ -1317,4 +564,4 @@ async function main() {
 
 main()
   .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => { await prisma.$disconnect(); await pool.end(); });

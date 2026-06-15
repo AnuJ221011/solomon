@@ -4,13 +4,11 @@ import { useState } from 'react'
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import {
   useAdminDisputes,
+  useResolveDispute,
+  useCloseDispute,
   type AdminDispute,
 } from '@/hooks/queries/useAdmin'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import api from '@/lib/api'
-import { getApiError } from '@/lib/getApiError'
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -32,25 +30,8 @@ function StatusBadge({ status }: { status: AdminDispute['status'] }) {
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function DisputeRow({ dispute }: { dispute: AdminDispute }) {
-  const qc = useQueryClient()
-
-  const resolve = useMutation({
-    mutationFn: () => api.post(`/admin/disputes/${dispute.id}/resolve`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-disputes'] })
-      toast.success('Dispute resolved.')
-    },
-    onError: (err) => toast.error(getApiError(err)),
-  })
-
-  const close = useMutation({
-    mutationFn: () => api.post(`/admin/disputes/${dispute.id}/close`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-disputes'] })
-      toast.success('Dispute closed.')
-    },
-    onError: (err) => toast.error(getApiError(err)),
-  })
+  const resolve = useResolveDispute()
+  const close = useCloseDispute()
 
   return (
     <tr className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors">
@@ -84,7 +65,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
           <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
-              onClick={() => resolve.mutate()}
+              onClick={() => resolve.mutate(dispute.id)}
               disabled={resolve.isPending}
               aria-label={`Resolve dispute ${dispute.orderNumber}`}
               className={cn(
@@ -97,7 +78,7 @@ function DisputeRow({ dispute }: { dispute: AdminDispute }) {
             </button>
             <button
               type="button"
-              onClick={() => close.mutate()}
+              onClick={() => close.mutate(dispute.id)}
               disabled={close.isPending}
               aria-label={`Close dispute ${dispute.orderNumber}`}
               className={cn(

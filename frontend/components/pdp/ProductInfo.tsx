@@ -384,15 +384,7 @@ export function ProductInfo({ product }: { product: Product }) {
             ? 'Added to order ✓'
             : axes.length > 0 && !selectedVariant
             ? 'Select options to continue'
-            : effectiveInStock ? 'Add to order' : 'Out of Stock'}
-        </Button>
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={handleRequestSamples}
-          className="w-full h-12 text-[14px] font-[600]"
-        >
-          Request samples
+            : effectiveInStock ? 'Add to Cart' : 'Out of Stock'}
         </Button>
       </div>
 

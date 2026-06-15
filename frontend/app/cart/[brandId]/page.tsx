@@ -8,15 +8,8 @@ import { cn } from '@/lib/utils'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { NavBar } from '@/components/shared/NavBar'
+import { useFormatPrice } from '@/components/ui/Price'
 import type { CartItem } from '@/types'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(n)
-}
 
 function formatLeadTime(lt?: string): string {
   if (!lt) return '1–2 weeks'
@@ -89,6 +82,7 @@ function BrandMiniCard({
 // ─── Product item row ─────────────────────────────────────────────────────────
 
 function CartItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void }) {
+  const fmt = useFormatPrice()
   const updateQuantity = useCartStore((s) => s.updateQuantity)
 
   return (
@@ -167,6 +161,7 @@ export default function BrandCartPage({
 }: {
   params: Promise<{ brandId: string }>
 }) {
+  const fmt              = useFormatPrice()
   const { brandId }     = use(params)
   const router           = useRouter()
   const isAuthenticated  = useAuthStore((s) => s.isAuthenticated)

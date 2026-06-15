@@ -26,7 +26,7 @@ const slug = (name) =>
 const TAXONOMY = [
   {
     name: 'Textiles & Fabric', sortOrder: 1,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/textiles.jpg',
+    imageUrl: 'https://picsum.photos/seed/1001/400/300',
     subcategories: [
       {
         name: 'Block Print Textiles', sortOrder: 1,
@@ -69,7 +69,7 @@ const TAXONOMY = [
   },
   {
     name: 'Home Décor & Living', sortOrder: 2,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/home-decor.jpg',
+    imageUrl: 'https://picsum.photos/seed/1002/400/300',
     subcategories: [
       {
         name: 'Candles & Holders', sortOrder: 1,
@@ -120,7 +120,7 @@ const TAXONOMY = [
   },
   {
     name: 'Jewellery & Accessories', sortOrder: 3,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/jewellery.jpg',
+    imageUrl: 'https://picsum.photos/seed/1003/400/300',
     subcategories: [
       {
         name: 'Fine Jewellery', sortOrder: 1,
@@ -161,7 +161,7 @@ const TAXONOMY = [
   },
   {
     name: 'Apparel & Clothing', sortOrder: 4,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/apparel.jpg',
+    imageUrl: 'https://picsum.photos/seed/1004/400/300',
     subcategories: [
       {
         name: 'Tops', sortOrder: 1,
@@ -214,7 +214,7 @@ const TAXONOMY = [
   },
   {
     name: 'Food & Wellness', sortOrder: 5,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/food.jpg',
+    imageUrl: 'https://picsum.photos/seed/1005/400/300',
     subcategories: [
       {
         name: 'Teas & Infusions', sortOrder: 1,
@@ -259,7 +259,7 @@ const TAXONOMY = [
   },
   {
     name: 'Art & Craft Objects', sortOrder: 6,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/art.jpg',
+    imageUrl: 'https://picsum.photos/seed/1006/400/300',
     subcategories: [
       {
         name: 'Wall Art', sortOrder: 1,
@@ -292,7 +292,7 @@ const TAXONOMY = [
   },
   {
     name: 'Stationery & Paper Goods', sortOrder: 7,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/stationery.jpg',
+    imageUrl: 'https://picsum.photos/seed/1007/400/300',
     subcategories: [
       {
         name: 'Notebooks & Journals', sortOrder: 1,
@@ -331,7 +331,7 @@ const TAXONOMY = [
   },
   {
     name: 'Ceramics & Pottery', sortOrder: 8,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/ceramics.jpg',
+    imageUrl: 'https://picsum.photos/seed/1008/400/300',
     subcategories: [
       {
         name: 'Tableware', sortOrder: 1,
@@ -365,7 +365,7 @@ const TAXONOMY = [
   },
   {
     name: 'Leather & Bags', sortOrder: 9,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/leather.jpg',
+    imageUrl: 'https://picsum.photos/seed/1009/400/300',
     subcategories: [
       {
         name: 'Bags', sortOrder: 1,
@@ -398,7 +398,7 @@ const TAXONOMY = [
   },
   {
     name: 'Beauty & Ritual', sortOrder: 10,
-    imageUrl: 'https://res.cloudinary.com/solomon/image/upload/v1/categories/beauty.jpg',
+    imageUrl: 'https://picsum.photos/seed/1010/400/300',
     subcategories: [
       {
         name: 'Skincare', sortOrder: 1,

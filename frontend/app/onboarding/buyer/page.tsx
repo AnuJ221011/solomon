@@ -174,7 +174,7 @@ export default function BuyerOnboardingPage() {
     // Step 3: complete onboarding
     setSaving(true)
     try {
-      await api.patch('/users/me/onboarding', { storeType, aesthetic, categories: selectedCategories })
+      await api.post('/auth/store-quiz', { storeType, aesthetic, categoryInterests: selectedCategories })
       router.push('/catalogue')
     } catch {
       // fail silently — redirect anyway for now

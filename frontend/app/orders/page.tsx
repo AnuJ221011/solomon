@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { CheckCircle, Circle, Download, AlertTriangle } from 'lucide-react'
+import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -14,9 +15,8 @@ import {
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useMyOrders, useOrder } from '@/hooks/queries/useOrders'
+import { useFormatPrice } from '@/components/ui/Price'
 import type { Order, OrderStatus } from '@/hooks/queries/useOrders'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type FilterTab = 'All' | 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'DISPUTED'
 
@@ -30,18 +30,6 @@ const TAB_LABELS: Record<FilterTab, string> = {
   DISPUTED: 'Disputed',
 }
 
-// ─── Price formatter ──────────────────────────────────────────────────────────
-
-function formatINR(amount: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
-
-// ─── Date formatter ───────────────────────────────────────────────────────────
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -50,15 +38,11 @@ function formatDate(iso: string) {
   })
 }
 
-// ─── Status timeline steps ────────────────────────────────────────────────────
-
 const TIMELINE_STEPS: OrderStatus[] = ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED']
 
 function getStepIndex(status: OrderStatus): number {
   return TIMELINE_STEPS.indexOf(status)
 }
-
-// ─── Skeleton table row ───────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -72,8 +56,6 @@ function SkeletonRow() {
   )
 }
 
-// ─── Order Detail Sheet ───────────────────────────────────────────────────────
-
 function OrderDetailSheet({
   orderId,
   open,
@@ -83,6 +65,7 @@ function OrderDetailSheet({
   open: boolean
   onClose: () => void
 }) {
+  const fmt = useFormatPrice()
   const { data: order, isLoading } = useOrder(orderId)
 
   const reachedIndex = order ? getStepIndex(order.status) : -1
@@ -116,7 +99,6 @@ function OrderDetailSheet({
 
           {order && (
             <>
-              {/* Order items */}
               <section>
                 <h3 className="text-[14px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em] mb-4">
                   Items
@@ -125,7 +107,6 @@ function OrderDetailSheet({
                   {order.items && order.items.length > 0 ? (
                     order.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        {/* Image */}
                         <div className="w-12 h-12 rounded border border-border-warm bg-muted-bg flex-shrink-0 flex items-center justify-center overflow-hidden">
                           {item.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -147,7 +128,7 @@ function OrderDetailSheet({
                           </p>
                         </div>
                         <p className="text-[14px] font-[600] font-public-sans text-primary flex-shrink-0">
-                          {formatINR(item.totalPrice ?? item.unitPrice * item.quantity)}
+                          {fmt(item.totalPrice ?? item.unitPrice * item.quantity)}
                         </p>
                       </div>
                     ))
@@ -160,22 +141,20 @@ function OrderDetailSheet({
                         </p>
                       </div>
                       <p className="text-[14px] font-[600] font-public-sans text-primary">
-                        {formatINR(order.amount)}
+                        {fmt(order.amount)}
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* Total */}
                 <div className="mt-4 pt-4 border-t border-border-warm flex justify-between">
                   <span className="text-[14px] font-[600] font-public-sans text-muted-text">Total</span>
                   <span className="text-[16px] font-[600] font-public-sans text-primary">
-                    {formatINR(order.amount)}
+                    {fmt(order.amount)}
                   </span>
                 </div>
               </section>
 
-              {/* Status timeline */}
               {!isCancelledOrDisputed && (
                 <section>
                   <h3 className="text-[14px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em] mb-4">
@@ -229,7 +208,6 @@ function OrderDetailSheet({
                 </section>
               )}
 
-              {/* Cancelled / Disputed notice */}
               {isCancelledOrDisputed && (
                 <div className="flex items-start gap-3 bg-error/[6%] border border-error/20 rounded p-4">
                   <AlertTriangle size={16} className="text-error flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -246,7 +224,6 @@ function OrderDetailSheet({
                 </div>
               )}
 
-              {/* Tracking */}
               {order.trackingNumber && (
                 <section>
                   <h3 className="text-[14px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em] mb-2">
@@ -258,15 +235,8 @@ function OrderDetailSheet({
                 </section>
               )}
 
-              {/* Actions */}
               <div className="flex gap-3 pt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled
-                  title="Coming soon"
-                >
+                <Button variant="ghost" size="sm" className="gap-1.5" disabled title="Coming soon">
                   <Download size={13} aria-hidden="true" />
                   Invoice
                 </Button>
@@ -284,19 +254,15 @@ function OrderDetailSheet({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function OrdersPage() {
+  const fmt = useFormatPrice()
   const [activeTab, setActiveTab] = useState<FilterTab>('All')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const statusParam = activeTab === 'All' ? undefined : activeTab
 
-  const { data, isLoading } = useMyOrders({
-    status: statusParam,
-    limit: 20,
-  })
+  const { data, isLoading } = useMyOrders({ status: statusParam, limit: 20 })
 
   const orders = data?.orders ?? []
   const total = data?.total ?? 0
@@ -307,8 +273,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div>
-      {/* Header */}
+    <AccountPageWrapper>
       <div className="mb-6">
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
           Order History
@@ -318,7 +283,6 @@ export default function OrdersPage() {
         </p>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-1 mb-6 border-b border-border-warm overflow-x-auto pb-0">
         {FILTER_TABS.map((tab) => (
           <button
@@ -339,7 +303,6 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="border border-border-warm rounded bg-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -373,7 +336,6 @@ export default function OrdersPage() {
                 </tr>
               ) : (
                 orders.map((order: Order) => {
-                  // Derive brand name from items if available
                   const brandName =
                     order.items && order.items.length > 0
                       ? order.items[0].productName
@@ -393,9 +355,7 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[13px] font-public-sans text-primary">
-                          {brandName}
-                        </span>
+                        <span className="text-[13px] font-public-sans text-primary">{brandName}</span>
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={order.status} />
@@ -407,7 +367,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-[13px] font-[600] font-public-sans text-primary">
-                          {formatINR(order.amount)}
+                          {fmt(order.amount)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -421,13 +381,7 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1"
-                          disabled
-                          title="Coming soon"
-                        >
+                        <Button variant="ghost" size="sm" className="gap-1" disabled title="Coming soon">
                           <Download size={12} aria-hidden="true" />
                           Download
                         </Button>
@@ -441,12 +395,11 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Order detail sheet */}
       <OrderDetailSheet
         orderId={selectedOrderId}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
       />
-    </div>
+    </AccountPageWrapper>
   )
 }

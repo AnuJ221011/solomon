@@ -28,20 +28,19 @@ interface AuthResponse {
 
 // ─── Country list ─────────────────────────────────────────────────────────────
 
-const COUNTRIES = [
-  'Australia',
-  'Canada',
-  'France',
-  'Germany',
-  'India',
-  'Japan',
-  'Netherlands',
-  'New Zealand',
-  'Singapore',
-  'United Arab Emirates',
-  'United Kingdom',
-  'United States',
-  'Other',
+const COUNTRIES: { label: string; code: string }[] = [
+  { label: 'Australia',            code: 'AU' },
+  { label: 'Canada',               code: 'CA' },
+  { label: 'France',               code: 'FR' },
+  { label: 'Germany',              code: 'DE' },
+  { label: 'India',                code: 'IN' },
+  { label: 'Japan',                code: 'JP' },
+  { label: 'Netherlands',          code: 'NL' },
+  { label: 'New Zealand',          code: 'NZ' },
+  { label: 'Singapore',            code: 'SG' },
+  { label: 'United Arab Emirates', code: 'AE' },
+  { label: 'United Kingdom',       code: 'GB' },
+  { label: 'United States',        code: 'US' },
 ]
 
 // ─── Buyer signup form ────────────────────────────────────────────────────────
@@ -69,8 +68,8 @@ function BuyerSignupForm() {
       setError('Email is required.')
       return
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+    if (password.length < 8 || !/\d/.test(password)) {
+      setError('Password must be at least 8 characters and contain a number.')
       return
     }
     if (!country) {
@@ -80,19 +79,18 @@ function BuyerSignupForm() {
 
     setLoading(true)
     try {
-      const { data } = await api.post<AuthResponse>('/auth/signup', {
-        name: businessName,
+      const { data } = await api.post<AuthResponse>('/auth/buyer/signup', {
+        businessName,
         email,
         password,
-        country,
-        role: 'BUYER',
+        countryCode: country,
       })
 
       if (typeof window !== 'undefined' && data.accessToken) {
         localStorage.setItem('sb_token', data.accessToken)
       }
       setUser(data.user)
-      router.push('/onboarding/buyer')
+      router.push(`/verify-email?next=/onboarding/buyer&email=${encodeURIComponent(email)}`)
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
@@ -152,8 +150,8 @@ function BuyerSignupForm() {
           </SelectTrigger>
           <SelectContent>
             {COUNTRIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
+              <SelectItem key={c.code} value={c.code}>
+                {c.label}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 
 const TOKEN_KEY = 'sb_token'
 
@@ -97,9 +98,10 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null)
 
+      useAuthStore.getState().logout()
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY)
-        window.location.href = '/?auth=login'
+        sessionStorage.setItem('sb_session_expired', '1')
+        window.location.href = '/'
       }
 
       return Promise.reject(refreshError)

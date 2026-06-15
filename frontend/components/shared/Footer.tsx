@@ -5,13 +5,11 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="font-public-sans text-[14px] text-white/55 hover:text-white transition-colors leading-[1.4]"
+      className="font-public-sans text-[14px] text-muted-text hover:text-primary transition-colors leading-[1.4]"
     >
       {children}
     </Link>
@@ -21,8 +19,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
-      {/* label-sm: 12px / 500 */}
-      <p className="font-public-sans text-[11px] font-[600] text-white/30 uppercase tracking-[0.08em]">{title}</p>
+      <p className="font-public-sans text-[11px] font-[600] text-primary/40 uppercase tracking-[0.08em]">{title}</p>
       <nav className="flex flex-col gap-2.5" aria-label={title}>{children}</nav>
     </div>
   )
@@ -51,8 +48,8 @@ function NewsletterForm() {
           placeholder="Your email address"
           required
           className={cn(
-            'flex-1 h-9 rounded border border-white/15 bg-white/[0.06] px-3',
-            'font-public-sans text-[13px] text-white placeholder:text-white/30',
+            'flex-1 h-9 rounded border border-border-warm bg-muted-bg px-3',
+            'font-public-sans text-[13px] text-primary placeholder:text-muted-text/50',
             'outline-none focus:border-accent transition-colors'
           )}
         />
@@ -68,8 +65,6 @@ function NewsletterForm() {
   )
 }
 
-// ─── Social icon ──────────────────────────────────────────────────────────────
-
 function SocialLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
     <a
@@ -77,31 +72,29 @@ function SocialLink({ href, label, children }: { href: string; label: string; ch
       aria-label={label}
       target="_blank"
       rel="noopener noreferrer"
-      className="w-8 h-8 rounded border border-white/15 flex items-center justify-center text-white/40 hover:text-white/70 hover:border-white/30 transition-colors"
+      className="w-8 h-8 rounded border border-border-warm flex items-center justify-center text-muted-text hover:text-primary hover:border-primary/30 transition-colors"
     >
       {children}
     </a>
   )
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function Footer() {
   return (
-    <footer className="bg-primary text-white">
+    <footer className="bg-white border-t border-border-warm">
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
 
-          {/* Brand column — spans 2 */}
+          {/* Brand column */}
           <div className="sm:col-span-2 lg:col-span-2 flex flex-col">
-            <Link href="/" className="font-playfair text-[20px] font-[600] text-white leading-none flex-shrink-0">
+            <Link href="/" className="font-playfair text-[20px] font-[600] text-primary leading-none flex-shrink-0">
               Solomon Bharat
             </Link>
-            <p className="font-public-sans text-[14px] leading-[1.6] text-white/45 mt-3 max-w-[260px]">
+            <p className="font-public-sans text-[14px] leading-[1.6] text-muted-text mt-3 max-w-[260px]">
               Connecting India's finest artisan brands and manufacturers with global buyers.
             </p>
             <div className="mt-6">
-              <p className="font-public-sans text-[11px] font-[600] text-white/30 uppercase tracking-[0.08em]">
+              <p className="font-public-sans text-[11px] font-[600] text-primary/40 uppercase tracking-[0.08em]">
                 Stay updated
               </p>
               <NewsletterForm />
@@ -130,7 +123,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/[8%]">
+      <div className="border-t border-border-warm">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <SocialLink href="https://instagram.com" label="Instagram">
@@ -152,7 +145,7 @@ export function Footer() {
               </svg>
             </SocialLink>
           </div>
-          <p className="font-public-sans text-[12px] text-white/30">
+          <p className="font-public-sans text-[12px] text-muted-text/60">
             &copy; 2026 Solomon Bharat. All rights reserved.
           </p>
         </div>

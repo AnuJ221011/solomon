@@ -9,35 +9,6 @@ import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { BrandStorefrontClient } from './BrandStorefrontClient'
 import { useBrand } from '@/hooks/queries/useBrands'
-import { useProducts } from '@/hooks/queries/useProducts'
-import type { Product as ApiProduct } from '@/hooks/queries/useProducts'
-import type { Product } from '@/types'
-
-// ─── Map API product to @/types Product ───────────────────────────────────────
-
-function toTypedProduct(p: ApiProduct): Product {
-  return {
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    brandId: p.brandId,
-    brandName: p.brandName,
-    brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription,
-    description: p.description,
-    images: p.photos
-      .sort((a, b) => a.position - b.position)
-      .map((ph) => ph.url),
-    wholesalePrice: p.wholesalePrice,
-    moq: p.moq,
-    leadTime: p.leadTime as Product['leadTime'],
-    weight: p.weight,
-    category: p.category,
-    tags: p.tags,
-    achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
-    inStock: p.inStock,
-  }
-}
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -97,12 +68,7 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
     isError: brandError,
   } = useBrand(slug)
 
-  const {
-    data: productsData,
-    isLoading: productsLoading,
-  } = useProducts({ brandSlug: slug, limit: 100 })
-
-  if (brandLoading || productsLoading) {
+  if (brandLoading) {
     return <BrandStorefrontSkeleton />
   }
 
@@ -122,14 +88,9 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
     )
   }
 
-  const rawProducts = productsData?.products ?? []
-  const products: Product[] = rawProducts.map((p) => toTypedProduct(p as unknown as ApiProduct))
-
-  // Build collections: "All Products" + brand's named collections from API
-  const apiCollections = brand.collections ?? []
   const collectionNames: string[] = [
     'All Products',
-    ...apiCollections.map((c) => c.name),
+    ...(brand.collections ?? []).map((c) => c.name),
   ]
 
   return (
@@ -222,7 +183,7 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
 
       {/* ── Client section: collections tab + product grid ──────────────────── */}
       <BrandStorefrontClient
-        products={products}
+        brandSlug={slug}
         collections={collectionNames}
       />
 

@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { use, useEffect } from 'react'
+import { MessageCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { PhotoGallery } from '@/components/pdp/PhotoGallery'
@@ -10,6 +12,7 @@ import { ProductCard } from '@/components/shared/ProductCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useProduct, useProducts } from '@/hooks/queries/useProducts'
+import { useBrand } from '@/hooks/queries/useBrands'
 import type { Product as HookProduct } from '@/hooks/queries/useProducts'
 import type { Product } from '@/types'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
@@ -76,31 +79,64 @@ function toTypedFromApi(p: ApiProduct): Product {
 // ─── More from brand ──────────────────────────────────────────────────────────
 
 function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: string; brandName: string; currentSlug: string }) {
-  const { data } = useProducts({ brandSlug, limit: 5 })
+  const { data: brand } = useBrand(brandSlug)
+  const { data } = useProducts({ brandSlug, limit: 6 })
   const others = (data?.products ?? [])
     .filter((p) => p.slug !== currentSlug)
-    .slice(0, 4)
+    .slice(0, 5)
 
   if (others.length === 0) return null
 
   return (
     <section className="border-t border-border-warm">
-      <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-12">
-        <h2 className="font-playfair font-[500] text-primary text-[22px] mb-6">
-          More from {brandName}
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-10">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full border border-border-warm flex-shrink-0 overflow-hidden bg-muted-bg">
+              {brand?.logo ? (
+                <img src={brand.logo} alt={brandName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center font-playfair font-[500] text-primary text-[20px]">
+                  {brandName[0]}
+                </div>
+              )}
+            </div>
+            <div>
+              <h2 className="font-playfair font-[500] text-primary text-[22px] leading-tight">{brandName}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                {brand?.achievementLevel && (
+                  <AchievementBadge level={brand.achievementLevel as 1 | 2 | 3 | 4 | 5} />
+                )}
+                {brand?.location && (
+                  <span className="font-public-sans text-[13px] text-muted-text">{brand.location}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              href={`/brands/${brandSlug}`}
+              className="inline-flex items-center justify-center h-10 px-5 rounded bg-primary text-white font-public-sans text-[13px] font-[600] hover:bg-primary/90 transition-colors whitespace-nowrap"
+            >
+              Shop all {brand?.productCount ? `${brand.productCount} ` : ''}products
+            </Link>
+            <button
+              type="button"
+              onClick={() => toast.info('Messaging coming soon')}
+              className="inline-flex items-center justify-center h-10 px-5 rounded border border-border-warm font-public-sans text-[13px] font-[600] text-primary hover:border-primary transition-colors gap-2 whitespace-nowrap"
+            >
+              <MessageCircle size={14} />
+              Message brand
+            </button>
+          </div>
+        </div>
+
+        {/* Products */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {others.map((p) => (
             <ProductCard key={p.slug} product={toTypedProduct(p)} />
           ))}
-        </div>
-        <div className="mt-6">
-          <Link
-            href={`/brands/${brandSlug}`}
-            className="font-public-sans text-[13px] font-[600] text-accent hover:text-accent-hover transition-colors underline underline-offset-2"
-          >
-            View all products from {brandName} →
-          </Link>
         </div>
       </div>
     </section>

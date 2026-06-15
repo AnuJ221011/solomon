@@ -6,9 +6,10 @@ import { HeroSection } from '@/components/homepage/HeroSection'
 import { TrustStrip } from '@/components/homepage/TrustStrip'
 import { CategorySection } from '@/components/homepage/CategorySection'
 import { TrendingProductsSection } from '@/components/homepage/TrendingProductsSection'
+import { RetailerHighlightSection } from '@/components/homepage/RetailerHighlightSection'
 import { FeaturedBrandsSection } from '@/components/homepage/FeaturedBrandsSection'
+import { StatsSection } from '@/components/homepage/StatsSection'
 import { HowItWorksSection } from '@/components/homepage/HowItWorksSection'
-import { WhyChooseSection } from '@/components/homepage/WhyChooseSection'
 import { TestimonialsSection } from '@/components/homepage/TestimonialsSection'
 import { SupplierCTASection } from '@/components/homepage/SupplierCTASection'
 import { BuyerFeed } from '@/components/home/BuyerFeed'
@@ -19,16 +20,17 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 function MarketingHomepage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
-      <NavBar transparent />
+      <NavBar />
 
       <main className="flex-1">
         <HeroSection />
-        <TrustStrip />
+        {/* <TrustStrip /> */}
         <CategorySection />
         <TrendingProductsSection />
+        <RetailerHighlightSection />
         <FeaturedBrandsSection />
+        <StatsSection />
         <HowItWorksSection />
-        <WhyChooseSection />
         <TestimonialsSection />
         <SupplierCTASection />
       </main>

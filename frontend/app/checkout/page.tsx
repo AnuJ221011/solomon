@@ -20,17 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import api from '@/lib/api'
+import { useFormatPrice } from '@/components/ui/Price'
 import type { Order } from '@/types'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatINR(amount: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
 
 // ─── Countries ────────────────────────────────────────────────────────────────
 
@@ -79,7 +70,7 @@ function OrderConfirmed({ order }: { order: Order }) {
         You&apos;ll receive a confirmation email shortly.
       </p>
       <div className="mt-8 flex gap-3">
-        <Link href="/dashboard">
+        <Link href="/orders">
           <Button variant="primary" size="md">View my orders</Button>
         </Link>
         <Link href="/catalogue">
@@ -105,6 +96,7 @@ interface ShippingForm {
 }
 
 export default function CheckoutPage() {
+  const fmt = useFormatPrice()
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -463,7 +455,7 @@ export default function CheckoutPage() {
                       </div>
                       {/* Price */}
                       <span className="text-[13px] font-[600] font-public-sans text-primary flex-shrink-0 ml-2">
-                        {formatINR(item.wholesalePrice * item.quantity)}
+                        {fmt(item.wholesalePrice * item.quantity)}
                       </span>
                     </div>
                   ))}
@@ -473,7 +465,7 @@ export default function CheckoutPage() {
                 <div className="border-t border-border-warm pt-4 flex flex-col gap-2 mb-4">
                   <div className="flex justify-between text-[13px] font-public-sans">
                     <span className="text-muted-text">Subtotal</span>
-                    <span className="text-primary font-[600]">{formatINR(total)}</span>
+                    <span className="text-primary font-[600]">{fmt(total)}</span>
                   </div>
                   <div className="flex justify-between text-[13px] font-public-sans">
                     <span className="text-muted-text">Shipping</span>
@@ -483,7 +475,7 @@ export default function CheckoutPage() {
 
                 <div className="border-t border-border-warm pt-4 flex justify-between mb-6">
                   <span className="text-[14px] font-[600] font-public-sans text-primary">Total</span>
-                  <span className="text-[18px] font-[600] font-public-sans text-primary">{formatINR(total)}</span>
+                  <span className="text-[18px] font-[600] font-public-sans text-primary">{fmt(total)}</span>
                 </div>
 
                 {error && (

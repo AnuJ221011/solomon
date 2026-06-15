@@ -9,6 +9,9 @@ import {
   Users,
   CreditCard,
   AlertTriangle,
+  Package,
+  RotateCcw,
+  ShoppingCart,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,7 +24,10 @@ const NAV_ITEMS = [
   { href: '/admin/brands', label: 'Brands', icon: Building2 },
   { href: '/admin/pending-brands', label: 'Pending Brands', icon: Clock },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/payouts', label: 'Payouts', icon: CreditCard },
+  { href: '/admin/returns', label: 'Returns', icon: RotateCcw },
   { href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },
 ]
 

@@ -17,6 +17,7 @@ interface AuthState {
 
 interface AuthActions {
   setUser: (user: User) => void
+  patchUser: (patch: Partial<User>) => void
   logout: () => void
   openAuthModal: (tab?: 'login' | 'signup', pendingAction?: string) => void
   closeAuthModal: () => void
@@ -52,6 +53,11 @@ export const useAuthStore = create<AuthStore>()(
           isAuthModalOpen: false,
           pendingAction: null,
         }),
+
+      patchUser: (patch: Partial<User>) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...patch } : state.user,
+        })),
 
       logout: () => {
         if (typeof window !== 'undefined') {

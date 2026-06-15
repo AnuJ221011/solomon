@@ -1,6 +1,38 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 
+// ── Profile ───────────────────────────────────────────────────
+
+export const getProfile = async (userId) => {
+  const profile = await prisma.buyerProfile.findUnique({ where: { userId } });
+  if (!profile) throw createError('Buyer profile not found', 404);
+  return profile;
+};
+
+export const updateProfile = async (userId, body) => {
+  const { businessName, phone, addressLine, city, state, postalCode, countryCode, preferredCurrency, storeType, notifNewArrivals, notifOrderUpdates, notifPromotions } = body;
+
+  const profile = await prisma.buyerProfile.update({
+    where: { userId },
+    data: {
+      ...(businessName   !== undefined && { businessName }),
+      ...(phone          !== undefined && { phone }),
+      ...(addressLine    !== undefined && { addressLine }),
+      ...(city           !== undefined && { city }),
+      ...(state          !== undefined && { state }),
+      ...(postalCode     !== undefined && { postalCode }),
+      ...(countryCode    !== undefined && { countryCode }),
+      ...(preferredCurrency !== undefined && { preferredCurrency }),
+      ...(storeType         !== undefined && { storeType }),
+      ...(notifNewArrivals  !== undefined && { notifNewArrivals }),
+      ...(notifOrderUpdates !== undefined && { notifOrderUpdates }),
+      ...(notifPromotions   !== undefined && { notifPromotions }),
+    },
+  });
+
+  return profile;
+};
+
 // ── Cart ──────────────────────────────────────────────────────
 
 export const getCart = async (userId) => {

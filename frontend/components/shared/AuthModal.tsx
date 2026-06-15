@@ -19,12 +19,30 @@ interface AuthResponse {
   accessToken: string
 }
 
+// ─── Country list (ISO-2 codes) ───────────────────────────────────────────────
+
+const COUNTRIES: { label: string; code: string }[] = [
+  { label: 'Australia',            code: 'AU' },
+  { label: 'Canada',               code: 'CA' },
+  { label: 'France',               code: 'FR' },
+  { label: 'Germany',              code: 'DE' },
+  { label: 'India',                code: 'IN' },
+  { label: 'Japan',                code: 'JP' },
+  { label: 'Netherlands',          code: 'NL' },
+  { label: 'New Zealand',          code: 'NZ' },
+  { label: 'Singapore',            code: 'SG' },
+  { label: 'United Arab Emirates', code: 'AE' },
+  { label: 'United Kingdom',       code: 'GB' },
+  { label: 'United States',        code: 'US' },
+]
+
 // ─── Form state ───────────────────────────────────────────────────────────────
 
 interface SignupForm {
   businessName: string
   email: string
   password: string
+  countryCode: string
 }
 
 interface LoginForm {
@@ -76,6 +94,7 @@ export function AuthModal() {
     businessName: '',
     email: '',
     password: '',
+    countryCode: '',
   })
 
   // ── Login form state ────────────────────────────────────────────────────────
@@ -102,18 +121,22 @@ export function AuthModal() {
       setError('Email is required.')
       return
     }
-    if (signupForm.password.length < 8) {
-      setError('Password must be at least 8 characters.')
+    if (signupForm.password.length < 8 || !/\d/.test(signupForm.password)) {
+      setError('Password must be at least 8 characters and contain a number.')
+      return
+    }
+    if (!signupForm.countryCode) {
+      setError('Please select your country.')
       return
     }
 
     setLoading(true)
     try {
-      const response = await api.post('/auth/signup', {
-        name: signupForm.businessName,
+      const response = await api.post('/auth/buyer/signup', {
+        businessName: signupForm.businessName,
         email: signupForm.email,
         password: signupForm.password,
-        role: 'BUYER',
+        countryCode: signupForm.countryCode,
       })
       const { user, accessToken } = response.data.data as AuthResponse
 
@@ -318,7 +341,7 @@ export function AuthModal() {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="At least 8 characters"
+                    placeholder="Min 8 chars, include a number"
                     autoComplete="new-password"
                     value={signupForm.password}
                     onChange={(e) =>
@@ -326,6 +349,30 @@ export function AuthModal() {
                     }
                     disabled={loading}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="signup-country">Country</Label>
+                  <select
+                    id="signup-country"
+                    value={signupForm.countryCode}
+                    onChange={(e) =>
+                      setSignupForm((f) => ({ ...f, countryCode: e.target.value }))
+                    }
+                    disabled={loading}
+                    className={cn(
+                      'mt-1 w-full h-10 px-3 rounded border border-border-warm bg-muted-bg/30',
+                      'text-[14px] font-public-sans text-primary',
+                      'focus:outline-none focus:border-primary/40 focus:bg-surface',
+                      'transition-colors duration-150 appearance-none cursor-pointer',
+                      !signupForm.countryCode && 'text-muted-text'
+                    )}
+                  >
+                    <option value="" disabled>Select your country</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {error && (

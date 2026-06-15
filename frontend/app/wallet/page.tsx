@@ -1,11 +1,12 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useWallet, type WalletCredit, type WalletCreditStatus } from '@/hooks/queries/useReferrals'
-
-// ─── Type badge ───────────────────────────────────────────────────────────────
+import { useFormatPrice } from '@/components/ui/Price'
 
 function TypeBadge({ status }: { status: WalletCreditStatus }) {
   const config: Record<WalletCreditStatus, { label: string; className: string }> = {
@@ -27,8 +28,6 @@ function TypeBadge({ status }: { status: WalletCreditStatus }) {
   )
 }
 
-// ─── Toggle ───────────────────────────────────────────────────────────────────
-
 function Toggle({
   checked,
   onChange,
@@ -48,9 +47,7 @@ function Toggle({
       className={cn(
         'relative inline-flex h-6 w-11 flex-shrink-0 rounded border',
         'transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-        checked
-          ? 'bg-white/20 border-white/30'
-          : 'bg-white/10 border-white/20'
+        checked ? 'bg-white/20 border-white/30' : 'bg-white/10 border-white/20'
       )}
     >
       <span
@@ -65,8 +62,6 @@ function Toggle({
   )
 }
 
-// ─── Date formatter ───────────────────────────────────────────────────────────
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -74,8 +69,6 @@ function formatDate(iso: string) {
     year: 'numeric',
   })
 }
-
-// ─── Skeleton rows ────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -89,9 +82,8 @@ function SkeletonRow() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function WalletPage() {
+  const fmt = useFormatPrice()
   const [autoApply, setAutoApply] = useState(true)
 
   const { data: wallet, isLoading } = useWallet()
@@ -99,15 +91,13 @@ export default function WalletPage() {
   const balance = wallet?.balance ?? 0
   const credits: WalletCredit[] = wallet?.credits ?? []
 
-  // Count pending credits (ACTIVE credits that haven't been used yet)
   const pendingCount = credits.filter((c) => c.status === 'ACTIVE').length
   const pendingAmount = credits
     .filter((c) => c.status === 'ACTIVE')
     .reduce((s, c) => s + c.amount, 0)
 
   return (
-    <div>
-      {/* Header */}
+    <AccountPageWrapper>
       <div className="mb-6">
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
           Wallet &amp; Credits
@@ -117,7 +107,6 @@ export default function WalletPage() {
         </p>
       </div>
 
-      {/* Balance card */}
       <div className="bg-primary text-white rounded p-8 mb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -128,7 +117,7 @@ export default function WalletPage() {
               <div className="h-12 bg-white/10 rounded animate-pulse w-32 mt-2" />
             ) : (
               <p className="text-[48px] leading-none font-[600] font-public-sans text-white mt-2">
-                &#x20B9;{balance.toLocaleString('en-IN')}
+                {fmt(balance)}
               </p>
             )}
             <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-white/50 mt-2">
@@ -136,7 +125,6 @@ export default function WalletPage() {
             </p>
           </div>
 
-          {/* Pending credits */}
           {(isLoading || pendingCount > 0) && (
             <div className="bg-white/10 rounded p-4 border border-white/15">
               <p className="text-[12px] font-[500] font-public-sans text-white/60 uppercase tracking-[0.06em]">
@@ -147,7 +135,7 @@ export default function WalletPage() {
               ) : (
                 <>
                   <p className="text-[24px] font-[600] font-public-sans text-white leading-none mt-1">
-                    &#x20B9;{pendingAmount.toLocaleString('en-IN')}
+                    {fmt(pendingAmount)}
                   </p>
                   <p className="text-[11px] font-public-sans text-white/50 mt-1">
                     {pendingCount} referral{pendingCount === 1 ? '' : 's'} awaiting first sale
@@ -158,13 +146,8 @@ export default function WalletPage() {
           )}
         </div>
 
-        {/* Auto-apply toggle */}
         <div className="flex items-center gap-3 mt-6 pt-6 border-t border-white/10">
-          <Toggle
-            checked={autoApply}
-            onChange={setAutoApply}
-            id="auto-apply-toggle"
-          />
+          <Toggle checked={autoApply} onChange={setAutoApply} id="auto-apply-toggle" />
           <label
             htmlFor="auto-apply-toggle"
             className="text-[14px] font-[600] font-public-sans text-white cursor-pointer"
@@ -177,7 +160,6 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* Credit history */}
       <div>
         <h2 className="text-[16px] font-[600] font-public-sans text-primary mb-3">
           Credit History
@@ -200,9 +182,7 @@ export default function WalletPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <SkeletonRow key={i} />
-                  ))}
+                  {Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}
                 </tbody>
               </table>
             </div>
@@ -213,7 +193,7 @@ export default function WalletPage() {
             description="Refer a brand to earn store credit."
             action={{
               label: 'Go to Referral Hub',
-              onClick: () => { window.location.href = '/dashboard/referrals' },
+              onClick: () => { window.location.href = '/referrals' },
             }}
           />
         ) : (
@@ -256,7 +236,7 @@ export default function WalletPage() {
                               isPositive ? 'text-success' : isUsed ? 'text-error' : 'text-warning'
                             )}
                           >
-                            {isUsed ? '-' : '+'}&#x20B9;{Math.abs(entry.amount).toLocaleString('en-IN')}
+                            {isUsed ? '-' : '+'}{fmt(Math.abs(entry.amount))}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -276,15 +256,17 @@ export default function WalletPage() {
               </table>
             </div>
 
-            {/* Pending note */}
             <div className="px-4 py-3 border-t border-border-warm bg-muted-bg/30">
               <p className="text-[12px] font-public-sans text-muted-text">
-                Active credits are applied automatically at checkout. Credits expire one year from issue.
+                Active credits are applied automatically at checkout. Credits expire one year from issue.{' '}
+                <Link href="/referrals" className="text-accent hover:text-accent-hover underline underline-offset-2">
+                  Earn more by referring brands.
+                </Link>
               </p>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </AccountPageWrapper>
   )
 }

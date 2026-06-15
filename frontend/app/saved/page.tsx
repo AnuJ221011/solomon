@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
+import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { ProductCard } from '@/components/shared/ProductCard'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -15,11 +16,7 @@ import {
 } from '@/hooks/queries/useBuyerDashboard'
 import type { Product as GlobalProduct } from '@/types'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type SavedTab = 'brands' | 'products'
-
-// ─── Adapt SavedProduct to global Product type ────────────────────────────────
 
 function adaptSavedProduct(p: SavedProduct): GlobalProduct {
   return {
@@ -40,8 +37,6 @@ function adaptSavedProduct(p: SavedProduct): GlobalProduct {
     inStock: p.inStock,
   }
 }
-
-// ─── Skeleton cards ───────────────────────────────────────────────────────────
 
 function SkeletonBrandCard() {
   return (
@@ -72,8 +67,6 @@ function SkeletonProductCard() {
   )
 }
 
-// ─── Saved Brand Card ─────────────────────────────────────────────────────────
-
 function SavedBrandCard({
   brand,
   onUnsave,
@@ -85,7 +78,6 @@ function SavedBrandCard({
 }) {
   return (
     <div className="bg-surface border border-border-warm rounded p-4 flex flex-col hover:shadow-[0_4px_20px_rgba(26,26,26,0.04)] transition-all duration-200">
-      {/* Header: logo + unsave */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="w-14 h-14 rounded border border-border-warm bg-muted-bg flex-shrink-0 flex items-center justify-center overflow-hidden">
           {brand.logo ? (
@@ -108,17 +100,13 @@ function SavedBrandCard({
         </button>
       </div>
 
-      {/* Brand info */}
       <p className="text-[18px] font-[500] font-playfair text-primary leading-tight line-clamp-1">
         {brand.name}
       </p>
       {brand.location && (
-        <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
-          {brand.location}
-        </p>
+        <p className="text-[12px] font-public-sans text-muted-text mt-0.5">{brand.location}</p>
       )}
 
-      {/* Actions */}
       <div className="mt-3 pt-3 border-t border-border-warm flex gap-2 mt-auto">
         <Button
           variant="ghost"
@@ -128,19 +116,13 @@ function SavedBrandCard({
         >
           View Brand
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 text-[12px]"
-        >
+        <Button variant="ghost" size="sm" className="flex-1 text-[12px]">
           Quick Reorder
         </Button>
       </div>
     </div>
   )
 }
-
-// ─── Saved Product Card wrapper (with unsave overlay) ─────────────────────────
 
 function SavedProductCard({
   product,
@@ -154,7 +136,6 @@ function SavedProductCard({
   return (
     <div className="relative group/card">
       <ProductCard product={adaptSavedProduct(product)} />
-      {/* Unsave overlay button */}
       <button
         type="button"
         onClick={() => onUnsave(product.id)}
@@ -174,8 +155,6 @@ function SavedProductCard({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('brands')
 
@@ -187,8 +166,7 @@ export default function SavedPage() {
   const savedProducts = saved?.products ?? []
 
   return (
-    <div>
-      {/* Header */}
+    <AccountPageWrapper>
       <div className="mb-6">
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
           Saved
@@ -198,17 +176,10 @@ export default function SavedPage() {
         </p>
       </div>
 
-      {/* Tab switch */}
       <div className="flex gap-1 mb-6 border-b border-border-warm">
         {[
-          {
-            key: 'brands' as SavedTab,
-            label: `Saved Brands${!isLoading ? ` (${savedBrands.length})` : ''}`,
-          },
-          {
-            key: 'products' as SavedTab,
-            label: `Saved Products${!isLoading ? ` (${savedProducts.length})` : ''}`,
-          },
+          { key: 'brands' as SavedTab, label: `Saved Brands${!isLoading ? ` (${savedBrands.length})` : ''}` },
+          { key: 'products' as SavedTab, label: `Saved Products${!isLoading ? ` (${savedProducts.length})` : ''}` },
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -228,19 +199,16 @@ export default function SavedPage() {
         ))}
       </div>
 
-      {/* Brands tab */}
       {activeTab === 'brands' && (
         <>
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SkeletonBrandCard key={i} />
-              ))}
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonBrandCard key={i} />)}
             </div>
           ) : savedBrands.length === 0 ? (
             <EmptyState
               title="No saved brands yet"
-              description="Browse the catalogue and save brands you love. They will appear here for quick access."
+              description="Browse the catalogue and save brands you love."
               action={{ label: 'Browse brands', onClick: () => { window.location.href = '/brands' } }}
             />
           ) : (
@@ -258,14 +226,11 @@ export default function SavedPage() {
         </>
       )}
 
-      {/* Products tab */}
       {activeTab === 'products' && (
         <>
           {isLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <SkeletonProductCard key={i} />
-              ))}
+              {Array.from({ length: 8 }).map((_, i) => <SkeletonProductCard key={i} />)}
             </div>
           ) : savedProducts.length === 0 ? (
             <EmptyState
@@ -287,6 +252,6 @@ export default function SavedPage() {
           )}
         </>
       )}
-    </div>
+    </AccountPageWrapper>
   )
 }

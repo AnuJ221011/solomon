@@ -6,7 +6,7 @@ import { Heart, Plus, Check, Star } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/types'
-import { Price } from '@/components/ui/Price'
+import { Price, useFormatPrice } from '@/components/ui/Price'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { toast } from 'sonner'
@@ -74,6 +74,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
   const isTrending = (achievementLevel ?? 0) >= 4
   const swatches = colorSwatches(product)
 
+  const fmt = useFormatPrice()
   const addItem = useCartStore((s) => s.addItem)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
@@ -227,7 +228,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
           )}
           {minOrder !== null && (
             <span className="text-[12px] font-public-sans text-muted-text">
-              {rating ? '·' : ''} ₹{Number(minOrder).toLocaleString('en-IN')} min
+              {rating ? '·' : ''} {fmt(Number(minOrder))} min
             </span>
           )}
         </div>

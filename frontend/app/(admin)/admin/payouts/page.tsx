@@ -112,9 +112,17 @@ export default function AdminPayoutsPage() {
   const [tab, setTab] = useState<'PENDING' | 'ALL'>('PENDING')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const isPaid = tab === 'ALL' ? undefined : false
-  const { data, isLoading } = useAdminPayouts({ isPaid, page, limit: 20 })
+  const { data, isLoading } = useAdminPayouts({
+    isPaid,
+    page,
+    limit: 20,
+    dateFrom: dateFrom ? new Date(dateFrom).toISOString() : undefined,
+    dateTo: dateTo ? new Date(dateTo + 'T23:59:59').toISOString() : undefined,
+  })
   const bulkPaid = useBulkMarkPayoutsPaid()
 
   const payouts = data?.payouts ?? []
@@ -200,6 +208,41 @@ export default function AdminPayoutsPage() {
             Export CSV
           </button>
         </div>
+      </div>
+
+      {/* Date range filter */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <span className="text-[13px] font-[600] font-public-sans text-muted-text">Date range:</span>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
+          className={cn(
+            'h-9 px-3 rounded border border-border-warm bg-surface',
+            'text-[13px] font-public-sans text-primary',
+            'focus:outline-none focus:border-primary/40 transition-colors'
+          )}
+        />
+        <span className="text-[13px] font-public-sans text-muted-text">to</span>
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
+          className={cn(
+            'h-9 px-3 rounded border border-border-warm bg-surface',
+            'text-[13px] font-public-sans text-primary',
+            'focus:outline-none focus:border-primary/40 transition-colors'
+          )}
+        />
+        {(dateFrom || dateTo) && (
+          <button
+            type="button"
+            onClick={() => { setDateFrom(''); setDateTo(''); setPage(1) }}
+            className="text-[12px] font-public-sans text-muted-text hover:text-primary transition-colors underline underline-offset-2"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Tabs */}

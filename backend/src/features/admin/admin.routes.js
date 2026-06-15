@@ -123,6 +123,118 @@ router.post('/payouts/bulk-paid',
   }
 );
 
+// ── Disputes ───────────────────────────────────────────────────────────────
+const disputeQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(['OPEN', 'RESOLVED', 'CLOSED']).optional(),
+});
+
+router.get('/disputes', validateQuery(disputeQuerySchema), async (req, res) => {
+  const result = await adminService.listDisputes(req.query);
+  sendSuccess(res, result);
+});
+
+router.post('/disputes/:id/resolve', async (req, res) => {
+  const order = await adminService.resolveDispute(req.params.id);
+  sendSuccess(res, order, 'Dispute resolved.');
+});
+
+router.post('/disputes/:id/close', async (req, res) => {
+  const order = await adminService.closeDispute(req.params.id);
+  sendSuccess(res, order, 'Dispute closed.');
+});
+
+// ── Products (platform-wide) ───────────────────────────────────────────────
+const productsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().optional(),
+  brandId: z.string().optional(),
+  availability: z.enum(['ACTIVE', 'INACTIVE', 'COMING_SOON']).optional(),
+});
+
+router.get('/products', validateQuery(productsQuerySchema), async (req, res) => {
+  const result = await adminService.listProducts(req.query);
+  sendSuccess(res, result);
+});
+
+// ── Returns ────────────────────────────────────────────────────────────────
+const returnsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(['REQUESTED', 'APPROVED', 'REJECTED', 'LABEL_ISSUED', 'RECEIVED', 'REFUNDED']).optional(),
+});
+
+router.get('/returns', validateQuery(returnsQuerySchema), async (req, res) => {
+  const result = await adminService.listReturns(req.query);
+  sendSuccess(res, result);
+});
+
+router.post('/returns/:id/approve', async (req, res) => {
+  const ret = await adminService.approveReturn(req.params.id);
+  sendSuccess(res, ret, 'Return approved.');
+});
+
+router.post('/returns/:id/reject',
+  validate(z.object({ adminNotes: z.string().optional() })),
+  async (req, res) => {
+    const ret = await adminService.rejectReturn(req.params.id, req.body.adminNotes);
+    sendSuccess(res, ret, 'Return rejected.');
+  }
+);
+
+router.post('/returns/:id/refund', async (req, res) => {
+  const ret = await adminService.refundReturn(req.params.id);
+  sendSuccess(res, ret, 'Return marked as refunded.');
+});
+
+router.post('/returns/:id/issue-label',
+  validate(z.object({ returnLabelUrl: z.string().url().optional() })),
+  async (req, res) => {
+    const ret = await adminService.issueReturnLabel(req.params.id, req.body.returnLabelUrl);
+    sendSuccess(res, ret, 'Return label issued.');
+  }
+);
+
+// ── Revenue over time ──────────────────────────────────────────────────────
+router.get('/stats/revenue', validateQuery(z.object({
+  days: z.coerce.number().int().min(7).max(365).default(30),
+})), async (req, res) => {
+  const data = await adminService.getRevenueOverTime({ days: Number(req.query.days) });
+  sendSuccess(res, data);
+});
+
+// ── Low stock ──────────────────────────────────────────────────────────────
+router.get('/inventory/low-stock', validateQuery(z.object({
+  threshold: z.coerce.number().int().min(0).max(100).default(10),
+})), async (req, res) => {
+  const data = await adminService.getLowStockVariants({ threshold: Number(req.query.threshold) });
+  sendSuccess(res, data);
+});
+
+// ── Category GMV ───────────────────────────────────────────────────────────
+router.get('/stats/categories', async (req, res) => {
+  const data = await adminService.getCategoryGmv();
+  sendSuccess(res, data);
+});
+
+// ── Orders (platform-wide) ────────────────────────────────────────────────
+const ordersQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().optional(),
+  status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'DISPUTED', 'RETURN_REQUESTED']).optional(),
+  brandId: z.string().optional(),
+  dateFrom: z.string().datetime().optional(),
+  dateTo: z.string().datetime().optional(),
+});
+
+router.get('/orders', validateQuery(ordersQuerySchema), async (req, res) => {
+  const result = await adminService.listOrders(req.query);
+  sendSuccess(res, result);
+});
+
 // ── Marketing ──────────────────────────────────────────────────────────────
 // Manual trigger for the weekly digest (useful for testing before Monday)
 router.post('/digest/send', async (req, res) => {

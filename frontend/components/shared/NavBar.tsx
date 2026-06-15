@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Search, Menu, X, ChevronDown, LogOut, User as UserIcon, ShoppingBag, Bell, LayoutGrid } from 'lucide-react'
+import { Search, Menu, X, ChevronDown, LogOut, User as UserIcon, ShoppingCart, Bell, LayoutGrid, Globe, Package, FileText, MessageSquare, Star, Heart, Puzzle, Users, Settings as SettingsIcon, ExternalLink, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
@@ -10,11 +11,54 @@ import { useCartStore } from '@/lib/store/useCartStore'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet'
 import { useCategoryTree } from '@/hooks/queries/useCategories'
+import { useBrands } from '@/hooks/queries/useBrands'
+import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import type { CategoryL1, CategoryL2 } from '@/hooks/queries/useCategories'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD']
+// Dynamically resolve full currency name via browser Intl API (e.g. "USD" → "US Dollar")
+const currencyDisplayNames =
+  typeof Intl !== 'undefined' && Intl.DisplayNames
+    ? new Intl.DisplayNames(['en'], { type: 'currency' })
+    : null
+
+function getCurrencyName(code: string): string {
+  try {
+    return currencyDisplayNames?.of(code) ?? code
+  } catch {
+    return code
+  }
+}
+
+const FALLBACK_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD']
+
+const BUYER_NAV_ITEMS = [
+  { href: '/orders', label: 'Orders', icon: Package },
+  { href: '/invoices', label: 'Invoices', icon: FileText },
+  { href: '/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/reviews', label: 'Reviews', icon: Star },
+  { href: '/saved', label: 'Saved', icon: Heart },
+  { href: '/integrations', label: 'Integrations', icon: Puzzle },
+  { href: '/team', label: 'Team & permissions', icon: Users },
+  { href: '/settings', label: 'Settings', icon: SettingsIcon },
+]
+
+function useCurrencies() {
+  return useQuery<string[]>({
+    queryKey: ['frankfurter-currencies'],
+    queryFn: async () => {
+      const res = await fetch('/api/currencies')
+      if (!res.ok) throw new Error('Failed')
+      const codes: Record<string, string> = await res.json()
+      const sorted = Object.keys(codes).sort((a, b) => a.localeCompare(b))
+      return ['INR', ...sorted.filter((c) => c !== 'INR')]
+    },
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    retry: 1,
+  })
+}
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -195,31 +239,116 @@ function AllCategoriesButton({ ghost }: { ghost?: boolean }) {
   )
 }
 
+// ─── Brands dropdown ─────────────────────────────────────────────────────────
+
+function BrandsDropdown({ onClose }: { onClose: () => void }) {
+  const { data } = useBrands({ limit: 50 })
+  const brands = data?.brands ?? []
+
+  return (
+    <div className="absolute left-0 top-full z-50 mt-0">
+      <div className="bg-surface border border-border-warm shadow-[0_12px_48px_rgba(26,26,26,0.14)] rounded-b-lg overflow-hidden w-72">
+        <div className="px-4 py-3 border-b border-border-warm flex items-center justify-between">
+          <p className="text-[11px] font-[600] font-public-sans uppercase tracking-[0.08em] text-muted-text">
+            All Brands
+          </p>
+          <Link
+            href="/brands"
+            onClick={onClose}
+            className="text-[11px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors"
+          >
+            View all →
+          </Link>
+        </div>
+        <div className="overflow-y-auto max-h-[440px] py-2">
+          {brands.map((brand) => (
+            <Link
+              key={brand.id}
+              href={`/brands/${brand.slug}`}
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted-bg transition-colors group"
+            >
+              <div className="w-8 h-8 rounded-full border border-border-warm flex-shrink-0 overflow-hidden bg-muted-bg">
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center text-[12px] font-playfair font-[500] text-primary">
+                    {brand.name[0]}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-[500] font-public-sans text-primary truncate group-hover:text-accent transition-colors">
+                  {brand.name}
+                </p>
+                {brand.location && (
+                  <p className="text-[11px] font-public-sans text-muted-text truncate">{brand.location}</p>
+                )}
+              </div>
+              {brand.achievementLevel && brand.achievementLevel > 1 && (
+                <AchievementBadge level={brand.achievementLevel as 1 | 2 | 3 | 4 | 5} className="flex-shrink-0" />
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BrandsButton({ ghost }: { ghost?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useOutsideClick(ref, () => setOpen(false), open)
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={cn(
+          'inline-flex items-center gap-2 h-8 px-4 rounded-full border text-[13px] font-[500] font-public-sans transition-colors',
+          ghost
+            ? open
+              ? 'bg-white/20 text-white border-white/40'
+              : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
+            : open
+              ? 'bg-primary text-white border-primary'
+              : 'bg-muted-bg border-border-warm text-primary hover:border-primary'
+        )}
+      >
+        Brands
+        {open
+          ? <X size={12} aria-hidden="true" />
+          : <ChevronDown size={12} aria-hidden="true" />}
+      </button>
+
+      {open && <BrandsDropdown onClose={() => setOpen(false)} />}
+    </div>
+  )
+}
+
 // ─── Category nav row (Row 2) — plain L1 links, no dropdown ──────────────────
 
 function CategoryNavRow() {
   const { data: tree = [] } = useCategoryTree()
 
   return (
-    <div className="h-11 flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-      {(tree as CategoryL1[]).map((l1) => (
-        <Link
-          key={l1.id}
-          href={`/categories/${l1.slug}`}
-          className="inline-flex items-center h-8 px-3 rounded whitespace-nowrap flex-shrink-0 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
-        >
-          {l1.name}
-        </Link>
-      ))}
-
-      <div className="ml-auto flex-shrink-0">
-        <Link
-          href="/apply"
-          className="inline-flex items-center h-8 px-3 rounded text-[12px] font-[600] font-public-sans text-accent hover:text-accent-hover hover:bg-accent/5 transition-colors whitespace-nowrap"
-        >
-          Sell on Solomon Bharat
-        </Link>
+    <div className="h-11 flex items-center gap-2">
+      {/* Scrollable category links — constrained to available space */}
+      <div className="flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-0.5">
+        {(tree as CategoryL1[]).map((l1) => (
+          <Link
+            key={l1.id}
+            href={`/categories/${l1.slug}`}
+            className="inline-flex items-center h-8 px-3 rounded whitespace-nowrap flex-shrink-0 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+          >
+            {l1.name}
+          </Link>
+        ))}
       </div>
+
     </div>
   )
 }
@@ -229,6 +358,7 @@ function CategoryNavRow() {
 function CurrencySelector() {
   const currency = useCurrencyStore((s) => s.currency)
   const setCurrency = useCurrencyStore((s) => s.setCurrency)
+  const { data: availableCurrencies = FALLBACK_CURRENCIES } = useCurrencies()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useOutsideClick(ref, () => setOpen(false), open)
@@ -239,27 +369,43 @@ function CurrencySelector() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1 h-9 px-2.5 rounded text-[13px] font-[600] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+        aria-label={`Currency: ${currency}`}
+        className="inline-flex items-center gap-1.5 h-9 px-2.5 rounded text-[13px] font-[600] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
       >
+        <Globe size={14} aria-hidden="true" />
         {currency}
         <ChevronDown size={11} className={cn('transition-transform', open && 'rotate-180')} aria-hidden="true" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border-warm rounded shadow-[0_4px_20px_rgba(26,26,26,0.08)] py-1 min-w-[96px]">
-          {CURRENCIES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => { setCurrency(c); setOpen(false) }}
-              className={cn(
-                'w-full text-left px-3 py-2 text-[13px] font-public-sans hover:bg-muted-bg transition-colors',
-                c === currency ? 'text-primary font-[600]' : 'text-muted-text'
-              )}
-            >
-              {c}
-            </button>
-          ))}
+        <div className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border-warm rounded shadow-[0_4px_20px_rgba(26,26,26,0.08)] py-1.5 min-w-[220px] max-h-[320px] overflow-y-auto">
+          {availableCurrencies.map((c) => {
+            const active = c === currency
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { setCurrency(c); setOpen(false) }}
+                className={cn(
+                  'w-full flex items-center justify-between px-4 py-2.5 transition-colors',
+                  active ? 'bg-muted-bg' : 'hover:bg-muted-bg'
+                )}
+              >
+                <span className={cn(
+                  'text-[13px] font-public-sans',
+                  active ? 'text-primary font-[600]' : 'text-muted-text'
+                )}>
+                  {getCurrencyName(c)}
+                </span>
+                <span className={cn(
+                  'text-[12px] font-[600] font-public-sans ml-3',
+                  active ? 'text-primary' : 'text-muted-text/70'
+                )}>
+                  {c}
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
@@ -285,7 +431,7 @@ function CartButton() {
       aria-label={`Cart — ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
       className="relative inline-flex items-center justify-center w-9 h-9 rounded text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
     >
-      <ShoppingBag size={17} aria-hidden="true" />
+      <ShoppingCart size={17} aria-hidden="true" />
       {totalItems > 0 && (
         <span className="absolute top-1 right-1 min-w-[14px] h-[14px] rounded-full bg-accent text-white text-[9px] font-[700] font-public-sans flex items-center justify-center px-0.5 tabular-nums leading-none pointer-events-none">
           {totalItems > 99 ? '99+' : totalItems}
@@ -330,59 +476,125 @@ function UserDropdown() {
 
   if (!user) return null
 
-  const dashHref =
-    user.role === 'ADMIN' ? '/admin' :
-    user.role === 'BRAND' ? '/portal' :
-    '/dashboard'
+  const isBuyer = user.role !== 'ADMIN' && user.role !== 'BRAND'
+  const trigger = (
+    <button
+      type="button"
+      onClick={() => setOpen((v) => !v)}
+      aria-expanded={open}
+      aria-label="User menu"
+      className="inline-flex items-center h-9 px-2 rounded hover:bg-muted-bg transition-colors"
+    >
+      {user.avatar ? (
+        <img
+          src={user.avatar}
+          alt={user.name}
+          className="w-7 h-7 rounded-full object-cover border border-border-warm"
+        />
+      ) : (
+        <span className="w-7 h-7 rounded-full inline-flex items-center justify-center bg-muted-bg border border-border-warm text-muted-text">
+          <UserIcon size={13} aria-hidden="true" />
+        </span>
+      )}
+    </button>
+  )
+
+  if (!isBuyer) {
+    const dashHref = user.role === 'ADMIN' ? '/admin' : '/portal'
+    return (
+      <div ref={ref} className="relative">
+        {trigger}
+        {open && (
+          <div className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border-warm rounded shadow-[0_4px_20px_rgba(26,26,26,0.08)] py-1 min-w-[180px]">
+            <div className="px-3 py-2.5 border-b border-border-warm">
+              <p className="text-[13px] font-[600] font-public-sans text-primary truncate">{user.name}</p>
+              <p className="text-[11px] font-public-sans text-muted-text truncate">{user.email}</p>
+            </div>
+            <Link
+              href={dashHref}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+            >
+              <UserIcon size={13} aria-hidden="true" />
+              {user.role === 'ADMIN' ? 'Admin Panel' : 'Brand Portal'}
+            </Link>
+            <button
+              type="button"
+              onClick={() => { logout(); setOpen(false) }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-red-500 hover:bg-muted-bg transition-colors"
+            >
+              <LogOut size={13} aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-label="User menu"
-        className="inline-flex items-center gap-1.5 h-9 px-2 rounded hover:bg-muted-bg transition-colors"
-      >
-        {user.avatar ? (
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-7 h-7 rounded-full object-cover border border-border-warm flex-shrink-0"
-          />
-        ) : (
-          <span className="w-7 h-7 rounded-full inline-flex items-center justify-center flex-shrink-0 bg-muted-bg border border-border-warm text-muted-text">
-            <UserIcon size={13} aria-hidden="true" />
-          </span>
-        )}
-        <span className="hidden lg:block text-[13px] font-[500] font-public-sans text-primary truncate max-w-[72px]">
-          {user.name?.split(' ')[0]}
-        </span>
-        <ChevronDown size={11} className={cn('text-muted-text transition-transform flex-shrink-0', open && 'rotate-180')} aria-hidden="true" />
-      </button>
-
+      {trigger}
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border-warm rounded shadow-[0_4px_20px_rgba(26,26,26,0.08)] py-1 min-w-[180px]">
-          <div className="px-3 py-2.5 border-b border-border-warm">
-            <p className="text-[13px] font-[600] font-public-sans text-primary truncate">{user.name}</p>
+        <div className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border-warm rounded shadow-[0_4px_20px_rgba(26,26,26,0.08)] min-w-[240px]">
+          {/* Greeting */}
+          <div className="px-4 py-3 border-b border-border-warm">
+            <p className="text-[14px] font-[600] font-public-sans text-primary">Hi, {user.name?.split(' ')[0] ?? 'there'}</p>
             <p className="text-[11px] font-public-sans text-muted-text truncate">{user.email}</p>
           </div>
-          <Link
-            href={dashHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
-          >
-            <UserIcon size={13} aria-hidden="true" />
-            {user.role === 'ADMIN' ? 'Admin Panel' : user.role === 'BRAND' ? 'Brand Portal' : 'My Account'}
-          </Link>
-          <button
-            type="button"
-            onClick={() => { logout(); setOpen(false) }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-red-500 hover:bg-muted-bg transition-colors"
-          >
-            <LogOut size={13} aria-hidden="true" />
-            Sign out
-          </button>
+
+          {/* Nav items */}
+          <div className="py-1">
+            {BUYER_NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+              >
+                <Icon size={13} aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Store credit */}
+          <div className="border-t border-border-warm px-4 py-3 flex items-center justify-between gap-3">
+            <Link
+              href="/wallet"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors"
+            >
+              <Wallet size={13} aria-hidden="true" />
+              Store credit
+            </Link>
+            <Link
+              href="/referrals"
+              onClick={() => setOpen(false)}
+              className="text-[12px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors whitespace-nowrap"
+            >
+              Refer brands →
+            </Link>
+          </div>
+
+          {/* Help + sign out */}
+          <div className="border-t border-border-warm py-1">
+            <a
+              href="mailto:support@solomonbharat.com"
+              className="flex items-center gap-2.5 px-4 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+            >
+              <ExternalLink size={13} aria-hidden="true" />
+              Help centre
+            </a>
+            <button
+              type="button"
+              onClick={() => { logout(); setOpen(false) }}
+              className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-red-500 hover:bg-muted-bg transition-colors"
+            >
+              <LogOut size={13} aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -425,6 +637,7 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
   const currency = useCurrencyStore((s) => s.currency)
   const setCurrency = useCurrencyStore((s) => s.setCurrency)
+  const { data: availableCurrencies = FALLBACK_CURRENCIES } = useCurrencies()
   const { data: tree = [] } = useCategoryTree()
 
   function handleAuth(tab: 'login' | 'signup') { onClose(); openAuthModal(tab) }
@@ -442,6 +655,22 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
             <div className="mb-4 pb-4 border-b border-border-warm">
               <p className="text-[14px] font-[600] font-public-sans text-primary">{user.name}</p>
               <p className="text-[12px] font-public-sans text-muted-text">{user.email}</p>
+
+              {user.role !== 'ADMIN' && user.role !== 'BRAND' && (
+                <div className="mt-3 flex flex-col gap-0.5">
+                  {BUYER_NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={onClose}
+                      className="flex items-center gap-2.5 py-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors"
+                    >
+                      <Icon size={13} aria-hidden="true" />
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -479,22 +708,36 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
             <p className="text-[11px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em] mb-3">
               Currency
             </p>
-            <div className="flex flex-wrap gap-1.5">
-              {CURRENCIES.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCurrency(c)}
-                  className={cn(
-                    'px-2.5 py-1 rounded border text-[12px] font-[600] font-public-sans transition-colors',
-                    c === currency
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
-                  )}
-                >
-                  {c}
-                </button>
-              ))}
+            <div className="flex flex-col gap-1 max-h-[260px] overflow-y-auto">
+              {availableCurrencies.map((c) => {
+                const active = c === currency
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    className={cn(
+                      'flex items-center justify-between w-full px-3 py-2.5 rounded border transition-colors text-left',
+                      active
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border-warm hover:border-primary/40 hover:bg-muted-bg'
+                    )}
+                  >
+                    <span className={cn(
+                      'text-[13px] font-public-sans',
+                      active ? 'text-primary font-[600]' : 'text-muted-text'
+                    )}>
+                      {getCurrencyName(c)}
+                    </span>
+                    <span className={cn(
+                      'text-[12px] font-[600] font-public-sans',
+                      active ? 'text-primary' : 'text-muted-text/60'
+                    )}>
+                      {c}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -560,10 +803,13 @@ export function NavBar({ transparent = false }: NavBarProps) {
               Solomon Bharat
             </Link>
 
-            {/* All categories button — desktop only */}
-            <div className="hidden md:block">
-              <AllCategoriesButton ghost={ghost} />
-            </div>
+            {/* All categories + Brands buttons — desktop only, authenticated only */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center gap-2">
+                <AllCategoriesButton ghost={ghost} />
+                <BrandsButton ghost={ghost} />
+              </div>
+            )}
 
             {/* Search — center */}
             <div className="hidden md:flex flex-1 justify-center px-4">
@@ -580,11 +826,22 @@ export function NavBar({ transparent = false }: NavBarProps) {
                 <UserDropdown />
               ) : (
                 <>
+                  <Link
+                    href="/apply"
+                    className={cn(
+                      'inline-flex items-center h-9 px-3 rounded text-[14px] font-[600] font-public-sans transition-colors',
+                      ghost
+                        ? 'text-white hover:bg-white/10'
+                        : 'text-muted-text hover:text-primary hover:bg-muted-bg'
+                    )}
+                  >
+                    Sign up to sell
+                  </Link>
                   <Button
                     variant="ghost"
                     size="md"
                     onClick={() => openAuthModal('login')}
-                    className={cn(ghost && 'text-white hover:bg-white/10')}
+                    className={cn('border-0', ghost && 'text-white hover:bg-white/10')}
                   >
                     Log in
                   </Button>
@@ -594,7 +851,7 @@ export function NavBar({ transparent = false }: NavBarProps) {
                     onClick={() => openAuthModal('signup')}
                     className={cn(ghost && 'bg-white text-primary hover:bg-white/90 border-0')}
                   >
-                    Join as Buyer
+                    Sign up to buy
                   </Button>
                 </>
               )}
@@ -663,7 +920,7 @@ export function NavBar({ transparent = false }: NavBarProps) {
             ghost ? 'border-white/10' : 'border-border-warm/60'
           )}
         >
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto px-4">
             <CategoryNavRow />
           </div>
         </div>

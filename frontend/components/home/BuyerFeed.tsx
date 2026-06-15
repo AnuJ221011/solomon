@@ -110,30 +110,26 @@ function RecentlyViewed() {
 
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
         {products.map((p) => (
-          <Link
-            key={p.id}
-            href={`/products/${p.slug}`}
-            className="w-[180px] flex-shrink-0 group"
-          >
-            <div className="aspect-square rounded-lg overflow-hidden bg-[#F7F4EF] mb-2">
-              {p.imageUrl ? (
-                <img
-                  src={p.imageUrl}
-                  alt={p.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full" />
-              )}
-            </div>
-            <p className="text-[11px] font-public-sans text-muted-text truncate">{p.brandName}</p>
-            <p className="text-[13px] font-[500] font-public-sans text-primary leading-snug line-clamp-2">
-              {p.name}
-            </p>
-            <p className="text-[13px] font-[600] font-public-sans text-primary mt-0.5">
-              ₹{p.price.toLocaleString('en-IN')}
-            </p>
-          </Link>
+          <div key={p.id} className="w-[210px] flex-shrink-0">
+            <ProductCard
+              product={{
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+                images: [p.imageUrl],
+                wholesalePrice: p.price,
+                brandId: '',
+                brandName: p.brandName,
+                brandSlug: p.brandSlug,
+                moq: 1,
+                inStock: true,
+                leadTime: '',
+                tags: [],
+                category: '',
+                weight: 0,
+              }}
+            />
+          </div>
         ))}
       </div>
     </section>

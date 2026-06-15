@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { Clipboard, CheckCheck, MessageCircle, Mail, Trophy } from 'lucide-react'
+import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
@@ -11,8 +12,6 @@ import {
   type ReferralEntry,
   type LeaderboardEntry,
 } from '@/hooks/queries/useReferrals'
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
   label,
@@ -44,8 +43,6 @@ function StatCard({
   )
 }
 
-// ─── Referral status badge ────────────────────────────────────────────────────
-
 function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
   return (
     <span
@@ -61,8 +58,6 @@ function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
     </span>
   )
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false)
@@ -96,12 +91,10 @@ export default function ReferralsPage() {
     window.open(`mailto:?subject=${subject}&body=${body}`)
   }
 
-  // Current month name for leaderboard heading
   const currentMonth = new Date().toLocaleString('en-US', { month: 'long' })
 
   return (
-    <div>
-      {/* Header */}
+    <AccountPageWrapper>
       <div className="mb-6">
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
           Referral Hub
@@ -111,7 +104,6 @@ export default function ReferralsPage() {
         </p>
       </div>
 
-      {/* Referral link card */}
       <div className="bg-surface border border-border-warm rounded p-6 mb-6">
         <p className="text-[16px] font-[400] font-public-sans text-primary leading-relaxed mb-4">
           Share this link to earn{' '}
@@ -119,7 +111,6 @@ export default function ReferralsPage() {
           when a brand you refer makes their first sale.
         </p>
 
-        {/* Link input with copy */}
         <div className="flex gap-2 mb-4">
           <div className="flex-1 min-w-0 bg-muted-bg border border-border-warm rounded px-3 py-2.5 overflow-hidden">
             {referralLoading ? (
@@ -147,7 +138,6 @@ export default function ReferralsPage() {
           </Button>
         </div>
 
-        {/* Share actions */}
         <div className="flex gap-3 flex-wrap">
           <Button
             variant="accent"
@@ -172,13 +162,8 @@ export default function ReferralsPage() {
         </div>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <StatCard
-          label="Brands Referred"
-          value={referralData?.totalReferrals}
-          loading={referralLoading}
-        />
+        <StatCard label="Brands Referred" value={referralData?.totalReferrals} loading={referralLoading} />
         <StatCard
           label="Pending Rewards"
           value={referralData?.pendingCount}
@@ -195,9 +180,7 @@ export default function ReferralsPage() {
         )}
       </div>
 
-      {/* Two-column: history + leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Referral history */}
         <div className="lg:col-span-3">
           <h2 className="text-[16px] font-[600] font-public-sans text-primary mb-3">
             Referral History
@@ -261,7 +244,7 @@ export default function ReferralsPage() {
                             ref.status === 'CONVERTED' ? 'text-success' : 'text-muted-text'
                           )}
                         >
-                          {ref.status === 'CONVERTED' ? '&#x20B9;500' : '&#x20B9;500 (pending)'}
+                          {ref.status === 'CONVERTED' ? '₹500' : '₹500 (pending)'}
                         </span>
                       </td>
                     </tr>
@@ -272,7 +255,6 @@ export default function ReferralsPage() {
           )}
         </div>
 
-        {/* Leaderboard */}
         <div className="lg:col-span-2">
           <h2 className="text-[16px] font-[600] font-public-sans text-primary mb-3 flex items-center gap-2">
             <Trophy size={16} className="text-accent" aria-hidden="true" />
@@ -312,9 +294,7 @@ export default function ReferralsPage() {
                       className={cn(
                         'w-7 h-7 flex items-center justify-center rounded',
                         'text-[12px] font-[600] font-public-sans',
-                        entry.rank === 1
-                          ? 'bg-accent text-white'
-                          : 'bg-muted-bg text-muted-text'
+                        entry.rank === 1 ? 'bg-accent text-white' : 'bg-muted-bg text-muted-text'
                       )}
                     >
                       {entry.rank}
@@ -340,6 +320,6 @@ export default function ReferralsPage() {
           )}
         </div>
       </div>
-    </div>
+    </AccountPageWrapper>
   )
 }

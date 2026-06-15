@@ -152,11 +152,19 @@ model BuyerProfile {
   businessName        String
   countryCode         String
   phone               String?
+  addressLine         String?
+  city                String?
+  state               String?
+  postalCode          String?
   preferredCurrency   String    @default("USD")
   // Store type quiz fields
   storeType           String?   // boutique | gift_shop | subscription_box | online_store | pop_up | other
   aesthetic           String?   // minimalist | bohemian | artisan | luxury | contemporary | eclectic
   categoryInterests   String[]  @default([])
+  // Notification preferences
+  notifNewArrivals    Boolean   @default(true)
+  notifOrderUpdates   Boolean   @default(true)
+  notifPromotions     Boolean   @default(false)
   // Business verification
   businessVerified    Boolean   @default(false)
   businessVerifiedAt  DateTime?
@@ -447,6 +455,8 @@ model Order {
   shareLinkId          String?
   shareLink            ShareLink?  @relation(fields: [shareLinkId], references: [id])
   notes                String?
+  disputeReason        String?
+  disputeResolution    String?     // null = OPEN, "RESOLVED", "CLOSED"
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 

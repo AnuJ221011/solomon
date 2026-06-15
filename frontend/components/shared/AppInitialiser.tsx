@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 
 interface IpapiResponse {
   currency?: string
@@ -24,6 +25,17 @@ export function AppInitialiser() {
   const setCurrency = useCurrencyStore((s) => s.setCurrency)
   const setRates = useCurrencyStore((s) => s.setRates)
   const lastFetched = useCurrencyStore((s) => s.lastFetched)
+  const openAuthModal = useAuthStore((s) => s.openAuthModal)
+
+  // If the session expired mid-session (api.ts refresh failed), show login modal
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const expired = sessionStorage.getItem('sb_session_expired')
+    if (expired) {
+      sessionStorage.removeItem('sb_session_expired')
+      openAuthModal('login')
+    }
+  }, [openAuthModal])
 
   useEffect(() => {
     let cancelled = false
@@ -71,7 +83,7 @@ export function AppInitialiser() {
       const RATES_TTL = 6 * 60 * 60 * 1000
       if (lastFetched && Date.now() - lastFetched < RATES_TTL) return
       try {
-        const res = await fetch('https://api.frankfurter.app/latest?base=INR')
+        const res = await fetch('/api/fx-rates')
 
         if (res.ok) {
           const data: FrankfurterResponse = await res.json()

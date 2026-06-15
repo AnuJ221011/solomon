@@ -83,11 +83,11 @@ function normaliseBrand(raw: any): Brand {
     logo: raw.logo ?? raw.logoUrl ?? undefined,
     banner: raw.banner ?? raw.bannerUrl ?? undefined,
     description: raw.description ?? '',
-    location: raw.location ?? raw.countryOfOrigin ?? '',
+    location: raw.location ?? [raw.city, raw.state].filter(Boolean).join(', ') ?? raw.countryOfOrigin ?? '',
     yearFounded: raw.yearFounded,
     achievementLevel: ACHIEVEMENT_MAP[raw.achievementLevel] ?? (typeof raw.achievementLevel === 'number' ? raw.achievementLevel : 1),
     tagline: raw.tagline,
-    productCount: raw.productCount ?? 0,
+    productCount: raw.productCount ?? raw.products?.length ?? 0,
     minimumOrderValue: raw.minimumOrderValue ?? 0,
     collections: raw.collections,
   }
