@@ -250,7 +250,7 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
         {products.length === 0 ? (
           <EmptyState title="No products yet" description="This brand hasn't added products to this catalogue." />
         ) : (
-          <BrandStorefrontClient products={products} collections={collections} />
+          <BrandStorefrontClient brandSlug={brand.slug} collections={collections} />
         )}
       </main>
 
