@@ -596,7 +596,6 @@ export const getPayoutsCsv = async (isPaid = false) => {
           createdAt: true,
           buyerCurrency: true,
           totalBuyerCurrency: true,
-          payoutSpeed: false,
         },
       },
     },

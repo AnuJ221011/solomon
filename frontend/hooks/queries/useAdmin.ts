@@ -443,7 +443,7 @@ export interface AdminOrder {
   buyerEmail: string
   brandName: string
   brandSlug: string
-  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED' | 'RETURN_REQUESTED'
+  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED'
   totalInr: number
   itemCount: number
   notes: string | null

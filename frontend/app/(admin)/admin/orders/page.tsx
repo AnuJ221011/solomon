@@ -8,14 +8,13 @@ import { cn } from '@/lib/utils'
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<AdminOrder['status'], string> = {
-  PENDING:          'bg-muted-bg text-muted-text',
-  CONFIRMED:        'bg-accent/10 text-accent',
-  PROCESSING:       'bg-amber-50 text-amber-700',
-  SHIPPED:          'bg-primary/10 text-primary',
-  DELIVERED:        'bg-success/10 text-success',
-  CANCELLED:        'bg-error/10 text-error',
-  DISPUTED:         'bg-red-100 text-red-700',
-  RETURN_REQUESTED: 'bg-orange-50 text-orange-700',
+  PENDING:    'bg-muted-bg text-muted-text',
+  CONFIRMED:  'bg-accent/10 text-accent',
+  PROCESSING: 'bg-amber-50 text-amber-700',
+  DISPATCHED: 'bg-primary/10 text-primary',
+  DELIVERED:  'bg-success/10 text-success',
+  CANCELLED:  'bg-error/10 text-error',
+  DISPUTED:   'bg-red-100 text-red-700',
 }
 
 function StatusBadge({ status }: { status: AdminOrder['status'] }) {
@@ -65,10 +64,9 @@ const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'CONFIRMED', label: 'Confirmed' },
   { value: 'PROCESSING', label: 'Processing' },
-  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DISPATCHED', label: 'Dispatched' },
   { value: 'DELIVERED', label: 'Delivered' },
   { value: 'DISPUTED', label: 'Disputed' },
-  { value: 'RETURN_REQUESTED', label: 'Return Req.' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ]
 

@@ -14,6 +14,8 @@
     "db:seed": "node prisma/seed.js && node prisma/seed-part2.js",
     "db:seed:part1": "node prisma/seed.js",
     "db:seed:part2": "node prisma/seed-part2.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix"
   },
@@ -46,7 +48,9 @@
   "devDependencies": {
     "eslint": "^8.57.0",
     "nodemon": "^3.1.4",
-    "prisma": "latest"
+    "prisma": "latest",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=18.0.0"
