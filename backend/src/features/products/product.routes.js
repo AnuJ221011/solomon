@@ -5,7 +5,7 @@ import { authenticate, optionalAuthenticate } from '../../shared/middleware/auth
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
 import { createProductSchema, updateProductSchema, productQuerySchema } from './product.validator.js';
-import { importProductsFromCsv } from './product.import.js';
+import { importProductsFromCsv, importProductsFromJson } from './product.import.js';
 import variantRouter from './variant.routes.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import multer from 'multer';
@@ -83,6 +83,12 @@ router.post(
     sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
   }
 );
+
+// Shopify CSV import — accepts pre-mapped JSON from the frontend wizard
+router.post('/import-shopify', authenticate, authorize('BRAND'), async (req, res) => {
+  const result = await importProductsFromJson(req.user.id, req.body.products);
+  sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
+});
 
 // Variant sub-routes: /api/products/:productId/variants
 router.use('/:productId/variants', variantRouter);

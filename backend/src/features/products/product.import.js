@@ -190,3 +190,108 @@ export const importProductsFromCsv = async (userId, csvText) => {
 
   return results;
 };
+
+/**
+ * Import pre-parsed products from a Shopify CSV (mapped on the frontend).
+ * Accepts a JSON array of product objects — no CSV parsing needed server-side.
+ */
+export const importProductsFromJson = async (userId, products) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { userId } });
+  if (!brand) throw createError('Brand profile not found', 404);
+  if (brand.status !== 'APPROVED') throw createError('Brand must be approved to import products', 403);
+
+  if (!Array.isArray(products) || products.length === 0) {
+    throw createError('products array is required and must not be empty', 400);
+  }
+
+  const results = { created: 0, skipped: 0, errors: [] };
+
+  for (const p of products) {
+    try {
+      if (!p.name?.trim()) {
+        results.errors.push('Skipping a product with no name');
+        results.skipped++;
+        continue;
+      }
+
+      const name = p.name.trim().slice(0, 80);
+      const shortDescription =
+        (p.shortDescription ?? '').trim().slice(0, 160) || name.slice(0, 160);
+      const wholesalePriceInr = Math.max(0.01, Number(p.wholesalePriceInr) || 0.01);
+      const moq = Math.max(1, parseInt(p.moq, 10) || 1);
+      const weightGrams = Math.max(1, parseInt(p.weightGrams, 10) || 100);
+      const leadTime = VALID_LEAD_TIMES.includes(p.leadTime) ? p.leadTime : 'ONE_TO_TWO_WEEKS';
+      const enabledZones =
+        (p.enabledZones ?? []).filter((z) => VALID_ZONES.includes(z));
+      if (enabledZones.length === 0) enabledZones.push('DOMESTIC');
+      const categories = (p.categories ?? []).slice(0, 2).filter(Boolean);
+      const tags = (p.tags ?? []).slice(0, 10).filter(Boolean);
+      const availability =
+        ['ACTIVE', 'INACTIVE', 'COMING_SOON'].includes(p.availability)
+          ? p.availability
+          : 'ACTIVE';
+
+      const existing = await prisma.product.findFirst({
+        where: { brandProfileId: brand.id, name },
+      });
+      if (existing) {
+        results.skipped++;
+        continue;
+      }
+
+      // Ensure slug is unique by appending a timestamp
+      const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = `${base}-${Date.now()}`;
+
+      await prisma.$transaction(async (tx) => {
+        const product = await tx.product.create({
+          data: {
+            name,
+            slug,
+            shortDescription,
+            fullDescription: p.fullDescription || null,
+            wholesalePriceInr,
+            moq,
+            leadTime,
+            weightGrams,
+            categories,
+            tags,
+            enabledZones,
+            availability,
+            brandProfileId: brand.id,
+          },
+        });
+
+        const variants = (p.variants ?? []).filter((v) => v.sku?.trim());
+        for (const v of variants) {
+          const variant = await tx.productVariant.create({
+            data: {
+              productId: product.id,
+              sku: v.sku.trim(),
+              priceInr: Math.max(0.01, Number(v.priceInr) || wholesalePriceInr),
+              stock: Math.max(0, parseInt(v.stock, 10) || 0),
+              status: 'ACTIVE',
+            },
+          });
+
+          if (v.attributes?.length) {
+            await tx.variantAttribute.createMany({
+              data: v.attributes.map((a) => ({
+                variantId: variant.id,
+                name: String(a.name),
+                value: String(a.value),
+              })),
+            });
+          }
+        }
+      });
+
+      results.created++;
+    } catch (err) {
+      results.errors.push(`"${p.name}": ${err.message}`);
+      results.skipped++;
+    }
+  }
+
+  return results;
+};

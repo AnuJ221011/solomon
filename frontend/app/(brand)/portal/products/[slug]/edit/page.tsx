@@ -13,14 +13,9 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
+import { useCategories } from '@/hooks/queries/useCategories'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  'Textiles', 'Jewellery', 'Pottery & Ceramics', 'Home Decor',
-  'Apparel', 'Accessories', 'Art & Prints', 'Stationery',
-  'Food & Wellness', 'Toys & Games', 'Leather Goods', 'Other',
-]
 
 const LEAD_TIMES = [
   { value: 'ONE_TO_THREE_DAYS', label: '1–3 days' },
@@ -28,11 +23,22 @@ const LEAD_TIMES = [
   { value: 'TWO_TO_FOUR_WEEKS', label: '2–4 weeks' },
 ]
 
+const SHIPPING_ZONES: { label: string; value: string }[] = [
+  { label: 'India (Domestic)',  value: 'DOMESTIC' },
+  { label: 'South Asia',        value: 'SOUTH_ASIA' },
+  { label: 'Southeast Asia',    value: 'SOUTHEAST_ASIA' },
+  { label: 'Middle East',       value: 'MIDDLE_EAST' },
+  { label: 'Europe',            value: 'EUROPE' },
+  { label: 'North America',     value: 'NORTH_AMERICA' },
+  { label: 'Oceania',           value: 'OCEANIA' },
+  { label: 'Rest of World',     value: 'REST_OF_WORLD' },
+]
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ProductForm {
   name: string
-  category: string
+  categories: string[]
   shortDescription: string
   fullDescription: string
   wholesalePriceInr: string
@@ -41,6 +47,7 @@ interface ProductForm {
   weightKg: string
   tags: string
   availability: 'ACTIVE' | 'INACTIVE' | 'COMING_SOON'
+  enabledZones: string[]
 }
 
 interface AttributeAxis {
@@ -766,9 +773,12 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
     queryFn: () => api.get(`/products/${slug}`).then((r) => r.data.data),
   })
 
+  const { data: categoriesData } = useCategories()
+  const categoryList = categoriesData ?? []
+
   const [form, setForm] = useState<ProductForm>({
     name: '',
-    category: '',
+    categories: [],
     shortDescription: '',
     fullDescription: '',
     wholesalePriceInr: '',
@@ -777,13 +787,14 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
     weightKg: '',
     tags: '',
     availability: 'ACTIVE',
+    enabledZones: [],
   })
 
   useEffect(() => {
     if (!product) return
     setForm({
       name: product.name ?? '',
-      category: (product.categories ?? [])[0] ?? '',
+      categories: product.categories ?? [],
       shortDescription: product.shortDescription ?? '',
       fullDescription: product.fullDescription ?? '',
       wholesalePriceInr: product.wholesalePriceInr != null ? String(product.wholesalePriceInr) : '',
@@ -792,17 +803,33 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
       weightKg: product.weightGrams != null ? String(product.weightGrams / 1000) : '',
       tags: (product.tags ?? []).join(', '),
       availability: product.availability ?? 'ACTIVE',
+      enabledZones: product.enabledZones ?? ['DOMESTIC'],
     })
   }, [product])
 
   const set = (key: keyof ProductForm) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }))
 
+  function toggleCategory(cat: string) {
+    setForm((f) => {
+      if (f.categories.includes(cat)) return { ...f, categories: f.categories.filter((c) => c !== cat) }
+      if (f.categories.length >= 2) { toast.error('Max 2 categories allowed.'); return f }
+      return { ...f, categories: [...f.categories, cat] }
+    })
+  }
+
+  function toggleZone(zone: string) {
+    setForm((f) => {
+      if (f.enabledZones.includes(zone)) return { ...f, enabledZones: f.enabledZones.filter((z) => z !== zone) }
+      return { ...f, enabledZones: [...f.enabledZones, zone] }
+    })
+  }
+
   const updateProduct = useMutation({
     mutationFn: () =>
       api.patch(`/products/${product?.id}`, {
         name: form.name.trim(),
-        categories: [form.category].filter(Boolean),
+        categories: form.categories,
         shortDescription: form.shortDescription.trim(),
         fullDescription: form.fullDescription.trim() || undefined,
         wholesalePriceInr: Number(form.wholesalePriceInr),
@@ -811,6 +838,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
         weightGrams: Math.round(Number(form.weightKg) * 1000),
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         availability: form.availability,
+        enabledZones: form.enabledZones,
       }),
     onSuccess: () => {
       toast.success('Product updated.')
@@ -822,7 +850,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim()) { toast.error('Product name is required.'); return }
-    if (!form.category) { toast.error('Please select a category.'); return }
+    if (form.categories.length === 0) { toast.error('Please select at least one category.'); return }
+    if (form.enabledZones.length === 0) { toast.error('Please select at least one shipping zone.'); return }
     updateProduct.mutate()
   }
 
@@ -874,19 +903,29 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
             <TextInput value={form.name} onChange={set('name')} placeholder="Product name" />
           </Field>
 
-          <Field label="Category">
-            <SelectWrapper>
-              <select
-                value={form.category}
-                onChange={(e) => set('category')(e.target.value)}
-                className="w-full h-10 px-3 pr-8 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors appearance-none"
-              >
-                <option value="">Select a category</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </SelectWrapper>
+          <Field label="Categories" hint="Select up to 2 categories">
+            <div className="flex flex-wrap gap-2">
+              {categoryList.length === 0 && (
+                <p className="text-[13px] font-public-sans text-muted-text">Loading categories…</p>
+              )}
+              {categoryList.map((cat: { id: string; name: string; slug: string }) => {
+                const selected = form.categories.includes(cat.slug)
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.slug)}
+                    className={`h-8 px-3 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                      selected
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-border-warm bg-muted-bg/30 text-primary hover:border-accent'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                )
+              })}
+            </div>
           </Field>
 
           <Field label="Short Description" hint="Max 160 characters — shown on product cards">
@@ -971,6 +1010,35 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
                 {status === 'ACTIVE' ? 'Active' : status === 'INACTIVE' ? 'Inactive' : 'Coming Soon'}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Shipping Zones */}
+        <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
+          <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">
+            Shipping Zones
+          </h2>
+          <p className="text-[13px] font-public-sans text-muted-text -mt-2">
+            Select the regions you ship to. At least one zone is required.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SHIPPING_ZONES.map((zone) => {
+              const selected = form.enabledZones.includes(zone.value)
+              return (
+                <button
+                  key={zone.value}
+                  type="button"
+                  onClick={() => toggleZone(zone.value)}
+                  className={`h-8 px-3 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                    selected
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-border-warm bg-muted-bg/30 text-primary hover:border-accent'
+                  }`}
+                >
+                  {zone.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 

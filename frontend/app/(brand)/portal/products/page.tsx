@@ -79,9 +79,11 @@ export default function ProductsPage() {
           Products
         </h1>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <Upload size={14} aria-hidden="true" />
-            Bulk Import CSV
+          <Button variant="ghost" size="sm" className="gap-1.5" asChild>
+            <Link href="/portal/products/import">
+              <Upload size={14} aria-hidden="true" />
+              Import from Shopify
+            </Link>
           </Button>
           <Button size="sm" className="gap-1.5" asChild>
             <Link href="/portal/products/new">

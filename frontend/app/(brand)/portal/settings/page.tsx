@@ -126,29 +126,8 @@ export default function SettingsPage() {
   const [businessRegNumber, setBusinessRegNumber] = useState('')
   const [minimumOrderValue, setMinimumOrderValue] = useState('')
 
-  // ── CSV import / export ────────────────────────────────────────────────────
-  const csvInputRef = useRef<HTMLInputElement>(null)
-  const [csvImporting, setCsvImporting] = useState(false)
+  // ── CSV export ─────────────────────────────────────────────────────────────
   const [csvExporting, setCsvExporting] = useState(false)
-  const [csvResult, setCsvResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null)
-
-  async function handleCsvImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setCsvImporting(true)
-    setCsvResult(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await api.post('/products/bulk-import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setCsvResult(res.data.data)
-    } catch (err) {
-      toast.error(getApiError(err))
-    } finally {
-      setCsvImporting(false)
-      if (csvInputRef.current) csvInputRef.current.value = ''
-    }
-  }
 
   async function handleCsvExport() {
     setCsvExporting(true)
@@ -167,23 +146,6 @@ export default function SettingsPage() {
     } finally {
       setCsvExporting(false)
     }
-  }
-
-  function downloadCsvTemplate() {
-    const header = 'name,short_description,full_description,wholesale_price_inr,moq,weight_grams,lead_time,shipping_zones,categories,tags,hs_tariff_code,country_of_origin,variant_sku,variant_attributes,variant_price_inr,variant_stock'
-    // Two rows for same product = two variants. Leave variant columns blank for products without variants.
-    const row1 = '"Handwoven Silk Scarf","Handwoven pure silk scarf in Indian patterns","Full description...",2500,10,150,one_to_two_weeks,EUROPE|NORTH_AMERICA,Textiles|Accessories,handmade|silk,,IN,SCARF-S-RED,Size:S|Color:Red,2500,20'
-    const row2 = '"Handwoven Silk Scarf","Handwoven pure silk scarf in Indian patterns","Full description...",2500,10,150,one_to_two_weeks,EUROPE|NORTH_AMERICA,Textiles|Accessories,handmade|silk,,IN,SCARF-L-BLUE,Size:L|Color:Blue,2700,15'
-    const row3 = '"Brass Diya Set","Set of 5 handcrafted brass diyas","Full description...",1200,5,400,one_to_three_days,DOMESTIC|MIDDLE_EAST,Home Decor,brass|diya|festive,,IN,,,,'
-    const blob = new Blob([header + '\n' + row1 + '\n' + row2 + '\n' + row3], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'products_template.csv'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
   }
 
   // ── Logo / banner upload ───────────────────────────────────────────────────
@@ -785,59 +747,20 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-3 p-4 border border-border-warm rounded">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-[12px] font-[600] font-public-sans text-muted-text">CSV</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-[600] font-public-sans text-primary">CSV Import / Export</p>
-                <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
-                  Bulk add products via CSV upload, or export your full catalogue.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="ghost" size="sm" className="gap-1.5"
-                  onClick={downloadCsvTemplate}>
-                  Template
-                </Button>
-                <input ref={csvInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsvImport} />
-                <Button variant="ghost" size="sm" className="gap-1.5"
-                  disabled={csvImporting}
-                  onClick={() => csvInputRef.current?.click()}>
-                  <Upload size={12} aria-hidden="true" />
-                  {csvImporting ? 'Importing…' : 'Import CSV'}
-                </Button>
-                <Button variant="ghost" size="sm"
-                  disabled={csvExporting}
-                  onClick={handleCsvExport}>
-                  {csvExporting ? 'Exporting…' : 'Export CSV'}
-                </Button>
-              </div>
+          <div className="flex items-start gap-4 p-4 border border-border-warm rounded">
+            <div className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[12px] font-[600] font-public-sans text-muted-text">CSV</span>
             </div>
-
-            {/* Import results */}
-            {csvResult && (
-              <div className={cn(
-                'rounded border p-3 text-[13px] font-public-sans',
-                csvResult.errors.length ? 'border-amber-200 bg-amber-50' : 'border-success/20 bg-success/5',
-              )}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="font-[600] text-primary">
-                    Import complete — {csvResult.created} created, {csvResult.skipped} skipped
-                  </p>
-                  <button type="button" onClick={() => setCsvResult(null)}
-                    className="text-muted-text hover:text-primary transition-colors">
-                    <X size={14} aria-hidden="true" />
-                  </button>
-                </div>
-                {csvResult.errors.length > 0 && (
-                  <ul className="mt-2 space-y-0.5 text-[12px] text-amber-700 max-h-32 overflow-y-auto">
-                    {csvResult.errors.map((e, i) => <li key={i}>• {e}</li>)}
-                  </ul>
-                )}
-              </div>
-            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-[600] font-public-sans text-primary">Export Catalogue</p>
+              <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
+                Download all your products as a CSV file. To import products from Shopify, use{' '}
+                <a href="/portal/products/import" className="underline text-accent hover:text-accent/80">Import from Shopify</a>.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" disabled={csvExporting} onClick={handleCsvExport} className="shrink-0">
+              {csvExporting ? 'Exporting…' : 'Export CSV'}
+            </Button>
           </div>
         </div>
       </Section>
