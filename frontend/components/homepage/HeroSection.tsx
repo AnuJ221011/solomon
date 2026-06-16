@@ -21,7 +21,7 @@ const TRUST_AVATARS = [
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden h-[90vh]">
+    <section className="relative overflow-hidden min-h-[580px] h-[90vh]">
 
       {/* Full-bleed background image — no overlay */}
       <Image
@@ -33,16 +33,16 @@ export function HeroSection() {
         priority
       />
 
-      {/* Very subtle left-side fade so dark text stays readable — no darkness on image */}
+      {/* Left-side fade — stronger on mobile for text readability */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, rgba(249,247,242,0.82) 0%, rgba(249,247,242,0.55) 45%, rgba(249,247,242,0) 70%)' }}
+        style={{ background: 'linear-gradient(to right, rgba(249,247,242,0.95) 0%, rgba(249,247,242,0.80) 55%, rgba(249,247,242,0.30) 75%, rgba(249,247,242,0) 100%)' }}
         aria-hidden="true"
       />
 
       {/* Content overlaid on the left */}
       <div className="relative z-10 flex items-center h-full absolute inset-0">
-        <div className="w-full px-6 md:px-10 lg:px-16 py-20">
+        <div className="w-full px-5 sm:px-8 md:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
           <div className="max-w-[520px]">
 
             {/* Eyebrow pill */}
@@ -56,14 +56,14 @@ export function HeroSection() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-playfair font-[600] text-primary leading-[1.05] tracking-[-0.01em] text-[30px] sm:text-[38px] lg:text-[44px]">
+            <h1 className="font-playfair font-[600] text-primary leading-[1.05] tracking-[-0.01em] text-[26px] sm:text-[34px] lg:text-[44px]">
               Source India&apos;s Finest<br />
               <span className="text-accent">Brands</span><br />
               Directly From Manufacturers
             </h1>
 
             {/* Body */}
-            <p className="font-public-sans text-[15px] font-[400] leading-[1.65] text-muted-text mt-6 max-w-[400px]">
+            <p className="font-public-sans text-[14px] sm:text-[15px] font-[400] leading-[1.65] text-muted-text mt-4 sm:mt-6 max-w-[400px]">
               Connect with verified artisan brands, exporters, and wholesale
               suppliers across India.
             </p>
@@ -87,15 +87,15 @@ export function HeroSection() {
             </div>
 
             {/* Stats */}
-            <div className="mt-10 flex gap-x-6 gap-y-4">
+            <div className="mt-8 sm:mt-10 grid grid-cols-2 sm:flex sm:flex-wrap gap-x-5 gap-y-3 sm:gap-x-6 sm:gap-y-4">
               {STATS.map(({ Icon, value, label }) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-white/70 border border-border-warm flex items-center justify-center flex-shrink-0">
-                    <Icon size={14} className="text-accent" aria-hidden="true" />
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/70 border border-border-warm flex items-center justify-center flex-shrink-0">
+                    <Icon size={13} className="text-accent" aria-hidden="true" />
                   </div>
                   <div>
-                    <p className="font-public-sans text-[14px] font-[600] text-primary leading-tight">{value}</p>
-                    <p className="font-public-sans text-[11px] text-muted-text leading-tight">{label}</p>
+                    <p className="font-public-sans text-[13px] sm:text-[14px] font-[600] text-primary leading-tight">{value}</p>
+                    <p className="font-public-sans text-[10px] sm:text-[11px] text-muted-text leading-tight">{label}</p>
                   </div>
                 </div>
               ))}
@@ -105,8 +105,8 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Floating trust card — top right area */}
-      <div className="absolute top-8 left-[50%] lg:left-[50%] bg-white border border-border-warm rounded-lg px-4 py-3 shadow-[0_4px_24px_rgba(26,26,26,0.10)] flex items-center gap-3 z-10">
+      {/* Floating trust card — hidden on mobile to avoid overlapping content */}
+      <div className="hidden sm:flex absolute top-8 left-[52%] lg:left-[50%] bg-white border border-border-warm rounded-lg px-4 py-3 shadow-[0_4px_24px_rgba(26,26,26,0.10)] items-center gap-3 z-10">
         <div className="flex -space-x-1.5 flex-shrink-0">
           {TRUST_AVATARS.map((src, i) => (
             <img

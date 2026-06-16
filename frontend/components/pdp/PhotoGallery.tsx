@@ -284,7 +284,7 @@ export function PhotoGallery({ images, productName }: PhotoGalleryProps) {
     return (
       <>
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2 h-[340px]">
+          <div className="flex gap-2 h-[220px] sm:h-[300px] md:h-[340px]">
             <button
               type="button"
               onClick={() => setLightboxIndex(0)}
@@ -330,7 +330,7 @@ export function PhotoGallery({ images, productName }: PhotoGalleryProps) {
       <div className="flex flex-col gap-2">
 
         {/* Row 1: portrait left (flex-2) + landscape right (flex-3) */}
-        <div className="flex gap-2 h-[340px] md:h-[370px]">
+        <div className="flex gap-2 h-[220px] sm:h-[300px] md:h-[370px]">
           <button
             type="button"
             onClick={() => setLightboxIndex(0)}
@@ -364,7 +364,7 @@ export function PhotoGallery({ images, productName }: PhotoGalleryProps) {
         </div>
 
         {/* Row 2: two equal images, last has "Show all" overlay */}
-        <div className="flex gap-2 h-[200px] md:h-[220px]">
+        <div className="flex gap-2 h-[130px] sm:h-[170px] md:h-[220px]">
           <button
             type="button"
             onClick={() => setLightboxIndex(2)}

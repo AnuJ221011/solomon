@@ -154,7 +154,7 @@ export default function BrandsPage() {
           </p>
           <div className="flex flex-col sm:flex-row sm:items-end gap-6">
             <div className="flex-1">
-              <h1 className="font-playfair text-[36px] lg:text-[44px] font-[500] text-primary leading-[1.1]">
+              <h1 className="font-playfair text-[28px] sm:text-[36px] lg:text-[44px] font-[500] text-primary leading-[1.1]">
                 Discover India's Finest<br className="hidden sm:block" /> Artisan Brands
               </h1>
               {!isLoading && total > 0 && (

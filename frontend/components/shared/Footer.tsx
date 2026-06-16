@@ -82,13 +82,17 @@ function SocialLink({ href, label, children }: { href: string; label: string; ch
 export function Footer() {
   return (
     <footer className="bg-white border-t border-border-warm">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10 lg:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
 
           {/* Brand column */}
           <div className="sm:col-span-2 lg:col-span-2 flex flex-col">
-            <Link href="/" className="font-playfair text-[20px] font-[600] text-primary leading-none flex-shrink-0">
-              Solomon Bharat
+            <Link href="/" className="flex-shrink-0">
+              <img
+                src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781610033/solomon-logo1_bpjtco.png"
+                alt="Solomon Bharat"
+                className="h-8 w-auto object-contain block"
+              />
             </Link>
             <p className="font-public-sans text-[14px] leading-[1.6] text-muted-text mt-3 max-w-[260px]">
               Connecting India's finest artisan brands and manufacturers with global buyers.

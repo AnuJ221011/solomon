@@ -60,7 +60,7 @@ export function ProductGrid({
     <div className="flex flex-col gap-6">
       {/* Grid */}
       <div
-        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
         aria-label="Product results"
       >
         {products.length === 0 ? (

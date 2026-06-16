@@ -57,7 +57,7 @@ function toTypedProduct(p: ApiProduct): Product {
 
 function CatalogueLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="animate-pulse">
           <div className="aspect-square bg-muted-bg rounded mb-3" />
@@ -219,7 +219,7 @@ function CatalogueContent() {
         </Sheet>
 
         {/* ── Main content ──────────────────────────────────────────────────── */}
-        <div className="flex-1 px-6 lg:px-10 py-8 min-w-0">
+        <div className="flex-1 px-4 sm:px-6 lg:px-10 py-5 sm:py-8 min-w-0">
           {/* Top bar */}
           <div
             className={cn(

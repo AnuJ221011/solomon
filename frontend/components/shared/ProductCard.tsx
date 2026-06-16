@@ -146,7 +146,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
           type="button"
           aria-label="Save"
           onClick={(e) => e.preventDefault()}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150"
         >
           <Heart size={13} className="text-muted-text" />
         </button>
@@ -157,7 +157,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
           aria-label={added ? 'Added to cart' : 'Add to cart'}
           onClick={handleAddToCart}
           className={cn(
-            'absolute bottom-2 right-2 w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-colors duration-200',
+            'absolute bottom-2 right-2 w-8 h-8 rounded-full shadow-sm flex items-center justify-center transition-colors duration-200',
             added ? 'bg-green-500' : 'bg-white'
           )}
         >

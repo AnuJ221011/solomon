@@ -91,9 +91,9 @@ function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: strin
     <section className="border-t border-border-warm">
       <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full border border-border-warm flex-shrink-0 overflow-hidden bg-muted-bg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border border-border-warm flex-shrink-0 overflow-hidden bg-muted-bg">
               {brand?.logo ? (
                 <img src={brand.logo} alt={brandName} className="w-full h-full object-cover" />
               ) : (
@@ -114,26 +114,27 @@ function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: strin
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <Link
               href={`/brands/${brandSlug}`}
-              className="inline-flex items-center justify-center h-10 px-5 rounded bg-primary text-white font-public-sans text-[13px] font-[600] hover:bg-primary/90 transition-colors whitespace-nowrap"
+              className="inline-flex items-center justify-center h-10 px-4 sm:px-5 rounded bg-primary text-white font-public-sans text-[13px] font-[600] hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
               Shop all {brand?.productCount ? `${brand.productCount} ` : ''}products
             </Link>
             <button
               type="button"
               onClick={() => toast.info('Messaging coming soon')}
-              className="inline-flex items-center justify-center h-10 px-5 rounded border border-border-warm font-public-sans text-[13px] font-[600] text-primary hover:border-primary transition-colors gap-2 whitespace-nowrap"
+              className="inline-flex items-center justify-center h-10 px-4 sm:px-5 rounded border border-border-warm font-public-sans text-[13px] font-[600] text-primary hover:border-primary transition-colors gap-2 whitespace-nowrap"
             >
               <MessageCircle size={14} />
-              Message brand
+              <span className="hidden sm:inline">Message brand</span>
+              <span className="sm:hidden">Message</span>
             </button>
           </div>
         </div>
 
         {/* Products */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {others.map((p) => (
             <ProductCard key={p.slug} product={toTypedProduct(p)} />
           ))}
@@ -240,7 +241,7 @@ function ProductDetailInner({ slug }: { slug: string }) {
       <NavBar />
 
       <main className="flex-1">
-        <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-10">
+        <div className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-16 py-6 sm:py-10">
 
           {/* Breadcrumb */}
           <nav
