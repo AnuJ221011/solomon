@@ -68,7 +68,7 @@ function BrandCard({ brand }: { brand: Brand }) {
           <p className="font-playfair text-[18px] font-[500] text-primary leading-tight line-clamp-1">
             {name}
           </p>
-          <AchievementBadge level={achievementLevel} />
+          <AchievementBadge level={(Math.min(Math.max(achievementLevel, 1), 5) as 1 | 2 | 3 | 4 | 5)} />
         </div>
 
         {location && (

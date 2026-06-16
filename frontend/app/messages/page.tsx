@@ -5,68 +5,33 @@ import { Send, Search, MessageSquare } from 'lucide-react'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { cn } from '@/lib/utils'
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  type Conversation,
+  type Message,
+} from '@/hooks/queries/useMessages'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-interface Message {
-  id: string
-  senderId: 'me' | 'brand'
-  text: string
-  sentAt: string
+function formatTime(iso: string) {
+  const d = new Date(iso)
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000)
+  if (diffDays === 0) return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return d.toLocaleDateString('en-IN', { weekday: 'short' })
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
-interface Thread {
-  id: string
-  brandName: string
-  brandInitial: string
-  lastMessage: string
-  lastAt: string
-  unread: number
-  messages: Message[]
+function getDisplayName(conv: Conversation) {
+  return conv.partner.brandProfile?.brandName ?? conv.partner.name ?? 'Unknown'
 }
 
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-const INITIAL_THREADS: Thread[] = [
-  {
-    id: 'thread-1',
-    brandName: 'Jaipur Craft House',
-    brandInitial: 'J',
-    lastMessage: 'Sure, we can do a sample shipment of 10 units.',
-    lastAt: '10:32 AM',
-    unread: 2,
-    messages: [
-      { id: 'm1', senderId: 'me', text: 'Hi! I came across your block-print textiles and I\'m interested in placing a wholesale order. Could you share your price list?', sentAt: 'Yesterday, 4:15 PM' },
-      { id: 'm2', senderId: 'brand', text: 'Hello! Thank you for reaching out. We\'d love to work with you. Our wholesale price list is attached — MOQ is 50 units per design.', sentAt: 'Yesterday, 5:02 PM' },
-      { id: 'm3', senderId: 'me', text: 'Great, thank you. Is it possible to get a sample before committing to a full order?', sentAt: 'Today, 9:50 AM' },
-      { id: 'm4', senderId: 'brand', text: 'Sure, we can do a sample shipment of 10 units.', sentAt: 'Today, 10:32 AM' },
-    ],
-  },
-  {
-    id: 'thread-2',
-    brandName: 'Nilgiri Pottery Co.',
-    brandInitial: 'N',
-    lastMessage: 'Lead time is typically 3–4 weeks from order confirmation.',
-    lastAt: 'Yesterday',
-    unread: 0,
-    messages: [
-      { id: 'm5', senderId: 'me', text: 'Hello, what is your typical lead time for custom pottery orders?', sentAt: 'Mon, 2:00 PM' },
-      { id: 'm6', senderId: 'brand', text: 'Lead time is typically 3–4 weeks from order confirmation.', sentAt: 'Mon, 4:45 PM' },
-    ],
-  },
-  {
-    id: 'thread-3',
-    brandName: 'Dharavi Leather Works',
-    brandInitial: 'D',
-    lastMessage: 'We export to 20+ countries and handle all documentation.',
-    lastAt: 'Mon',
-    unread: 0,
-    messages: [
-      { id: 'm7', senderId: 'me', text: 'Do you handle export documentation for international orders?', sentAt: 'Sun, 11:00 AM' },
-      { id: 'm8', senderId: 'brand', text: 'We export to 20+ countries and handle all documentation.', sentAt: 'Sun, 1:30 PM' },
-    ],
-  },
-]
+function getInitial(name: string) {
+  return (name || '?').charAt(0).toUpperCase()
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -81,7 +46,16 @@ function BrandAvatar({ initial, size = 'md' }: { initial: string; size?: 'sm' | 
   )
 }
 
-function ThreadItem({ thread, active, onClick }: { thread: Thread; active: boolean; onClick: () => void }) {
+function ThreadItem({
+  conv,
+  active,
+  onClick,
+}: {
+  conv: Conversation
+  active: boolean
+  onClick: () => void
+}) {
+  const name = getDisplayName(conv)
   return (
     <button
       type="button"
@@ -91,17 +65,19 @@ function ThreadItem({ thread, active, onClick }: { thread: Thread; active: boole
         active ? 'bg-muted-bg' : 'hover:bg-muted-bg/60'
       )}
     >
-      <BrandAvatar initial={thread.brandInitial} />
+      <BrandAvatar initial={getInitial(name)} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-public-sans text-[13px] font-[600] text-primary truncate">{thread.brandName}</span>
-          <span className="font-public-sans text-[11px] text-muted-text flex-shrink-0">{thread.lastAt}</span>
+          <span className="font-public-sans text-[13px] font-[600] text-primary truncate">{name}</span>
+          <span className="font-public-sans text-[11px] text-muted-text flex-shrink-0">
+            {conv.lastAt ? formatTime(conv.lastAt) : ''}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className="font-public-sans text-[12px] text-muted-text truncate">{thread.lastMessage}</p>
-          {thread.unread > 0 && (
+          <p className="font-public-sans text-[12px] text-muted-text truncate">{conv.lastMessage}</p>
+          {conv.unreadCount > 0 && (
             <span className="flex-shrink-0 w-4 h-4 rounded-full bg-accent text-white text-[10px] font-[700] flex items-center justify-center">
-              {thread.unread}
+              {conv.unreadCount}
             </span>
           )}
         </div>
@@ -110,8 +86,8 @@ function ThreadItem({ thread, active, onClick }: { thread: Thread; active: boole
   )
 }
 
-function ChatBubble({ message }: { message: Message }) {
-  const isMe = message.senderId === 'me'
+function ChatBubble({ message, myId }: { message: Message; myId: string }) {
+  const isMe = message.senderId === myId
   return (
     <div className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
       <div className="max-w-[72%]">
@@ -121,10 +97,10 @@ function ChatBubble({ message }: { message: Message }) {
             ? 'bg-primary text-white rounded-br-sm'
             : 'bg-surface border border-border-warm text-primary rounded-bl-sm'
         )}>
-          {message.text}
+          {message.content}
         </div>
         <p className={cn('font-public-sans text-[11px] text-muted-text mt-1', isMe ? 'text-right' : 'text-left')}>
-          {message.sentAt}
+          {formatTime(message.createdAt)}
         </p>
       </div>
     </div>
@@ -134,47 +110,38 @@ function ChatBubble({ message }: { message: Message }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MessagesPage() {
-  const [threads, setThreads] = useState<Thread[]>(INITIAL_THREADS)
-  const [activeId, setActiveId] = useState<string>(INITIAL_THREADS[0].id)
+  const user = useAuthStore((s) => s.user)
+  const [activePartnerId, setActivePartnerId] = useState<string | null>(null)
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
-  const user = useAuthStore((s) => s.user)
 
-  const activeThread = threads.find((t) => t.id === activeId)!
+  const { data: conversations = [], isLoading: convsLoading } = useConversations()
+  const { data: messages = [], isLoading: msgsLoading } = useMessages(activePartnerId)
+  const sendMessage = useSendMessage()
 
-  const filteredThreads = search
-    ? threads.filter((t) => t.brandName.toLowerCase().includes(search.toLowerCase()))
-    : threads
+  const activeConv = conversations.find((c) => c.partnerId === activePartnerId)
+  const displayName = activeConv ? getDisplayName(activeConv) : ''
+
+  const filtered = search
+    ? conversations.filter((c) => getDisplayName(c).toLowerCase().includes(search.toLowerCase()))
+    : conversations
+
+  useEffect(() => {
+    if (!activePartnerId && conversations.length > 0) {
+      setActivePartnerId(conversations[0].partnerId)
+    }
+  }, [conversations, activePartnerId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [activeId, activeThread?.messages.length])
+  }, [messages.length, activePartnerId])
 
   function handleSend() {
-    const text = input.trim()
-    if (!text) return
-
-    const newMsg: Message = {
-      id: `m-${Date.now()}`,
-      senderId: 'me',
-      text,
-      sentAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-    }
-
-    setThreads((prev) =>
-      prev.map((t) =>
-        t.id === activeId
-          ? { ...t, messages: [...t.messages, newMsg], lastMessage: text, lastAt: 'Just now', unread: 0 }
-          : t
-      )
-    )
+    const content = input.trim()
+    if (!content || !activePartnerId) return
+    sendMessage.mutate({ recipientId: activePartnerId, content })
     setInput('')
-  }
-
-  function handleSelect(id: string) {
-    setActiveId(id)
-    setThreads((prev) => prev.map((t) => t.id === id ? { ...t, unread: 0 } : t))
   }
 
   return (
@@ -186,12 +153,12 @@ export default function MessagesPage() {
         </p>
       </div>
 
-      {/* Two-pane layout */}
-      <div className="border border-border-warm rounded overflow-hidden flex" style={{ height: 'calc(100vh - 280px)', minHeight: '520px' }}>
-
+      <div
+        className="border border-border-warm rounded overflow-hidden flex"
+        style={{ height: 'calc(100vh - 280px)', minHeight: '520px' }}
+      >
         {/* Left — thread list */}
         <div className="w-[300px] flex-shrink-0 border-r border-border-warm flex flex-col">
-          {/* Search */}
           <div className="px-3 py-3 border-b border-border-warm">
             <div className="relative">
               <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" aria-hidden="true" />
@@ -205,72 +172,101 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          {/* Threads */}
           <div className="flex-1 overflow-y-auto">
-            {filteredThreads.length === 0 ? (
-              <p className="px-4 py-8 text-center font-public-sans text-[13px] text-muted-text">No conversations found.</p>
-            ) : (
-              filteredThreads.map((t) => (
-                <ThreadItem
-                  key={t.id}
-                  thread={t}
-                  active={t.id === activeId}
-                  onClick={() => handleSelect(t.id)}
-                />
+            {convsLoading && (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex gap-3 px-4 py-3.5 border-b border-border-warm animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-muted-bg flex-shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-3 bg-muted-bg rounded w-2/3" />
+                    <div className="h-3 bg-muted-bg rounded w-full" />
+                  </div>
+                </div>
               ))
             )}
+            {!convsLoading && filtered.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
+                <MessageSquare size={24} className="text-muted-text mb-2" aria-hidden="true" />
+                <p className="font-public-sans text-[13px] text-muted-text">
+                  {search ? 'No conversations found.' : 'No conversations yet.'}
+                </p>
+              </div>
+            )}
+            {filtered.map((conv) => (
+              <ThreadItem
+                key={conv.partnerId}
+                conv={conv}
+                active={conv.partnerId === activePartnerId}
+                onClick={() => setActivePartnerId(conv.partnerId)}
+              />
+            ))}
           </div>
         </div>
 
         {/* Right — active conversation */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Thread header */}
-          <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-warm bg-surface flex-shrink-0">
-            <BrandAvatar initial={activeThread.brandInitial} size="sm" />
-            <div>
-              <p className="font-public-sans text-[13px] font-[600] text-primary">{activeThread.brandName}</p>
-              <p className="font-public-sans text-[11px] text-muted-text">Verified supplier</p>
+        {!activeConv ? (
+          <div className="flex-1 flex items-center justify-center font-public-sans text-[14px] text-muted-text">
+            {convsLoading ? 'Loading…' : 'Select a conversation'}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-warm bg-surface flex-shrink-0">
+              <BrandAvatar initial={getInitial(displayName)} size="sm" />
+              <div>
+                <p className="font-public-sans text-[13px] font-[600] text-primary">{displayName}</p>
+                <p className="font-public-sans text-[11px] text-muted-text">Verified supplier</p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-4 bg-bg">
+              {msgsLoading && (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                </div>
+              )}
+              {!msgsLoading && messages.length === 0 && (
+                <p className="text-center font-public-sans text-[13px] text-muted-text pt-8">
+                  No messages yet. Start the conversation below.
+                </p>
+              )}
+              {!msgsLoading && messages.map((msg) => (
+                <ChatBubble key={msg.id} message={msg} myId={user?.id ?? ''} />
+              ))}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input */}
+            <div className="border-t border-border-warm px-4 py-3 bg-white flex-shrink-0">
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+                  }}
+                  placeholder={`Message ${displayName}…`}
+                  rows={1}
+                  className="flex-1 resize-none rounded border border-border-warm bg-muted-bg px-3 py-2 font-public-sans text-[13px] text-primary placeholder:text-muted-text/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors leading-[1.5] max-h-[120px]"
+                  style={{ fieldSizing: 'content' } as React.CSSProperties}
+                />
+                <button
+                  type="button"
+                  onClick={handleSend}
+                  disabled={!input.trim() || sendMessage.isPending}
+                  aria-label="Send message"
+                  className="w-9 h-9 flex-shrink-0 rounded bg-primary text-white flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send size={14} aria-hidden="true" />
+                </button>
+              </div>
+              <p className="font-public-sans text-[11px] text-muted-text/60 mt-1.5">
+                Press Enter to send · Shift+Enter for new line
+              </p>
             </div>
           </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-4 bg-bg">
-            {activeThread.messages.map((msg) => (
-              <ChatBubble key={msg.id} message={msg} />
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input */}
-          <div className="border-t border-border-warm px-4 py-3 bg-white flex-shrink-0">
-            <div className="flex items-end gap-2">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-                }}
-                placeholder={`Message ${activeThread.brandName}…`}
-                rows={1}
-                className="flex-1 resize-none rounded border border-border-warm bg-muted-bg px-3 py-2 font-public-sans text-[13px] text-primary placeholder:text-muted-text/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors leading-[1.5] max-h-[120px]"
-                style={{ fieldSizing: 'content' } as React.CSSProperties}
-              />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={!input.trim()}
-                aria-label="Send message"
-                className="w-9 h-9 flex-shrink-0 rounded bg-primary text-white flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <Send size={14} aria-hidden="true" />
-              </button>
-            </div>
-            <p className="font-public-sans text-[11px] text-muted-text/60 mt-1.5">
-              Press Enter to send · Shift+Enter for new line
-            </p>
-          </div>
-        </div>
-
+        )}
       </div>
     </AccountPageWrapper>
   )

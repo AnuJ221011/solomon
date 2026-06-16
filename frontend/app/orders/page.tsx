@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle, Circle, Download, AlertTriangle } from 'lucide-react'
+import { CheckCircle, Circle, Download, AlertTriangle, RotateCcw } from 'lucide-react'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useMyOrders, useOrder } from '@/hooks/queries/useOrders'
 import { useFormatPrice } from '@/components/ui/Price'
+import { useRequestReturn } from '@/hooks/queries/useReturns'
 import type { Order, OrderStatus } from '@/hooks/queries/useOrders'
 
 type FilterTab = 'All' | 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'DISPUTED'
@@ -56,6 +57,46 @@ function SkeletonRow() {
   )
 }
 
+function ReturnForm({ orderId, onDone }: { orderId: string; onDone: () => void }) {
+  const [reason, setReason] = useState('')
+  const requestReturn = useRequestReturn()
+
+  function handleSubmit() {
+    if (reason.trim().length < 10) return
+    requestReturn.mutate({ orderId, reason: reason.trim() }, { onSuccess: onDone })
+  }
+
+  return (
+    <div className="space-y-3 bg-muted-bg/40 border border-border-warm rounded p-4">
+      <p className="text-[13px] font-[600] font-public-sans text-primary">Request a Return</p>
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Describe the reason for your return (min 10 characters)"
+        rows={3}
+        className={cn(
+          'w-full resize-none rounded border border-border-warm bg-surface px-3 py-2',
+          'font-public-sans text-[13px] text-primary placeholder:text-muted-text',
+          'focus:outline-none focus:border-primary/40 transition-colors'
+        )}
+      />
+      <div className="flex gap-2">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleSubmit}
+          disabled={reason.trim().length < 10 || requestReturn.isPending}
+        >
+          {requestReturn.isPending ? 'Submitting…' : 'Submit Request'}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDone} disabled={requestReturn.isPending}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function OrderDetailSheet({
   orderId,
   open,
@@ -65,6 +106,7 @@ function OrderDetailSheet({
   open: boolean
   onClose: () => void
 }) {
+  const [showReturnForm, setShowReturnForm] = useState(false)
   const fmt = useFormatPrice()
   const { data: order, isLoading } = useOrder(orderId)
 
@@ -73,7 +115,7 @@ function OrderDetailSheet({
     order?.status === 'CANCELLED' || order?.status === 'DISPUTED'
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) { onClose(); setShowReturnForm(false) } }}>
       <SheetContent side="right" className="overflow-y-auto flex flex-col">
         <SheetHeader>
           <SheetTitle>
@@ -235,15 +277,35 @@ function OrderDetailSheet({
                 </section>
               )}
 
-              <div className="flex gap-3 pt-2">
-                <Button variant="ghost" size="sm" className="gap-1.5" disabled title="Coming soon">
-                  <Download size={13} aria-hidden="true" />
-                  Invoice
-                </Button>
-                {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-                  <Button variant="destructive" size="sm">
-                    Report Issue
+              <div className="space-y-3 pt-2">
+                <div className="flex gap-3">
+                  <Button variant="ghost" size="sm" className="gap-1.5" disabled title="Coming soon">
+                    <Download size={13} aria-hidden="true" />
+                    Invoice
                   </Button>
+                  {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                    <Button variant="destructive" size="sm">
+                      Report Issue
+                    </Button>
+                  )}
+                  {order.status === 'DELIVERED' && !showReturnForm && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setShowReturnForm(true)}
+                    >
+                      <RotateCcw size={13} aria-hidden="true" />
+                      Request Return
+                    </Button>
+                  )}
+                </div>
+
+                {order.status === 'DELIVERED' && showReturnForm && (
+                  <ReturnForm
+                    orderId={order.id}
+                    onDone={() => setShowReturnForm(false)}
+                  />
                 )}
               </div>
             </>

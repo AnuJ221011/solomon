@@ -30,8 +30,11 @@ export interface Brand {
 
 export interface BrandDashboardStats {
   gmvThisMonth: number
+  gmvLastMonth: number
   ordersThisMonth: number
+  ordersLastMonth: number
   avgOrderValue: number
+  pendingPayoutInr: number
   commissionSaved: number
   totalOrders: number
   avgRating: number
@@ -167,28 +170,60 @@ export function useBrandMinimums(slugs: string[]): Record<string, number> {
 
 /**
  * Fetch the authenticated brand's dashboard stats + recent orders.
+ * Makes two parallel requests: dashboard stats and the 5 most recent orders.
  */
 export function useMyBrandDashboard() {
   return useQuery<BrandDashboard>({
     queryKey: ['brand-dashboard'],
     queryFn: async () => {
-      const response = await api.get('/brands/me/dashboard')
+      const [dashRes, ordersRes] = await Promise.all([
+        api.get('/brands/me/dashboard'),
+        api.get('/orders/brand', { params: { limit: 5 } }),
+      ])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const d: any = response.data.data
-      const gmvThis = d.gmvThisMonthInr ?? 0
-      const gmvLast = d.gmvLastMonthInr ?? 0
-      const orders  = d.ordersThisMonth ?? 0
-      const avgOrder = orders > 0 ? Math.round(gmvThis / orders) : 0
+      const d: any = dashRes.data.data
+      const gmvThis   = d.gmvThisMonthInr ?? 0
+      const gmvLast   = d.gmvLastMonthInr ?? 0
+      const orders    = d.ordersThisMonth ?? 0
+      const ordersLast = d.ordersLastMonth ?? 0
+      const avgOrder  = orders > 0 ? Math.round(gmvThis / orders) : 0
+
+      // Commission saved = sum of commissionSavedInr across all active share links
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const commissionSaved = (d.shareLinks ?? []).reduce(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (sum: number, link: any) => sum + (link.commissionSavedInr ?? 0),
+        0
+      )
+
+      const ordersPayload = ordersRes.data.data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rawRecent: any[] = ordersPayload?.orders ?? ordersPayload ?? []
+      // Normalise field names to match the Order interface (totalInr → amount, nested buyer → buyerName)
+      const recentOrders = rawRecent.map((raw) => ({
+        id: raw.id,
+        orderNumber: raw.orderNumber,
+        buyerName: raw.buyer?.buyerProfile?.businessName ?? raw.buyer?.name ?? raw.buyerName ?? '',
+        status: raw.status,
+        amount: raw.totalInr ?? raw.amount ?? 0,
+        currency: raw.buyerCurrency ?? 'INR',
+        createdAt: raw.createdAt,
+        trackingNumber: raw.trackingNumber ?? undefined,
+      }))
+
       return {
         stats: {
           gmvThisMonth:    gmvThis,
+          gmvLastMonth:    gmvLast,
           ordersThisMonth: orders,
+          ordersLastMonth: ordersLast,
           avgOrderValue:   avgOrder,
-          commissionSaved: d.pendingPayoutInr ?? 0,
+          pendingPayoutInr: d.pendingPayoutInr ?? 0,
+          commissionSaved,
           totalOrders:     d.confirmedOrderCount ?? 0,
           avgRating:       d.avgRating ?? 0,
         },
-        recentOrders: d.recentOrders ?? [],
+        recentOrders,
         achievement: d.achievement ?? null,
       }
     },

@@ -1,13 +1,15 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Clock, Truck } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/shared/DataTable'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { AchievementProgressBar } from '@/components/shared/AchievementProgressBar'
 import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
 import { useAchievementProgress } from '@/hooks/queries/useAchievements'
+import api from '@/lib/api'
 import type { OrderStatus, AchievementCriteria } from '@/types'
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -53,14 +55,7 @@ function StatCardSkeleton() {
 
 // ─── Table columns ────────────────────────────────────────────────────────────
 
-type OrderRow = {
-  id: string
-  orderNumber: string
-  buyerName: string
-  status: OrderStatus
-  amount: number
-  createdAt: string
-}
+// Brand orders API returns totalInr (not amount) and buyer as a nested object
 
 const ORDER_COLUMNS = [
   {
@@ -71,14 +66,21 @@ const ORDER_COLUMNS = [
       <span className="font-[500] text-[14px] tabular-nums">{String(val)}</span>
     ),
   },
-  { key: 'buyerName', label: 'Buyer', sortable: true },
+  {
+    key: 'buyer',
+    label: 'Buyer',
+    render: (val: unknown) => {
+      const b = val as { name?: string; buyerProfile?: { businessName?: string } } | null
+      return <span className="text-[14px]">{b?.buyerProfile?.businessName ?? b?.name ?? '—'}</span>
+    },
+  },
   {
     key: 'status',
     label: 'Status',
     render: (val: unknown) => <StatusBadge status={val as OrderStatus} />,
   },
   {
-    key: 'amount',
+    key: 'totalInr',
     label: 'Amount',
     sortable: true,
     render: (val: unknown) => (
@@ -111,6 +113,16 @@ function EmptyOrders() {
   )
 }
 
+// ─── Trend helpers ────────────────────────────────────────────────────────────
+
+function momTrend(current: number, prev: number): { label: string; up: boolean; neutral: boolean } {
+  if (prev === 0 && current === 0) return { label: 'No data yet', up: false, neutral: true }
+  if (prev === 0) return { label: 'New this period', up: true, neutral: false }
+  const pct = ((current - prev) / prev) * 100
+  const sign = pct >= 0 ? '+' : ''
+  return { label: `${sign}${pct.toFixed(0)}% vs last month`, up: pct >= 0, neutral: false }
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PortalOverviewPage() {
@@ -119,6 +131,31 @@ export default function PortalOverviewPage() {
 
   const stats = dashboard?.stats
   const recentOrders = dashboard?.recentOrders ?? []
+
+  const gmvTrend    = momTrend(stats?.gmvThisMonth ?? 0, stats?.gmvLastMonth ?? 0)
+  const ordersTrend = momTrend(stats?.ordersThisMonth ?? 0, stats?.ordersLastMonth ?? 0)
+
+  const { data: pendingCount = 0 } = useQuery<number>({
+    queryKey: ['brand-orders-count', 'PENDING'],
+    queryFn: async () => {
+      const r = await api.get('/orders/brand', { params: { status: 'PENDING', limit: 1 } })
+      const payload = r.data.data
+      return r.data.meta?.total ?? payload?.total ?? (payload?.orders ?? payload ?? []).length
+    },
+    staleTime: 60 * 1000,
+  })
+
+  const { data: confirmedCount = 0 } = useQuery<number>({
+    queryKey: ['brand-orders-count', 'CONFIRMED'],
+    queryFn: async () => {
+      const r = await api.get('/orders/brand', { params: { status: 'CONFIRMED', limit: 1 } })
+      const payload = r.data.data
+      return r.data.meta?.total ?? payload?.total ?? (payload?.orders ?? payload ?? []).length
+    },
+    staleTime: 60 * 1000,
+  })
+
+  const hasActions = pendingCount > 0 || confirmedCount > 0
 
   return (
     <div>
@@ -129,8 +166,8 @@ export default function PortalOverviewPage() {
 
       {/* Stat cards */}
       {dashLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {Array.from({ length: 5 }).map((_, i) => (
             <StatCardSkeleton key={i} />
           ))}
         </div>
@@ -139,18 +176,20 @@ export default function PortalOverviewPage() {
           <p className="text-[14px] font-public-sans text-error">Failed to load dashboard stats.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <StatCard
             label="GMV This Month"
             value={`₹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
-            trend="this month"
-            trendNeutral
+            trend={gmvTrend.label}
+            trendUp={gmvTrend.up}
+            trendNeutral={gmvTrend.neutral}
           />
           <StatCard
             label="Orders"
             value={String(stats?.ordersThisMonth ?? 0)}
-            trend="this month"
-            trendNeutral
+            trend={ordersTrend.label}
+            trendUp={ordersTrend.up}
+            trendNeutral={ordersTrend.neutral}
           />
           <StatCard
             label="Avg Order Value"
@@ -159,12 +198,54 @@ export default function PortalOverviewPage() {
             trendNeutral
           />
           <StatCard
-            label="Commission Saved"
-            value={`₹${(stats?.commissionSaved ?? 0).toLocaleString('en-IN')}`}
-            trend="via Share Links"
+            label="Pending Payout"
+            value={`₹${(stats?.pendingPayoutInr ?? 0).toLocaleString('en-IN')}`}
+            trend="awaiting settlement"
+            trendNeutral
+          />
+          <StatCard
+            label="Avg Rating"
+            value={(stats?.avgRating ?? 0) > 0 ? (stats!.avgRating).toFixed(1) : '—'}
+            trend="out of 5.0"
             trendNeutral
           />
         </div>
+      )}
+
+      {/* Pending actions */}
+      {hasActions && (
+        <section className="mb-8">
+          <div className="border border-amber-200 bg-amber-50/60 rounded divide-y divide-amber-100">
+            {pendingCount > 0 && (
+              <div className="flex items-center justify-between px-5 py-3.5 gap-4">
+                <div className="flex items-center gap-3">
+                  <Clock size={15} className="text-amber-500 flex-shrink-0" aria-hidden="true" />
+                  <p className="font-public-sans text-[14px] font-[600] text-primary">
+                    {pendingCount} order{pendingCount !== 1 ? 's' : ''}{' '}
+                    <span className="font-[400] text-muted-text">awaiting your confirmation</span>
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" asChild className="flex-shrink-0 text-amber-700 hover:text-amber-800 hover:bg-amber-100">
+                  <Link href="/portal/orders">Review →</Link>
+                </Button>
+              </div>
+            )}
+            {confirmedCount > 0 && (
+              <div className="flex items-center justify-between px-5 py-3.5 gap-4">
+                <div className="flex items-center gap-3">
+                  <Truck size={15} className="text-amber-500 flex-shrink-0" aria-hidden="true" />
+                  <p className="font-public-sans text-[14px] font-[600] text-primary">
+                    {confirmedCount} order{confirmedCount !== 1 ? 's' : ''}{' '}
+                    <span className="font-[400] text-muted-text">confirmed and ready to dispatch</span>
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" asChild className="flex-shrink-0 text-amber-700 hover:text-amber-800 hover:bg-amber-100">
+                  <Link href="/portal/orders">Dispatch →</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Recent orders */}
