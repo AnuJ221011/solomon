@@ -11,7 +11,7 @@ export function RetailerHighlightSection() {
           <div className="hidden md:block w-[260px] lg:w-[320px] flex-shrink-0">
             <div className="relative h-[300px] lg:h-[360px] rounded-t overflow-hidden">
               <Image
-                src="https://picsum.photos/seed/indian-crafts-flat/640/720"
+                src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781611195/img2_ufqsb5.webp"
                 alt="Artisan products"
                 fill
                 sizes="320px"
@@ -41,7 +41,7 @@ export function RetailerHighlightSection() {
           <div className="hidden md:block w-[260px] lg:w-[320px] flex-shrink-0">
             <div className="relative h-[300px] lg:h-[360px] rounded-t overflow-hidden">
               <Image
-                src="https://picsum.photos/seed/boutique-owner-shelf/640/720"
+                src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781611195/img1_szdvos.webp"
                 alt="Retailer in store"
                 fill
                 sizes="320px"

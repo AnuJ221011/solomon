@@ -791,16 +791,13 @@ export function NavBar({ transparent = false }: NavBarProps) {
         <div className="h-16">
           <div className="max-w-7xl mx-auto px-4 h-full flex items-center gap-3">
 
-            {/* Wordmark */}
-            <Link
-              href="/"
-              aria-label="Solomon Bharat — home"
-              className={cn(
-                'font-playfair text-[22px] font-[600] leading-none flex-shrink-0 transition-colors duration-300',
-                ghost ? 'text-white' : 'text-primary'
-              )}
-            >
-              Solomon Bharat
+            {/* Logo */}
+            <Link href="/" aria-label="Solomon Bharat — home" className="flex-shrink-0 flex items-center self-stretch">
+              <img
+                src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781610714/solomon-logo1_inmwov.png"
+                alt="Solomon Bharat"
+                className={cn('h-20 w-auto object-contain block', ghost && 'brightness-0 invert')}
+              />
             </Link>
 
             {/* All categories + Brands buttons — desktop only, authenticated only */}

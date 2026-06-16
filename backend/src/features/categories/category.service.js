@@ -36,16 +36,13 @@ export const getCategoryTree = async ({ includeInactive = false } = {}) => {
     where: { level: 1, ...activeFilter },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     include: {
-      attributes: { orderBy: { sortOrder: 'asc' } },
       children: {
         where: activeFilter,
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         include: {
-          attributes: { orderBy: { sortOrder: 'asc' } },
           children: {
             where: activeFilter,
             orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-            include: { attributes: { orderBy: { sortOrder: 'asc' } } },
           },
         },
       },

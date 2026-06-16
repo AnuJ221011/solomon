@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ArrowLeft, Check, Eye, EyeOff, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/select'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
+import { useCategoryTree } from '@/hooks/queries/useCategories'
+import type { CategoryL1 } from '@/hooks/queries/useCategories'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TOTAL_STEPS = 9
 
-const PRODUCT_CATEGORIES = [
+const PRODUCT_CATEGORIES_FALLBACK = [
   'Textiles', 'Home Decor', 'Jewellery', 'Accessories', 'Apparel',
   'Food & Wellness', 'Art & Craft', 'Stationery', 'Other',
 ]
@@ -434,7 +436,18 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [categoryOptions, setCategoryOptions] = useState<string[]>(PRODUCT_CATEGORIES)
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(PRODUCT_CATEGORIES_FALLBACK)
+
+  const { data: categoryTree = [] } = useCategoryTree()
+  useEffect(() => {
+    const apiNames = (categoryTree as CategoryL1[]).map((l1) => l1.name)
+    if (apiNames.length > 0) {
+      setCategoryOptions((prev) => {
+        const custom = prev.filter((c) => !PRODUCT_CATEGORIES_FALLBACK.includes(c))
+        return [...apiNames, ...custom]
+      })
+    }
+  }, [categoryTree])
   const [newCategoryInput, setNewCategoryInput] = useState('')
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
   const newCategoryRef = useRef<HTMLInputElement>(null)
