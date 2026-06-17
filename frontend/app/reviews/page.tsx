@@ -214,15 +214,7 @@ export default function ReviewsPage() {
   const orders: Order[] = data?.orders ?? []
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Reviews
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Share your experience with delivered orders
-        </p>
-      </div>
+    <AccountPageWrapper title="Reviews" description="Share your experience with delivered orders">
 
       {isLoading && (
         <div className="space-y-3">

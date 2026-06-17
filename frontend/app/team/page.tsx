@@ -6,15 +6,7 @@ import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 
 export default function TeamPage() {
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Team &amp; Permissions
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Manage who has access to your Solomon Bharat account
-        </p>
-      </div>
+    <AccountPageWrapper title="Team & Permissions" description="Manage who has access to your Solomon Bharat account">
 
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="w-14 h-14 rounded-full bg-muted-bg flex items-center justify-center mb-4">

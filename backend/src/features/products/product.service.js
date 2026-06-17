@@ -20,6 +20,7 @@ export const createProduct = async (userId, data) => {
 
 export const updateProduct = async (userId, productId, data) => {
   const product = await getOwnedProduct(userId, productId);
+  if (data.categories?.length) await validateCategories(data.categories);
   return prisma.product.update({
     where: { id: product.id },
     data,

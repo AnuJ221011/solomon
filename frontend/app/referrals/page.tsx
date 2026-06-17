@@ -94,15 +94,7 @@ export default function ReferralsPage() {
   const currentMonth = new Date().toLocaleString('en-US', { month: 'long' })
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Referral Hub
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Invite brands to join Solomon Bharat and earn store credit.
-        </p>
-      </div>
+    <AccountPageWrapper title="Referral Hub" description="Invite brands to join Solomon Bharat and earn store credit.">
 
       <div className="bg-surface border border-border-warm rounded p-6 mb-6">
         <p className="text-[16px] font-[400] font-public-sans text-primary leading-relaxed mb-4">

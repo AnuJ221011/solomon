@@ -7,10 +7,40 @@ const BONUS_INR = 500;
 const CREDIT_EXPIRY_MONTHS = 12;
 const BONUS_WINDOW_DAYS = 90;
 
-export const getReferralLink = async (userId) => {
-  const referral = await prisma.buyerReferral.findFirst({ where: { referrerUserId: userId } });
-  // Return existing token or explain usage — actual unique link is /signup?ref=<token>
-  return referral?.token ?? null;
+export const getReferralStats = async (userId) => {
+  // Get or auto-create the buyer's personal referral token (null referredBrandId = master token row)
+  let master = await prisma.buyerReferral.findFirst({
+    where: { referrerUserId: userId, referredBrandId: null },
+  });
+  if (!master) {
+    master = await prisma.buyerReferral.create({ data: { referrerUserId: userId } });
+  }
+
+  const baseUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  const referralLink = `${baseUrl}/apply?ref=${master.token}`;
+
+  // All referrals that were actually used (brand signed up)
+  const used = await prisma.buyerReferral.findMany({
+    where: { referrerUserId: userId, referredBrandId: { not: null } },
+    include: {
+      referredBrand: {
+        select: { user: { select: { email: true } } },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return {
+    referralLink,
+    totalReferrals: used.length,
+    pendingCount: used.filter((r) => !r.rewardIssued).length,
+    referrals: used.map((r) => ({
+      id: r.id,
+      referredEmail: r.referredBrand?.user?.email ?? null,
+      status: r.rewardIssued ? 'CONVERTED' : 'PENDING',
+      createdAt: r.createdAt,
+    })),
+  };
 };
 
 export const recordReferralSignup = async (referralToken, newBrandId) => {
@@ -141,12 +171,13 @@ export const getLeaderboard = async (requestingUserId) => {
   const percentile = myRank ? Math.round((1 - myRank / totalBuyers) * 100) : null;
 
   return {
-    leaderboard: enriched,
-    myStats: {
-      rank: myRank,
-      referrals: myCount,
-      percentile,
-      summary: myRank ? `You've referred ${myCount} brand${myCount !== 1 ? 's' : ''} — top ${100 - percentile}% of buyers this month` : null,
-    },
+    rank: myRank,
+    total: totalBuyers,
+    leaderboard: enriched.map((e) => ({
+      rank: e.rank,
+      name: e.name,
+      count: e.referrals,
+      isCurrentUser: e.userId === requestingUserId,
+    })),
   };
 };

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Search, Menu, X, ChevronDown, LogOut, User as UserIcon, ShoppingCart, Bell, LayoutGrid, Globe, Package, FileText, MessageSquare, Star, Heart, Puzzle, Users, Settings as SettingsIcon, ExternalLink, Wallet } from 'lucide-react'
+import { Search, Menu, X, ChevronDown, LogOut, User as UserIcon, ShoppingCart, Bell, LayoutGrid, Globe, Package, FileText, MessageSquare, Star, Heart, Puzzle, Users, Settings as SettingsIcon, ExternalLink, Gift } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
@@ -39,6 +39,7 @@ const BUYER_NAV_ITEMS = [
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/reviews', label: 'Reviews', icon: Star },
   { href: '/saved', label: 'Saved', icon: Heart },
+  { href: '/referrals', label: 'Refer a Brand', icon: Gift },
   { href: '/integrations', label: 'Integrations', icon: Puzzle },
   { href: '/team', label: 'Team & permissions', icon: Users },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
@@ -558,24 +559,6 @@ function UserDropdown() {
             ))}
           </div>
 
-          {/* Store credit */}
-          <div className="border-t border-border-warm px-4 py-3 flex items-center justify-between gap-3">
-            <Link
-              href="/wallet"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 text-[13px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors"
-            >
-              <Wallet size={13} aria-hidden="true" />
-              Store credit
-            </Link>
-            <Link
-              href="/referrals"
-              onClick={() => setOpen(false)}
-              className="text-[12px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors whitespace-nowrap"
-            >
-              Refer brands →
-            </Link>
-          </div>
 
           {/* Help + sign out */}
           <div className="border-t border-border-warm py-1">

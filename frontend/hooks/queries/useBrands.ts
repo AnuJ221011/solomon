@@ -14,6 +14,7 @@ export interface BrandCollection {
 
 export interface Brand {
   id: string
+  userId?: string
   name: string
   slug: string
   logo?: string
@@ -81,6 +82,7 @@ const ACHIEVEMENT_MAP: Record<string, 1 | 2 | 3 | 4 | 5> = {
 function normaliseBrand(raw: any): Brand {
   return {
     id: raw.id,
+    userId: raw.userId ?? undefined,
     name: raw.name ?? raw.brandName ?? '',
     slug: raw.slug,
     logo: raw.logo ?? raw.logoUrl ?? undefined,

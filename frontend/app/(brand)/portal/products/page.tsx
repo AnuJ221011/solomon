@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Plus, Upload, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useMyProducts } from '@/hooks/queries/useProducts'
@@ -79,18 +79,20 @@ export default function ProductsPage() {
           Products
         </h1>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-            <Link href="/portal/products/import">
-              <Upload size={14} aria-hidden="true" />
-              Import from Shopify
-            </Link>
-          </Button>
-          <Button size="sm" className="gap-1.5" asChild>
-            <Link href="/portal/products/new">
-              <Plus size={14} aria-hidden="true" />
-              Add Product
-            </Link>
-          </Button>
+          <Link
+            href="/portal/products/import"
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5')}
+          >
+            <Upload size={14} aria-hidden="true" />
+            Import from Shopify
+          </Link>
+          <Link
+            href="/portal/products/new"
+            className={cn(buttonVariants({ variant: 'primary', size: 'sm' }), 'gap-1.5')}
+          >
+            <Plus size={14} aria-hidden="true" />
+            Add Product
+          </Link>
         </div>
       </div>
 

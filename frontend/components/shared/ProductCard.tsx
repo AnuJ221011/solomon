@@ -10,6 +10,7 @@ import { Price, useFormatPrice } from '@/components/ui/Price'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { toast } from 'sonner'
+import { useSaved, useSaveProduct, useUnsaveProduct } from '@/hooks/queries/useBuyerDashboard'
 
 interface ProductCardProps {
   product: Product
@@ -77,8 +78,30 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
   const fmt = useFormatPrice()
   const addItem = useCartStore((s) => s.addItem)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const user = useAuthStore((s) => s.user)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
   const [added, setAdded] = useState(false)
+
+  const isBuyer = isAuthenticated && user?.role === 'BUYER'
+  const { data: saved } = useSaved({ enabled: isBuyer })
+  const isSaved = saved?.products?.some((p) => p.id === id) ?? false
+  const saveProduct = useSaveProduct()
+  const unsaveProduct = useUnsaveProduct()
+
+  function handleToggleSave(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isAuthenticated) {
+      openAuthModal('login')
+      return
+    }
+    if (isSaved) {
+      unsaveProduct.mutate(id)
+    } else {
+      saveProduct.mutate(id)
+      toast.success('Saved', { description: name, duration: 2000 })
+    }
+  }
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -144,11 +167,19 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
         {/* Heart — top right */}
         <button
           type="button"
-          aria-label="Save"
-          onClick={(e) => e.preventDefault()}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150"
+          aria-label={isSaved ? 'Remove from saved' : 'Save product'}
+          onClick={handleToggleSave}
+          disabled={saveProduct.isPending || unsaveProduct.isPending}
+          className={cn(
+            'absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm transition-all duration-150 disabled:opacity-60',
+            isSaved ? 'opacity-100' : 'sm:opacity-0 sm:group-hover:opacity-100'
+          )}
         >
-          <Heart size={13} className="text-muted-text" />
+          <Heart
+            size={13}
+            className={isSaved ? 'text-rose-500' : 'text-muted-text'}
+            fill={isSaved ? 'currentColor' : 'none'}
+          />
         </button>
 
         {/* Quick-add — bottom right */}

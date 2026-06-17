@@ -97,15 +97,7 @@ export default function WalletPage() {
     .reduce((s, c) => s + c.amount, 0)
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Wallet &amp; Credits
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Store credits earned through referrals and promotions
-        </p>
-      </div>
+    <AccountPageWrapper title="Wallet & Credits" description="Store credits earned through referrals and promotions">
 
       <div className="bg-primary text-white rounded p-8 mb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">

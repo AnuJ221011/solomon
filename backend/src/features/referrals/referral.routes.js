@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
-import { getWallet, getReferralLink, getLeaderboard } from './referral.service.js';
+import { getWallet, getReferralStats, getLeaderboard } from './referral.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 
 const router = Router();
 
 router.get('/link', authenticate, authorize('BUYER'), async (req, res) => {
-  const token = await getReferralLink(req.user.id);
-  sendSuccess(res, { referralLink: token ? `/signup?ref=${token}` : null });
+  const data = await getReferralStats(req.user.id);
+  sendSuccess(res, data);
 });
 
 router.get('/wallet', authenticate, authorize('BUYER'), async (req, res) => {

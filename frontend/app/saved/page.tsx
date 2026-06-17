@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils'
 import {
   useSaved,
   useUnsaveBrand,
-  useUnsaveProduct,
   type SavedBrand,
   type SavedProduct,
 } from '@/hooks/queries/useBuyerDashboard'
@@ -124,62 +123,26 @@ function SavedBrandCard({
   )
 }
 
-function SavedProductCard({
-  product,
-  onUnsave,
-  isPending,
-}: {
-  product: SavedProduct
-  onUnsave: (id: string) => void
-  isPending: boolean
-}) {
-  return (
-    <div className="relative group/card">
-      <ProductCard product={adaptSavedProduct(product)} />
-      <button
-        type="button"
-        onClick={() => onUnsave(product.id)}
-        disabled={isPending}
-        aria-label={`Remove ${product.name} from saved`}
-        className={cn(
-          'absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded',
-          'bg-surface/90 border border-border-warm',
-          'text-accent hover:text-error hover:border-error/20 hover:bg-surface',
-          'transition-all duration-150 disabled:opacity-50',
-          'opacity-0 group-hover/card:opacity-100'
-        )}
-      >
-        <Heart size={13} fill="currentColor" aria-hidden="true" />
-      </button>
-    </div>
-  )
+function SavedProductCard({ product }: { product: SavedProduct }) {
+  return <ProductCard product={adaptSavedProduct(product)} />
 }
 
 export default function SavedPage() {
-  const [activeTab, setActiveTab] = useState<SavedTab>('brands')
+  const [activeTab, setActiveTab] = useState<SavedTab>('products')
 
   const { data: saved, isLoading } = useSaved()
   const unsaveBrandMutation = useUnsaveBrand()
-  const unsaveProductMutation = useUnsaveProduct()
 
   const savedBrands = saved?.brands ?? []
   const savedProducts = saved?.products ?? []
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Saved
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Your curated shortlist of brands and products
-        </p>
-      </div>
+    <AccountPageWrapper title="Saved" description="Your curated shortlist of brands and products">
 
       <div className="flex gap-1 mb-6 border-b border-border-warm">
         {[
-          { key: 'brands' as SavedTab, label: `Saved Brands${!isLoading ? ` (${savedBrands.length})` : ''}` },
           { key: 'products' as SavedTab, label: `Saved Products${!isLoading ? ` (${savedProducts.length})` : ''}` },
+          { key: 'brands' as SavedTab, label: `Saved Brands${!isLoading ? ` (${savedBrands.length})` : ''}` },
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -241,12 +204,7 @@ export default function SavedPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {savedProducts.map((product) => (
-                <SavedProductCard
-                  key={product.id}
-                  product={product}
-                  onUnsave={(id) => unsaveProductMutation.mutate(id)}
-                  isPending={unsaveProductMutation.isPending}
-                />
+                <SavedProductCard key={product.id} product={product} />
               ))}
             </div>
           )}

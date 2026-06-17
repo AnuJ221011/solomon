@@ -188,14 +188,31 @@ export const getSavedItems = async (userId) => {
     profile.savedBrands.map((sb) =>
       prisma.brandProfile.findUnique({
         where: { id: sb.brandProfileId },
-        select: { id: true, brandName: true, slug: true, logoUrl: true, achievementLevel: true },
+        select: { id: true, brandName: true, slug: true, logoUrl: true, achievementLevel: true, location: true },
       })
     )
   );
 
   return {
-    products: profile.savedProducts.map((sp) => sp.product),
-    brands: savedBrandDetails.filter(Boolean),
+    products: profile.savedProducts.map((sp) => ({
+      id: sp.product.id,
+      name: sp.product.name,
+      slug: sp.product.slug,
+      wholesalePrice: sp.product.wholesalePriceInr,
+      moq: sp.product.moq,
+      image: sp.product.photos[0]?.url ?? null,
+      brandName: sp.product.brandProfile?.brandName ?? '',
+      brandSlug: sp.product.brandProfile?.slug ?? '',
+      inStock: sp.product.availability === 'ACTIVE',
+    })),
+    brands: savedBrandDetails.filter(Boolean).map((b) => ({
+      id: b.id,
+      name: b.brandName,
+      slug: b.slug,
+      logo: b.logoUrl ?? null,
+      location: b.location ?? '',
+      achievementLevel: b.achievementLevel ?? 1,
+    })),
   };
 };
 

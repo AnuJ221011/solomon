@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { use, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { MessageCircle } from 'lucide-react'
-import { toast } from 'sonner'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { PhotoGallery } from '@/components/pdp/PhotoGallery'
@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { useProduct, useProducts } from '@/hooks/queries/useProducts'
 import { useBrand } from '@/hooks/queries/useBrands'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 import type { Product as HookProduct } from '@/hooks/queries/useProducts'
 import type { Product } from '@/types'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
@@ -81,6 +82,16 @@ function toTypedFromApi(p: ApiProduct): Product {
 function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: string; brandName: string; currentSlug: string }) {
   const { data: brand } = useBrand(brandSlug)
   const { data } = useProducts({ brandSlug, limit: 6 })
+  const router = useRouter()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const openAuthModal = useAuthStore((s) => s.openAuthModal)
+
+  function handleMessageBrand() {
+    if (!isAuthenticated) { openAuthModal('login'); return }
+    if (!brand?.userId) return
+    const params = new URLSearchParams({ partner: brand.userId, name: brandName })
+    router.push(`/messages?${params.toString()}`)
+  }
   const others = (data?.products ?? [])
     .filter((p) => p.slug !== currentSlug)
     .slice(0, 5)
@@ -123,7 +134,7 @@ function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: strin
             </Link>
             <button
               type="button"
-              onClick={() => toast.info('Messaging coming soon')}
+              onClick={handleMessageBrand}
               className="inline-flex items-center justify-center h-10 px-4 sm:px-5 rounded border border-border-warm font-public-sans text-[13px] font-[600] text-primary hover:border-primary transition-colors gap-2 whitespace-nowrap"
             >
               <MessageCircle size={14} />

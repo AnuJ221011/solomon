@@ -909,12 +909,12 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
                 <p className="text-[13px] font-public-sans text-muted-text">Loading categories…</p>
               )}
               {categoryList.map((cat: { id: string; name: string; slug: string }) => {
-                const selected = form.categories.includes(cat.slug)
+                const selected = form.categories.includes(cat.name)
                 return (
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => toggleCategory(cat.slug)}
+                    onClick={() => toggleCategory(cat.name)}
                     className={`h-8 px-3 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
                       selected
                         ? 'border-accent bg-accent text-white'

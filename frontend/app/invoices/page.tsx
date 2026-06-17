@@ -188,13 +188,7 @@ export default function InvoicesPage() {
     : orders.filter((o) => getInvoiceStatus(o.status) === tab)
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">Invoices</h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Download and manage your order invoices
-        </p>
-      </div>
+    <AccountPageWrapper title="Invoices" description="Download and manage your order invoices">
 
       {/* Filter tabs */}
       <div className="flex gap-1 mb-6 border-b border-border-warm">

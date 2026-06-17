@@ -335,15 +335,10 @@ export default function OrdersPage() {
   }
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Order History
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          {isLoading ? 'Loading...' : `${total} order${total === 1 ? '' : 's'} to date`}
-        </p>
-      </div>
+    <AccountPageWrapper
+      title="Order History"
+      description={isLoading ? 'Loading...' : `${total} order${total === 1 ? '' : 's'} to date`}
+    >
 
       <div className="flex gap-1 mb-6 border-b border-border-warm overflow-x-auto pb-0">
         {FILTER_TABS.map((tab) => (

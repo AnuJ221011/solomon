@@ -294,15 +294,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-          Settings
-        </h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Manage your store profile, preferences, and team access.
-        </p>
-      </div>
+    <AccountPageWrapper title="Settings" description="Manage your store profile, preferences, and team access.">
 
       <div className="space-y-6">
         <Section title="Store Profile" description="Your business details as they appear on orders and invoices.">

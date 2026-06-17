@@ -66,7 +66,7 @@ export function useBuyerDashboard() {
 /**
  * Fetch the authenticated buyer's saved products and brands.
  */
-export function useSaved() {
+export function useSaved(options?: { enabled?: boolean }) {
   return useQuery<Saved>({
     queryKey: ['saved'],
     queryFn: async () => {
@@ -74,6 +74,7 @@ export function useSaved() {
       return response.data.data
     },
     staleTime: 60 * 1000,
+    enabled: options?.enabled ?? true,
   })
 }
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { Send, Search, MessageSquare } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { cn } from '@/lib/utils'
@@ -107,11 +108,15 @@ function ChatBubble({ message, myId }: { message: Message; myId: string }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Inner page (needs useSearchParams inside Suspense) ───────────────────────
 
-export default function MessagesPage() {
+function MessagesInner() {
   const user = useAuthStore((s) => s.user)
-  const [activePartnerId, setActivePartnerId] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const initialPartnerId = searchParams.get('partner')
+  const initialPartnerName = searchParams.get('name') ?? ''
+
+  const [activePartnerId, setActivePartnerId] = useState<string | null>(initialPartnerId)
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -121,12 +126,17 @@ export default function MessagesPage() {
   const sendMessage = useSendMessage()
 
   const activeConv = conversations.find((c) => c.partnerId === activePartnerId)
-  const displayName = activeConv ? getDisplayName(activeConv) : ''
+  // For a new conversation (partner from URL, no prior messages), show their name from URL param
+  const displayName = activeConv
+    ? getDisplayName(activeConv)
+    : (activePartnerId ? initialPartnerName : '')
+  const hasActiveThread = !!activeConv || (!!activePartnerId && !!initialPartnerId)
 
   const filtered = search
     ? conversations.filter((c) => getDisplayName(c).toLowerCase().includes(search.toLowerCase()))
     : conversations
 
+  // Auto-select first conversation only when no partner is pre-selected from URL
   useEffect(() => {
     if (!activePartnerId && conversations.length > 0) {
       setActivePartnerId(conversations[0].partnerId)
@@ -145,13 +155,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <AccountPageWrapper>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">Messages</h1>
-        <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-muted-text mt-1">
-          Direct conversations with brands
-        </p>
-      </div>
+    <AccountPageWrapper title="Messages" description="Direct conversations with brands">
 
       <div
         className="border border-border-warm rounded overflow-hidden flex"
@@ -184,7 +188,24 @@ export default function MessagesPage() {
                 </div>
               ))
             )}
-            {!convsLoading && filtered.length === 0 && (
+            {/* Show new-conversation placeholder in thread list when coming from product page */}
+            {!convsLoading && initialPartnerId && !conversations.find((c) => c.partnerId === initialPartnerId) && (
+              <button
+                type="button"
+                onClick={() => setActivePartnerId(initialPartnerId)}
+                className={cn(
+                  'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors border-b border-border-warm',
+                  activePartnerId === initialPartnerId ? 'bg-muted-bg' : 'hover:bg-muted-bg/60'
+                )}
+              >
+                <BrandAvatar initial={getInitial(initialPartnerName)} />
+                <div className="flex-1 min-w-0">
+                  <span className="font-public-sans text-[13px] font-[600] text-primary truncate block">{initialPartnerName}</span>
+                  <p className="font-public-sans text-[12px] text-muted-text">New conversation</p>
+                </div>
+              </button>
+            )}
+            {!convsLoading && filtered.length === 0 && !initialPartnerId && (
               <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
                 <MessageSquare size={24} className="text-muted-text mb-2" aria-hidden="true" />
                 <p className="font-public-sans text-[13px] text-muted-text">
@@ -204,7 +225,7 @@ export default function MessagesPage() {
         </div>
 
         {/* Right — active conversation */}
-        {!activeConv ? (
+        {!hasActiveThread ? (
           <div className="flex-1 flex items-center justify-center font-public-sans text-[14px] text-muted-text">
             {convsLoading ? 'Loading…' : 'Select a conversation'}
           </div>
@@ -269,5 +290,15 @@ export default function MessagesPage() {
         )}
       </div>
     </AccountPageWrapper>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function MessagesPage() {
+  return (
+    <Suspense>
+      <MessagesInner />
+    </Suspense>
   )
 }
