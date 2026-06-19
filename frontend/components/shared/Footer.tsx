@@ -98,7 +98,7 @@ export function Footer() {
               <img
                 src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1781610033/solomon-logo1_bpjtco.png"
                 alt="Solomon Bharat"
-                className="h-8 w-auto object-contain block"
+                className="h-20 w-auto object-contain block"
               />
             </Link>
             <p className="font-public-sans text-[14px] leading-[1.6] text-muted-text mt-3 max-w-[260px]">
