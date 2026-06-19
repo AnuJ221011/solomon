@@ -5,7 +5,14 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+function FooterLink({ href, children, disabled }: { href: string; children: React.ReactNode; disabled?: boolean }) {
+  if (disabled) {
+    return (
+      <span className="font-public-sans text-[14px] text-muted-text leading-[1.4] cursor-default">
+        {children}
+      </span>
+    )
+  }
   return (
     <Link
       href={href}
@@ -108,21 +115,21 @@ export function Footer() {
           <FooterColumn title="Marketplace">
             <FooterLink href="/catalogue">Browse Products</FooterLink>
             <FooterLink href="/brands">Featured Brands</FooterLink>
-            <FooterLink href="/categories">All Categories</FooterLink>
+            <FooterLink href="/categories" disabled>All Categories</FooterLink>
           </FooterColumn>
 
           <FooterColumn title="Suppliers">
             <FooterLink href="/apply">Become a Supplier</FooterLink>
             <FooterLink href="/portal">Brand Portal</FooterLink>
-            <FooterLink href="/achievements">Achievement System</FooterLink>
-            <FooterLink href="/share-links">Share Links</FooterLink>
+            <FooterLink href="/achievements" disabled>Achievement System</FooterLink>
+            <FooterLink href="/share-links" disabled>Share Links</FooterLink>
           </FooterColumn>
 
           <FooterColumn title="Company">
-            <FooterLink href="/about">About Us</FooterLink>
-            <FooterLink href="/how-it-works">How It Works</FooterLink>
-            <FooterLink href="/terms">Terms of Service</FooterLink>
-            <FooterLink href="/privacy">Privacy Policy</FooterLink>
+            <FooterLink href="/about" disabled>About Us</FooterLink>
+            <FooterLink href="/how-it-works" disabled>How It Works</FooterLink>
+            <FooterLink href="/terms" disabled>Terms of Service</FooterLink>
+            <FooterLink href="/privacy" disabled>Privacy Policy</FooterLink>
           </FooterColumn>
         </div>
       </div>

@@ -198,23 +198,26 @@ export const listProducts = async ({
 const LEVEL_BOOST = { L5_LEGEND: 5, L4_ELITE: 4, L3_TRUSTED: 3, L2_RISING: 2, L1_SPROUT: 1 };
 
 const _getActivePromotedIds = async () => {
-  const now = new Date();
-  const rows = await prisma.promotedListing.findMany({
-    where: {
-      isActive: true,
-      startsAt: { lte: now },
-      OR: [{ endsAt: null }, { endsAt: { gte: now } }],
-    },
-    select: { productId: true, bidAmountInr: true },
-  });
-  // Record impression counts (fire-and-forget)
-  if (rows.length) {
-    prisma.promotedListing.updateMany({
-      where: { productId: { in: rows.map((r) => r.productId) }, isActive: true },
-      data: { impressions: { increment: 1 } },
-    }).catch(() => {});
+  try {
+    const now = new Date();
+    const rows = await prisma.promotedListing.findMany({
+      where: {
+        isActive: true,
+        startsAt: { lte: now },
+        OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+      },
+      select: { productId: true, bidAmountInr: true },
+    });
+    if (rows.length) {
+      prisma.promotedListing.updateMany({
+        where: { productId: { in: rows.map((r) => r.productId) }, isActive: true },
+        data: { impressions: { increment: 1 } },
+      }).catch(() => {});
+    }
+    return new Map(rows.map((r) => [r.productId, Number(r.bidAmountInr)]));
+  } catch {
+    return new Map();
   }
-  return new Map(rows.map((r) => [r.productId, Number(r.bidAmountInr)]));
 };
 
 const _rankProducts = async (products, buyerProfile) => {
