@@ -53,7 +53,7 @@ export default function LoginPage() {
 
       // Redirect based on role
       if (data.user.role === 'BRAND') {
-        router.push('/brand-portal')
+        router.push('/portal')
       } else {
         router.push('/catalogue')
       }

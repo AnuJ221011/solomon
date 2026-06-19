@@ -25,7 +25,7 @@ function adaptSavedProduct(p: SavedProduct): GlobalProduct {
     brandId: '',
     brandName: p.brandName,
     brandSlug: p.brandSlug,
-    shortDescription: '',
+    description: '',
     images: p.image ? [p.image] : [],
     wholesalePrice: p.wholesalePrice,
     moq: p.moq,

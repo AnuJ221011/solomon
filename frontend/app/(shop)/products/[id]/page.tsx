@@ -28,7 +28,6 @@ function toTypedProduct(p: HookProduct): Product {
     brandId: p.brandId,
     brandName: p.brandName,
     brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription,
     description: p.description,
     images: p.photos.map((ph) => ph.url),
     wholesalePrice: p.wholesalePrice,
@@ -49,8 +48,8 @@ interface ApiVariant { id: string; sku: string; priceInr: number; stock: number;
 
 interface ApiProduct {
   id: string; name: string; slug: string; brandId: string
-  brandName: string; brandSlug: string; shortDescription: string
-  description?: string; photos?: Array<{ id: string; url: string; position: number }>
+  brandName: string; brandSlug: string
+  description: string; photos?: Array<{ id: string; url: string; position: number }>
   wholesalePrice: number; moq: number; leadTime: string; weight: number
   category: string; tags: string[]
   brand?: { achievementLevel: number; minimumOrderValue?: number }
@@ -62,7 +61,7 @@ function toTypedFromApi(p: ApiProduct): Product {
   return {
     id: p.id, name: p.name, slug: p.slug,
     brandId: p.brandId, brandName: p.brandName, brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription, description: p.description,
+    description: p.description,
     images: (p.photos ?? []).sort((a, b) => a.position - b.position).map((ph) => ph.url),
     wholesalePrice: p.wholesalePrice, moq: p.moq,
     leadTime: p.leadTime as Product['leadTime'],

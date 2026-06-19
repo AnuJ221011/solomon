@@ -32,7 +32,7 @@ beforeAll(async () => {
   const categoryName = await getFirstCategoryName()
   PRODUCT_PAYLOAD = {
     name: 'Handloom Silk Scarf',
-    shortDescription: 'A beautiful handwoven silk scarf from Varanasi',
+    description: 'A beautiful handwoven silk scarf from Varanasi',
     wholesalePriceInr: 800,
     moq: 5,
     leadTime: 'ONE_TO_TWO_WEEKS',
@@ -197,8 +197,8 @@ describe('Brand — Products: create', () => {
     expect(res.status).toBe(401)
   })
 
-  it('approved brand missing required field (shortDescription) → 422', async () => {
-    const { shortDescription: _, ...partial } = PRODUCT_PAYLOAD
+  it('approved brand missing required field (description) → 422', async () => {
+    const { description: _, ...partial } = PRODUCT_PAYLOAD
     const res = await request(app).post('/api/products')
       .set('Authorization', `Bearer ${approvedToken}`)
       .send(partial)
@@ -257,15 +257,15 @@ describe('Brand — Products: update & delete', () => {
     if (!createdProductId) return
     const res = await request(app).patch(`/api/products/${createdProductId}`)
       .set('Authorization', `Bearer ${approvedToken}`)
-      .send({ shortDescription: 'Updated in tests' })
+      .send({ description: 'Updated in tests' })
     expect(res.status).toBe(200)
-    expect(res.body.data.shortDescription).toBe('Updated in tests')
+    expect(res.body.data.description).toBe('Updated in tests')
   })
 
   it('PATCH non-existent product → 404', async () => {
     const res = await request(app).patch('/api/products/nonexistent-product-id')
       .set('Authorization', `Bearer ${approvedToken}`)
-      .send({ shortDescription: 'nope' })
+      .send({ description: 'nope' })
     expect(res.status).toBe(404)
   })
 
@@ -273,7 +273,7 @@ describe('Brand — Products: update & delete', () => {
     if (!createdProductId) return
     const res = await request(app).patch(`/api/products/${createdProductId}`)
       .set('Authorization', `Bearer ${buyerToken}`)
-      .send({ shortDescription: 'nope' })
+      .send({ description: 'nope' })
     expect(res.status).toBe(403)
   })
 

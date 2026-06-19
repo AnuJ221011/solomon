@@ -17,7 +17,7 @@ router.get('/', optionalAuthenticate, validateQuery(productQuerySchema), ctrl.li
 router.get('/:slug', ctrl.getProduct);
 
 // Brand-only
-router.get('/me/listings', authenticate, authorize('BRAND'), validateQuery(productQuerySchema), ctrl.listMyProducts);
+router.get('/me/listings', authenticate, authorize('BRAND'), ctrl.listMyProducts);
 
 // CSV export — must be before /:slug
 router.get('/me/export-csv', authenticate, authorize('BRAND'), async (req, res) => {
@@ -31,14 +31,13 @@ router.get('/me/export-csv', authenticate, authorize('BRAND'), async (req, res) 
   });
 
   const q = (s) => `"${(s ?? '').toString().replace(/"/g, '""')}"`;
-  const header = 'name,short_description,full_description,wholesale_price_inr,moq,weight_grams,lead_time,shipping_zones,categories,tags,hs_tariff_code,country_of_origin,variant_sku,variant_attributes,variant_price_inr,variant_stock';
+  const header = 'name,description,wholesale_price_inr,moq,weight_grams,lead_time,shipping_zones,categories,tags,hs_tariff_code,country_of_origin,variant_sku,variant_attributes,variant_price_inr,variant_stock';
 
   const rows = [];
   for (const p of products) {
     const base = [
       q(p.name),
-      q(p.shortDescription),
-      q(p.fullDescription),
+      q(p.description),
       p.wholesalePriceInr,
       p.moq,
       p.weightGrams,
@@ -84,9 +83,11 @@ router.post(
   }
 );
 
-// Shopify CSV import — accepts pre-mapped JSON from the frontend wizard
+// CSV import wizard — accepts pre-parsed products + unmatched category names.
+// Gemini classifies unmatched categories and creates missing L1/L2/L3 nodes before inserting.
 router.post('/import-shopify', authenticate, authorize('BRAND'), async (req, res) => {
-  const result = await importProductsFromJson(req.user.id, req.body.products);
+  const { products, unmatchedCategories = [] } = req.body;
+  const result = await importProductsFromJson(req.user.id, products, unmatchedCategories);
   sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
 });
 

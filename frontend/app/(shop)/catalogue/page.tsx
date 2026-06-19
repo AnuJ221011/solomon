@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useCallback, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -16,7 +16,7 @@ import type { Product as ApiProduct } from '@/hooks/queries/useProducts'
 import { useCategories } from '@/hooks/queries/useCategories'
 import type { Product } from '@/types'
 
-// ─── Sort options ─────────────────────────────────────────────────────────────
+// --- Sort options -------------------------------------------------------------
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'newest'
 
@@ -29,7 +29,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 const PAGE_SIZE = 20
 
-// ─── Map API product to @/types Product ──────────────────────────────────────
+// --- Map API product to @/types Product --------------------------------------
 
 function toTypedProduct(p: ApiProduct): Product {
   return {
@@ -39,7 +39,6 @@ function toTypedProduct(p: ApiProduct): Product {
     brandId: p.brandId,
     brandName: p.brandName,
     brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription,
     description: p.description,
     images: p.photos.map((ph) => ph.url),
     wholesalePrice: p.wholesalePrice,
@@ -53,7 +52,7 @@ function toTypedProduct(p: ApiProduct): Product {
   }
 }
 
-// ─── Loading skeleton ─────────────────────────────────────────────────────────
+// --- Loading skeleton ---------------------------------------------------------
 
 function CatalogueLoadingSkeleton() {
   return (
@@ -70,7 +69,7 @@ function CatalogueLoadingSkeleton() {
   )
 }
 
-// ─── Page component ───────────────────────────────────────────────────────────
+// --- Page component -----------------------------------------------------------
 
 export default function CataloguePage() {
   return (
@@ -107,7 +106,7 @@ function CatalogueContent() {
   const { data: categoriesData } = useCategories()
   const categoryNames = (categoriesData ?? []).map((c) => c.name)
 
-  // Resolve URL slug → category name, then seed filters once categories load
+  // Resolve URL slug ? category name, then seed filters once categories load
   const resolvedCategoryName = useMemo(() => {
     if (!categorySlug || !categoriesData) return null
     const match = categoriesData.find(
@@ -131,7 +130,7 @@ function CatalogueContent() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // ── Data fetching ─────────────────────────────────────────────────────────────
+  // -- Data fetching -------------------------------------------------------------
   // Prefer sidebar-driven categories; fall back to the URL-resolved name so the
   // first render already sends the correct filter (before the useEffect fires).
   const activeCategory =
@@ -180,7 +179,7 @@ function CatalogueContent() {
       <NavBar />
 
       <main className="flex flex-1 min-h-0">
-        {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
+        {/* -- Desktop sidebar ------------------------------------------------- */}
         <FilterSidebar
           key={resolvedCategoryName ?? 'all'}
           onFilterChange={handleFilterChange}
@@ -188,7 +187,7 @@ function CatalogueContent() {
           initialCategories={resolvedCategoryName ? [resolvedCategoryName] : []}
         />
 
-        {/* ── Mobile filter sheet ───────────────────────────────────────────── */}
+        {/* -- Mobile filter sheet --------------------------------------------- */}
         <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
           <SheetContent side="bottom" className="w-full max-h-[90vh] p-0 overflow-y-auto rounded-t">
             <SheetHeader className="px-5 pt-5 pb-0">
@@ -218,7 +217,7 @@ function CatalogueContent() {
           </SheetContent>
         </Sheet>
 
-        {/* ── Main content ──────────────────────────────────────────────────── */}
+        {/* -- Main content ---------------------------------------------------- */}
         <div className="flex-1 px-4 sm:px-6 lg:px-10 py-5 sm:py-8 min-w-0">
           {/* Top bar */}
           <div
@@ -334,7 +333,7 @@ function CatalogueContent() {
   )
 }
 
-// ─── Mobile filter sidebar ────────────────────────────────────────────────────
+// --- Mobile filter sidebar ----------------------------------------------------
 
 function MobileFilterSidebar({
   onFilterChange,

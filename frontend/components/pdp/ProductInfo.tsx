@@ -159,7 +159,7 @@ function buildAxes(variants: NonNullable<Product['variants']>) {
 export function ProductInfo({ product }: { product: Product }) {
   const {
     id, name, brandName, brandSlug,
-    shortDescription, description,
+    description,
     wholesalePrice, displayPrice, currency,
     moq, leadTime, weight, category, tags, images, inStock,
     variants = [],
@@ -437,14 +437,9 @@ export function ProductInfo({ product }: { product: Product }) {
         <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-3">
           About this product
         </p>
-        <p className="font-public-sans text-[15px] leading-[1.75] text-muted-text">
-          {shortDescription}
+        <p className="font-public-sans text-[15px] leading-[1.75] text-muted-text whitespace-pre-wrap">
+          {description}
         </p>
-        {description && description !== shortDescription && (
-          <p className="font-public-sans text-[15px] leading-[1.75] text-muted-text mt-3">
-            {description}
-          </p>
-        )}
       </div>
 
       {/* 10. Accordions */}

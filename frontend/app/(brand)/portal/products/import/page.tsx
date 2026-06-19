@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, CheckCircle, AlertCircle, X, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
@@ -12,42 +12,25 @@ import { useCategories, type Category } from '@/hooks/queries/useCategories'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ShopifyVariant {
+interface ParsedVariant {
   sku: string
   price: number
-  compareAtPrice: number
   stock: number
   weightGrams: number
   attributes: { name: string; value: string }[]
 }
 
-interface ShopifyProduct {
+interface ParsedProduct {
   handle: string
   name: string
-  shortDescription: string
-  descriptionHtml: string
-  shopifyType: string
+  description: string
+  sourceCategory: string  // raw category from CSV, used for auto-matching
+  images: string[]
   tags: string[]
   status: string
   weightGrams: number
-  imageUrls: string[]
-  variants: ShopifyVariant[]
+  variants: ParsedVariant[]
   minPrice: number
-}
-
-interface ImportConfig {
-  typeToCategory: Record<string, string>
-  priceMode: 'retail' | 'percent'
-  pricePercent: number
-  defaultMoq: number
-  defaultLeadTime: string
-  enabledZones: string[]
-}
-
-interface RowOverride {
-  price: string
-  moq: string
-  skip: boolean
 }
 
 interface ImportResult {
@@ -56,29 +39,22 @@ interface ImportResult {
   errors: string[]
 }
 
-type Step = 'upload' | 'configure' | 'review' | 'done'
+interface ImportSummary {
+  result: ImportResult
+  detected: 'WooCommerce' | 'Shopify' | 'Generic'
+}
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+interface ParseState {
+  products: ParsedProduct[]
+  categoryMap: Record<string, string>  // sourceCategory → platform category name
+  detected: ImportSummary['detected']
+}
 
-const LEAD_TIMES = [
-  { value: 'ONE_TO_THREE_DAYS', label: '1–3 days' },
-  { value: 'ONE_TO_TWO_WEEKS', label: '1–2 weeks' },
-  { value: 'TWO_TO_FOUR_WEEKS', label: '2–4 weeks' },
-]
+type Step = 'upload' | 'preview' | 'done'
 
-const SHIPPING_ZONES = [
-  { label: 'India (Domestic)', value: 'DOMESTIC' },
-  { label: 'South Asia', value: 'SOUTH_ASIA' },
-  { label: 'Southeast Asia', value: 'SOUTHEAST_ASIA' },
-  { label: 'Middle East', value: 'MIDDLE_EAST' },
-  { label: 'Europe', value: 'EUROPE' },
-  { label: 'North America', value: 'NORTH_AMERICA' },
-  { label: 'Oceania', value: 'OCEANIA' },
-  { label: 'Rest of World', value: 'REST_OF_WORLD' },
-]
+// ─── CSV Helpers ──────────────────────────────────────────────────────────────
 
-// ─── Shopify CSV Parser ───────────────────────────────────────────────────────
-
+// Parses a single CSV line (used only for header detection — no multiline fields there).
 function parseCsvLine(line: string): string[] {
   const values: string[] = []
   let current = ''
@@ -99,13 +75,42 @@ function parseCsvLine(line: string): string[] {
   return values
 }
 
+// Streaming CSV parser — correctly handles quoted fields that span multiple lines.
+// WooCommerce exports product descriptions with real newlines inside quoted cells,
+// which breaks any approach that pre-splits the file on \n.
+function parseAllCsvRecords(csv: string): string[][] {
+  const records: string[][] = []
+  let record: string[] = []
+  let field = ''
+  let inQuotes = false
+
+  for (let i = 0; i < csv.length; i++) {
+    const ch = csv[i]
+    if (ch === '"') {
+      if (inQuotes && csv[i + 1] === '"') { field += '"'; i++ }
+      else { inQuotes = !inQuotes }
+    } else if (ch === ',' && !inQuotes) {
+      record.push(field)
+      field = ''
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && csv[i + 1] === '\n') i++
+      record.push(field)
+      field = ''
+      if (record.some((f) => f)) records.push(record)
+      record = []
+    } else {
+      field += ch
+    }
+  }
+  // Flush trailing record
+  record.push(field)
+  if (record.some((f) => f)) records.push(record)
+
+  return records
+}
+
 function normalizeHeader(h: string): string {
-  return h
-    .replace(/[()]/g, '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_]/g, '')
+  return h.replace(/[()]/g, '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
 }
 
 function stripHtml(html: string): string {
@@ -118,23 +123,111 @@ function stripHtml(html: string): string {
   }
 }
 
-function parseShopifyCsv(text: string): ShopifyProduct[] {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n')
-  if (lines.length < 2) throw new Error('File must have a header row and at least one product row')
+function parseCsvToRows(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const records = parseAllCsvRecords(text)
+  if (records.length < 2) throw new Error('File must have a header row and at least one data row')
 
-  const rawHeaders = parseCsvLine(lines[0])
-  const headers = rawHeaders.map(normalizeHeader)
+  const headers = records[0].map(normalizeHeader)
 
   const rows: Record<string, string>[] = []
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCsvLine(lines[i])
+  for (let i = 1; i < records.length; i++) {
+    const values = records[i]
     if (values.every((v) => !v.trim())) continue
     const row: Record<string, string> = {}
     headers.forEach((h, idx) => { row[h] = (values[idx] ?? '').trim() })
     rows.push(row)
   }
+  return { headers, rows }
+}
 
-  // Group by Handle
+// ─── Format Detection ─────────────────────────────────────────────────────────
+
+function detectFormat(headers: string[]): 'shopify' | 'woocommerce' | 'generic' {
+  const h = new Set(headers)
+  if (h.has('handle') && h.has('title')) return 'shopify'
+  if (h.has('id') && h.has('type') && h.has('regular_price')) return 'woocommerce'
+  return 'generic'
+}
+
+// ─── WooCommerce Parser ───────────────────────────────────────────────────────
+
+function parseWoocommerce(text: string): ParsedProduct[] {
+  const { headers, rows } = parseCsvToRows(text)
+
+  const productRows = rows.filter((r) => r['type'] === 'simple' || r['type'] === 'variable')
+  const variationRows = rows.filter((r) => r['type'] === 'variation')
+
+  const varsByParent = new Map<string, Record<string, string>[]>()
+  for (const vRow of variationRows) {
+    const parentId = (vRow['parent'] ?? '').replace(/^id:/i, '').trim()
+    if (!parentId) continue
+    if (!varsByParent.has(parentId)) varsByParent.set(parentId, [])
+    varsByParent.get(parentId)!.push(vRow)
+  }
+
+  const products: ParsedProduct[] = []
+
+  for (const row of productRows) {
+    const id = (row['id'] ?? '').trim()
+    const name = (row['name'] ?? '').trim().slice(0, 80)
+    if (!name || row['published'] === '-1') continue
+
+    const descHtml = row['description'] ?? ''
+    const shortDescText =
+      stripHtml(row['short_description'] ?? '').slice(0, 160) ||
+      stripHtml(descHtml).slice(0, 160) || name
+
+    const imageUrls = (row['images'] ?? '').split(',').map((u) => u.trim()).filter(Boolean)
+    const category = (row['categories'] ?? '').split(',')[0]?.trim() ?? ''
+    const tags = (row['tags'] ?? '').split(',').map((t) => t.trim()).filter(Boolean).slice(0, 10)
+    const weightLbs = parseFloat(row['weight_lbs'] ?? '0') || 0
+    const weightGrams = Math.round(weightLbs * 453.592)
+    const regularPrice = parseFloat(row['regular_price'] ?? '0') || 0
+    const salePrice = parseFloat(row['sale_price'] ?? '0') || 0
+    const effectivePrice = salePrice > 0 ? salePrice : regularPrice
+
+    const variations = varsByParent.get(id) ?? []
+    const variants: ParsedVariant[] = []
+    const seenSkus = new Set<string>()
+
+    for (const vRow of variations) {
+      if (vRow['published'] === '-1') continue
+      const vSku = (vRow['sku'] ?? '').trim()
+      if (vSku && seenSkus.has(vSku)) continue
+      if (vSku) seenSkus.add(vSku)
+
+      const vRegularPrice = parseFloat(vRow['regular_price'] ?? '0') || 0
+      const vSalePrice = parseFloat(vRow['sale_price'] ?? '0') || 0
+      const vPrice = vSalePrice > 0 ? vSalePrice : (vRegularPrice || effectivePrice)
+      const vWeightLbs = parseFloat(vRow['weight_lbs'] ?? '0') || weightLbs
+      const vWeightGrams = Math.round(vWeightLbs * 453.592) || weightGrams
+
+      const attrs: { name: string; value: string }[] = []
+      for (const n of [1, 2, 3]) {
+        const an = (vRow[`attribute_${n}_name`] ?? '').trim()
+        const av = (vRow[`attribute_${n}_values`] ?? '').trim()
+        if (an && av) attrs.push({ name: an, value: av })
+      }
+      if (vSku || attrs.length > 0) {
+        variants.push({ sku: vSku, price: vPrice, stock: parseInt(vRow['stock'] ?? '0', 10) || 0, weightGrams: vWeightGrams, attributes: attrs })
+      }
+    }
+
+    const minPrice =
+      variants.length > 0
+        ? Math.min(...variants.map((v) => v.price).filter((p) => p > 0)) || effectivePrice
+        : effectivePrice
+
+    products.push({ handle: id, name, description: descHtml || shortDescText, sourceCategory: category, images: imageUrls, tags, status: 'active', weightGrams, variants, minPrice })
+  }
+  return products
+}
+
+// ─── Shopify Parser ───────────────────────────────────────────────────────────
+
+function parseShopify(text: string): ParsedProduct[] {
+  const { rows } = parseCsvToRows(text)
+
   const handleMap = new Map<string, Record<string, string>[]>()
   const handleOrder: string[] = []
   for (const row of rows) {
@@ -144,7 +237,7 @@ function parseShopifyCsv(text: string): ShopifyProduct[] {
     handleMap.get(handle)!.push(row)
   }
 
-  const products: ShopifyProduct[] = []
+  const products: ParsedProduct[] = []
 
   for (const handle of handleOrder) {
     const groupRows = handleMap.get(handle)!
@@ -153,555 +246,574 @@ function parseShopifyCsv(text: string): ShopifyProduct[] {
     const descHtml = first['body_html'] ?? ''
     const shortDescription = stripHtml(descHtml).slice(0, 160) || (first['title'] ?? '').slice(0, 160)
 
-    // Collect image URLs (deduped, excluding empty)
-    const imageUrls = [...new Set(groupRows.map((r) => r['image_src']).filter(Boolean))]
-
-    // Collect variants — filter out the Shopify default "Title / Default Title" pseudo-variant
-    const variants: ShopifyVariant[] = []
+    const variants: ParsedVariant[] = []
     const seenSkus = new Set<string>()
-
     for (const row of groupRows) {
-      const sku = row['variant_sku']?.trim() ?? ''
-
+      const sku = (row['variant_sku'] ?? '').trim()
       const attrs: { name: string; value: string }[] = []
       for (const n of [1, 2, 3]) {
-        const name = row[`option${n}_name`]?.trim() ?? ''
-        const value = row[`option${n}_value`]?.trim() ?? ''
+        const name = (row[`option${n}_name`] ?? '').trim()
+        const value = (row[`option${n}_value`] ?? '').trim()
         if (name && value && name.toLowerCase() !== 'title' && value.toLowerCase() !== 'default title') {
           attrs.push({ name, value })
         }
       }
-
-      // Skip rows with no real variant data
       if (!sku && attrs.length === 0) continue
       if (sku && seenSkus.has(sku)) continue
       if (sku) seenSkus.add(sku)
-
-      const price = parseFloat(row['variant_price'] ?? '0') || 0
-      const compareAtPrice = parseFloat(row['variant_compare_at_price'] ?? '0') || 0
-      const stock = parseInt(row['variant_inventory_qty'] ?? '0', 10) || 0
-      const grams = parseInt(row['variant_grams'] ?? '0', 10) || 0
-
-      variants.push({ sku, price, compareAtPrice, stock, weightGrams: grams, attributes: attrs })
+      variants.push({
+        sku,
+        price: parseFloat(row['variant_price'] ?? '0') || 0,
+        stock: parseInt(row['variant_inventory_qty'] ?? '0', 10) || 0,
+        weightGrams: parseInt(row['variant_grams'] ?? '0', 10) || 0,
+        attributes: attrs,
+      })
     }
 
-    // Tags: Shopify stores comma-separated in a single cell
     const tags = (first['tags'] ?? '').split(',').map((t) => t.trim()).filter(Boolean).slice(0, 10)
-
-    // Weight: use first variant's weight, fallback to 0 (user must have set product weight)
     const weightGrams = variants[0]?.weightGrams || parseInt(first['variant_grams'] ?? '0', 10) || 0
-
-    // Min price across variants (or 0 if no variants)
-    const minPrice = variants.length
-      ? Math.min(...variants.map((v) => v.price).filter((p) => p > 0))
-      : 0
-
-    const status = (first['status'] ?? 'active').toLowerCase()
+    const minPrice = variants.length ? Math.min(...variants.map((v) => v.price).filter((p) => p > 0)) : 0
+    const images = [...new Set(groupRows.map((r) => (r['image_src'] ?? '').trim()).filter(Boolean))]
 
     products.push({
       handle,
       name: (first['title'] ?? handle).slice(0, 80),
-      shortDescription,
-      descriptionHtml: descHtml,
-      shopifyType: (first['type'] ?? '').trim(),
+      description: descHtml || shortDescription,
+      sourceCategory: (first['type'] ?? '').trim(),
+      images,
       tags,
-      status,
+      status: (first['status'] ?? 'active').toLowerCase(),
       weightGrams,
-      imageUrls,
       variants,
       minPrice,
     })
   }
+  return products
+}
+
+// ─── Generic CSV Parser ───────────────────────────────────────────────────────
+// Auto-detects columns from any product CSV using header pattern matching,
+// then falls back to data-driven heuristics if no match found.
+
+function findCol(headers: string[], ...patterns: string[]): string {
+  for (const pattern of patterns) {
+    const match = headers.find(
+      (h) => h === pattern || h.startsWith(pattern + '_') || h.endsWith('_' + pattern) || h.includes(pattern),
+    )
+    if (match) return match
+  }
+  return ''
+}
+
+function pickTextCol(rows: Record<string, string>[], headers: string[]): string {
+  const sample = rows.slice(0, 20)
+  for (const h of headers) {
+    const vals = sample.map((r) => r[h]).filter(Boolean)
+    if (vals.length < 3) continue
+    const numRatio = vals.filter((v) => !isNaN(parseFloat(v))).length / vals.length
+    if (numRatio < 0.2 && vals.some((v) => v.length > 3)) return h
+  }
+  return headers[0] ?? ''
+}
+
+function pickNumericCol(rows: Record<string, string>[], headers: string[]): string {
+  const sample = rows.slice(0, 20)
+  for (const h of headers) {
+    const vals = sample.map((r) => r[h]).filter(Boolean)
+    if (vals.length < 3) continue
+    const numRatio = vals.filter((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0).length / vals.length
+    if (numRatio > 0.6) return h
+  }
+  return ''
+}
+
+function parseGeneric(text: string): ParsedProduct[] {
+  const { headers, rows } = parseCsvToRows(text)
+
+  const nameCol =
+    findCol(headers, 'product_name', 'item_name', 'name', 'title', 'product_title', 'product') ||
+    pickTextCol(rows, headers)
+
+  const priceCol =
+    findCol(headers, 'regular_price', 'retail_price', 'selling_price', 'wholesale_price', 'mrp', 'price', 'cost', 'rate', 'amount') ||
+    pickNumericCol(rows, headers)
+
+  const shortDescCol = findCol(headers, 'short_description', 'short_desc', 'excerpt', 'brief', 'subtitle')
+  const fullDescCol = findCol(headers, 'full_description', 'long_description', 'description', 'body_html', 'body', 'details', 'desc')
+  const categoryCol = findCol(headers, 'categories', 'category', 'product_type', 'type', 'collection', 'department', 'genre')
+  const imageCol = findCol(headers, 'image_src', 'image_url', 'image', 'images', 'photo', 'thumbnail', 'picture')
+  const tagsCol = findCol(headers, 'tags', 'keywords', 'labels')
+  const weightCol = findCol(headers, 'weight_g', 'weight_gram', 'weight_grams', 'weight_kg', 'weight_kgs', 'weight_lbs', 'weight_lb', 'weight_oz', 'weight')
+  const stockCol = findCol(headers, 'stock', 'inventory_qty', 'inventory', 'quantity', 'qty', 'available_stock')
+  const skuCol = findCol(headers, 'sku', 'product_code', 'item_code', 'barcode', 'product_id')
+
+  if (!nameCol) {
+    throw new Error(
+      'Could not detect a product name column. For best results, export using WooCommerce (Products → Export) or Shopify.',
+    )
+  }
+
+  const weightUnit: 'g' | 'kg' | 'lbs' | 'oz' =
+    weightCol.includes('lbs') || weightCol.includes('_lb') ? 'lbs' :
+    weightCol.includes('_kg') || weightCol === 'kg' ? 'kg' :
+    weightCol.includes('oz') ? 'oz' : 'g'
+
+  const products: ParsedProduct[] = []
+
+  rows.forEach((row, idx) => {
+    const name = (row[nameCol] ?? '').trim().slice(0, 80)
+    if (!name) return
+
+    const price = parseFloat(row[priceCol] ?? '0') || 0
+    const descHtml = row[fullDescCol] ?? ''
+    const shortDescText =
+      stripHtml(row[shortDescCol] ?? '').slice(0, 160) ||
+      stripHtml(descHtml).slice(0, 160) || name
+    const category = (row[categoryCol] ?? '').split(',')[0]?.trim() ?? ''
+    const tags = (row[tagsCol] ?? '').split(',').map((t) => t.trim()).filter(Boolean).slice(0, 10)
+
+    const rawWeight = parseFloat(row[weightCol] ?? '0') || 0
+    let weightGrams = 0
+    if (rawWeight > 0) {
+      switch (weightUnit) {
+        case 'kg': weightGrams = Math.round(rawWeight * 1000); break
+        case 'lbs': weightGrams = Math.round(rawWeight * 453.592); break
+        case 'oz': weightGrams = Math.round(rawWeight * 28.3495); break
+        default: weightGrams = Math.round(rawWeight)
+      }
+    }
+
+    const sku = (row[skuCol] ?? '').trim()
+    const stock = parseInt(row[stockCol] ?? '0', 10) || 0
+    const variants: ParsedVariant[] = sku
+      ? [{ sku, price, stock, weightGrams, attributes: [] }]
+      : []
+
+    const images = imageCol
+      ? (row[imageCol] ?? '').split(',').map((u: string) => u.trim()).filter(Boolean)
+      : []
+
+    products.push({
+      handle: `row${idx}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}`,
+      name,
+      description: descHtml || shortDescText,
+      sourceCategory: category,
+      images,
+      tags,
+      status: 'active',
+      weightGrams,
+      variants,
+      minPrice: price,
+    })
+  })
 
   return products
 }
 
-// ─── Price computation ────────────────────────────────────────────────────────
+// ─── Auto-Import Pipeline ─────────────────────────────────────────────────────
 
-function computePrice(product: ShopifyProduct, config: ImportConfig, override?: string): number {
-  const raw = parseFloat(override ?? '') || null
-  if (raw !== null && raw > 0) return raw
-  const base = product.minPrice || 1
-  return config.priceMode === 'retail'
-    ? base
-    : Math.max(0.01, Math.round(base * config.pricePercent) / 100)
+// Returns sourceCategory → platform category NAME (not slug).
+// Product.categories stores names as String[] — not IDs or slugs.
+function autoMatchCategories(
+  products: ParsedProduct[],
+  categories: Category[],
+): Record<string, string> {
+  const map: Record<string, string> = {}
+  const uniqueTypes = [...new Set(products.map((p) => p.sourceCategory))]
+  for (const type of uniqueTypes) {
+    if (!type) continue
+    const norm = type.toLowerCase().trim()
+    let match = categories.find((c) => c.name.toLowerCase() === norm)
+    if (!match) match = categories.find((c) => c.slug.toLowerCase() === norm.replace(/\s+/g, '-'))
+    if (!match) match = categories.find((c) => norm.includes(c.name.toLowerCase()))
+    if (!match) match = categories.find((c) => c.name.toLowerCase().includes(norm))
+    if (match) map[type] = match.name  // store name, not slug
+  }
+  return map
 }
 
-function formatInr(n: number) {
-  return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+// Parse only — no API call. Used to populate the preview step.
+async function parseFile(
+  file: File,
+  categories: Category[],
+  onStatus: (msg: string) => void,
+): Promise<ParseState> {
+  onStatus('Reading file…')
+  const text = await file.text()
+
+  const firstLine = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n')[0]
+  const headers = parseCsvLine(firstLine).map(normalizeHeader)
+  const fmt = detectFormat(headers)
+
+  onStatus('Parsing products…')
+  let products: ParsedProduct[]
+  let detected: ImportSummary['detected']
+
+  if (fmt === 'shopify') {
+    products = parseShopify(text)
+    detected = 'Shopify'
+  } else if (fmt === 'woocommerce') {
+    products = parseWoocommerce(text)
+    detected = 'WooCommerce'
+  } else {
+    products = parseGeneric(text)
+    detected = 'Generic'
+  }
+
+  if (products.length === 0) {
+    throw new Error('No products found in the CSV. Check that the file has product data rows.')
+  }
+
+  const categoryMap = autoMatchCategories(products, categories)
+  return { products, categoryMap, detected }
 }
 
-// ─── Step 1: Upload ───────────────────────────────────────────────────────────
+// Import — sends parsed products + unmatched category names to the backend.
+// The backend calls Gemini to classify unmatched categories, creates missing
+// L1/L2/L3 nodes, then imports products with the resolved category names.
+async function importProducts(parseState: ParseState): Promise<ImportResult> {
+  const { products, categoryMap } = parseState
 
-function UploadStep({ onParsed }: { onParsed: (p: ShopifyProduct[]) => void }) {
+  // Collect category names that had no platform match — backend resolves these via Gemini
+  const unmatchedCategories = [
+    ...new Set(
+      products
+        .map((p) => p.sourceCategory)
+        .filter((sc): sc is string => !!sc && !categoryMap[sc] && sc.toLowerCase() !== 'uncategorized'),
+    ),
+  ]
+
+  const payload = products.map((p) => ({
+    name: p.name,
+    sourceCategory: p.sourceCategory || null,
+    description: p.description || p.name,
+    images: p.images ?? [],
+    categories: categoryMap[p.sourceCategory] ? [categoryMap[p.sourceCategory]] : [],
+    tags: p.tags,
+    wholesalePriceInr: Math.max(0.01, p.minPrice || 0.01),
+    moq: 1,
+    weightGrams: p.weightGrams || 100,
+    leadTime: 'ONE_TO_TWO_WEEKS',
+    enabledZones: ['DOMESTIC'],
+    availability: p.status === 'active' ? 'ACTIVE' : 'INACTIVE',
+    variants: p.variants
+      .filter((v) => v.sku)
+      .map((v) => ({
+        sku: v.sku,
+        priceInr: v.price || Math.max(0.01, p.minPrice || 0.01),
+        stock: v.stock,
+        attributes: v.attributes,
+      })),
+  }))
+
+  const res = await api.post('/products/import-shopify', { products: payload, unmatchedCategories })
+  return res.data.data as ImportResult
+}
+
+// ─── Upload Step ──────────────────────────────────────────────────────────────
+
+function UploadStep({
+  onFile,
+  processing,
+  categoriesLoading,
+}: {
+  onFile: (f: File) => void
+  processing: string | null
+  categoriesLoading: boolean
+}) {
   const [dragging, setDragging] = useState(false)
-  const [parsing, setParsing] = useState(false)
+  const [helpTab, setHelpTab] = useState<'woocommerce' | 'shopify'>('woocommerce')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const processFile = useCallback(async (file: File) => {
-    if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
-      toast.error('Please upload a .csv file exported from Shopify')
-      return
-    }
-    setParsing(true)
-    try {
-      const text = await file.text()
-      const products = parseShopifyCsv(text)
-      if (products.length === 0) throw new Error('No products found in the CSV file')
-      onParsed(products)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to parse CSV')
-    } finally {
-      setParsing(false)
-    }
-  }, [onParsed])
+  const handleFile = useCallback(
+    (file: File) => {
+      if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
+        toast.error('Please upload a .csv file')
+        return
+      }
+      onFile(file)
+    },
+    [onFile],
+  )
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) processFile(file)
-  }, [processFile])
+  // Processing overlay
+  if (processing) {
+    return (
+      <div className="max-w-xl">
+        <div className="flex flex-col items-center justify-center gap-5 border-2 border-dashed border-border-warm rounded-lg p-16">
+          <div className="w-10 h-10 border-[3px] border-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-[15px] font-[600] font-public-sans text-primary">{processing}</p>
+        </div>
+      </div>
+    )
+  }
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) processFile(file)
-  }, [processFile])
+  const disabled = categoriesLoading
 
   return (
     <div className="max-w-xl">
+      {/* Drop zone */}
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true) }}
         onDragLeave={() => setDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`relative flex flex-col items-center justify-center gap-4 border-2 border-dashed rounded-lg p-12 cursor-pointer transition-colors ${
-          dragging ? 'border-accent bg-accent/5' : 'border-border-warm hover:border-accent hover:bg-muted-bg/50'
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragging(false)
+          if (!disabled) {
+            const f = e.dataTransfer.files[0]
+            if (f) handleFile(f)
+          }
+        }}
+        onClick={() => { if (!disabled) inputRef.current?.click() }}
+        className={`relative flex flex-col items-center justify-center gap-4 border-2 border-dashed rounded-lg p-12 transition-colors ${
+          disabled
+            ? 'border-border-warm opacity-60 cursor-not-allowed'
+            : dragging
+            ? 'border-accent bg-accent/5 cursor-pointer'
+            : 'border-border-warm hover:border-accent hover:bg-muted-bg/50 cursor-pointer'
         }`}
       >
-        <input ref={inputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleChange} />
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+          disabled={disabled}
+        />
         <div className="w-12 h-12 rounded-full bg-muted-bg flex items-center justify-center">
           <Upload size={22} className="text-muted-text" aria-hidden="true" />
         </div>
         <div className="text-center">
           <p className="text-[15px] font-[600] font-public-sans text-primary">
-            {parsing ? 'Parsing CSV…' : 'Drop your Shopify CSV here'}
+            {disabled ? 'Loading…' : 'Drop your product CSV here'}
           </p>
           <p className="text-[13px] font-public-sans text-muted-text mt-1">
-            or click to browse · .csv files only
+            {disabled ? 'Preparing importer, please wait' : 'or click to browse · WooCommerce, Shopify, or any product CSV · .csv only'}
           </p>
         </div>
-        {parsing && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-surface/70">
-            <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
       </div>
 
-      <div className="mt-6 p-4 rounded border border-border-warm bg-muted-bg/30">
-        <p className="text-[13px] font-[600] font-public-sans text-primary mb-2">
-          How to export from Shopify
-        </p>
-        <ol className="text-[13px] font-public-sans text-muted-text space-y-1 list-decimal list-inside">
-          <li>Go to <span className="font-[500] text-primary">Products</span> in your Shopify admin</li>
-          <li>Click <span className="font-[500] text-primary">Export</span> (top-right)</li>
-          <li>Choose <span className="font-[500] text-primary">All products</span> and format <span className="font-[500] text-primary">CSV for Excel</span></li>
-          <li>Click <span className="font-[500] text-primary">Export products</span> — Shopify emails you the file</li>
-        </ol>
-        <p className="text-[12px] font-public-sans text-muted-text mt-3">
-          Note: Product images are not imported automatically. You can add them after listing from the product edit page.
+      {/* Auto-import note */}
+      <div className="mt-4 flex items-start gap-2.5 px-3 py-2.5 rounded border border-border-warm bg-muted-bg/30">
+        <Info size={14} className="text-muted-text shrink-0 mt-0.5" aria-hidden="true" />
+        <p className="text-[12px] font-public-sans text-muted-text">
+          Products are imported automatically with default MOQ 1, Domestic shipping, and 1–2 week lead time.
+          Edit individual products afterwards to customize pricing, zones, and images.
         </p>
       </div>
-    </div>
-  )
-}
 
-// ─── Step 2: Configure ────────────────────────────────────────────────────────
-
-function ConfigureStep({
-  products,
-  config,
-  setConfig,
-  categories,
-  onBack,
-  onNext,
-}: {
-  products: ShopifyProduct[]
-  config: ImportConfig
-  setConfig: React.Dispatch<React.SetStateAction<ImportConfig>>
-  categories: Category[]
-  onBack: () => void
-  onNext: () => void
-}) {
-  const uniqueTypes = [...new Set(products.map((p) => p.shopifyType))]
-  const totalVariants = products.reduce((s, p) => s + p.variants.length, 0)
-
-  function setTypeCategory(type: string, catSlug: string) {
-    setConfig((c) => ({ ...c, typeToCategory: { ...c.typeToCategory, [type]: catSlug } }))
-  }
-
-  function toggleZone(zone: string) {
-    setConfig((c) => {
-      const has = c.enabledZones.includes(zone)
-      if (has && c.enabledZones.length === 1) { toast.error('At least one shipping zone is required'); return c }
-      return { ...c, enabledZones: has ? c.enabledZones.filter((z) => z !== zone) : [...c.enabledZones, zone] }
-    })
-  }
-
-  const unmappedTypes = uniqueTypes.filter((t) => !config.typeToCategory[t])
-  const canProceed = unmappedTypes.length === 0
-
-  return (
-    <div className="max-w-2xl space-y-6">
-      {/* Summary */}
-      <div className="bg-muted-bg/40 border border-border-warm rounded p-4 text-[13px] font-public-sans text-muted-text">
-        Found <span className="font-[600] text-primary">{products.length} products</span>
-        {' · '}<span className="font-[600] text-primary">{uniqueTypes.length} product types</span>
-        {totalVariants > 0 && <>{' · '}<span className="font-[600] text-primary">{totalVariants} variants</span></>}
-      </div>
-
-      {/* Category mapping */}
-      <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
-        <div>
-          <h2 className="text-[15px] font-[600] font-public-sans text-primary">Category Mapping</h2>
-          <p className="text-[13px] font-public-sans text-muted-text mt-0.5">
-            Map each Shopify product type to a Solomon Bharat category
-          </p>
-        </div>
-        <div className="space-y-3">
-          {uniqueTypes.map((type) => (
-            <div key={type || '__empty__'} className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-public-sans text-primary truncate">
-                  {type || <span className="italic text-muted-text">No type / untagged</span>}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-muted-text text-[12px]">→</div>
-              <select
-                value={config.typeToCategory[type] ?? ''}
-                onChange={(e) => setTypeCategory(type, e.target.value)}
-                className="w-52 h-9 px-3 rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
-              >
-                <option value="">Select category…</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.slug}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
+      {/* How-to instructions */}
+      <div className="mt-4 border border-border-warm rounded overflow-hidden">
+        <div className="flex border-b border-border-warm">
+          {(['woocommerce', 'shopify'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setHelpTab(tab)}
+              className={`flex-1 py-2.5 text-[13px] font-[600] font-public-sans transition-colors ${
+                helpTab === tab
+                  ? 'bg-surface text-primary border-b-2 border-accent'
+                  : 'bg-muted-bg/30 text-muted-text hover:text-primary'
+              }`}
+            >
+              {tab === 'woocommerce' ? 'WooCommerce / WordPress' : 'Shopify'}
+            </button>
           ))}
         </div>
-        {!canProceed && (
-          <p className="text-[12px] font-public-sans text-amber-600">
-            Please map all product types before continuing
+        <div className="p-4">
+          {helpTab === 'woocommerce' ? (
+            <>
+              <p className="text-[13px] font-[600] font-public-sans text-primary mb-2">
+                How to export from WooCommerce
+              </p>
+              <ol className="text-[13px] font-public-sans text-muted-text space-y-1 list-decimal list-inside">
+                <li>Go to <span className="font-[500] text-primary">WooCommerce → Products</span> in your WordPress admin</li>
+                <li>Click <span className="font-[500] text-primary">Export</span> at the top of the product list</li>
+                <li>Leave all options as default (all products, all columns)</li>
+                <li>Click <span className="font-[500] text-primary">Generate CSV</span> and download the file</li>
+              </ol>
+            </>
+          ) : (
+            <>
+              <p className="text-[13px] font-[600] font-public-sans text-primary mb-2">
+                How to export from Shopify
+              </p>
+              <ol className="text-[13px] font-public-sans text-muted-text space-y-1 list-decimal list-inside">
+                <li>Go to <span className="font-[500] text-primary">Products</span> in your Shopify admin</li>
+                <li>Click <span className="font-[500] text-primary">Export</span> (top-right)</li>
+                <li>Choose <span className="font-[500] text-primary">All products</span> and format <span className="font-[500] text-primary">CSV for Excel</span></li>
+                <li>Click <span className="font-[500] text-primary">Export products</span> — Shopify emails you the file</li>
+              </ol>
+            </>
+          )}
+          <p className="text-[12px] font-public-sans text-muted-text mt-3">
+            Any product CSV works — columns are detected automatically.
+            Product images are not imported; add them from the edit page.
           </p>
-        )}
-      </div>
-
-      {/* Pricing */}
-      <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
-        <div>
-          <h2 className="text-[15px] font-[600] font-public-sans text-primary">Wholesale Pricing</h2>
-          <p className="text-[13px] font-public-sans text-muted-text mt-0.5">
-            Shopify stores retail prices. Set how wholesale prices should be calculated.
-          </p>
         </div>
-        <div className="space-y-3">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="radio"
-              checked={config.priceMode === 'retail'}
-              onChange={() => setConfig((c) => ({ ...c, priceMode: 'retail' }))}
-              className="mt-0.5"
-            />
-            <div>
-              <p className="text-[14px] font-[500] font-public-sans text-primary">Use Shopify price as wholesale</p>
-              <p className="text-[12px] font-public-sans text-muted-text">Import the Shopify price as-is</p>
-            </div>
-          </label>
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="radio"
-              checked={config.priceMode === 'percent'}
-              onChange={() => setConfig((c) => ({ ...c, priceMode: 'percent' }))}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <p className="text-[14px] font-[500] font-public-sans text-primary">Set wholesale as % of Shopify price</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={config.pricePercent}
-                  onChange={(e) => setConfig((c) => ({ ...c, pricePercent: Number(e.target.value) }))}
-                  disabled={config.priceMode !== 'percent'}
-                  className="w-20 h-8 px-3 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors disabled:opacity-40"
-                />
-                <span className="text-[13px] font-public-sans text-muted-text">% of Shopify price</span>
-                {config.priceMode === 'percent' && (
-                  <span className="text-[12px] font-public-sans text-muted-text">
-                    (e.g. ₹2,000 Shopify → ₹{Math.round(2000 * config.pricePercent / 100).toLocaleString('en-IN')} wholesale)
-                  </span>
-                )}
-              </div>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Defaults */}
-      <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
-        <h2 className="text-[15px] font-[600] font-public-sans text-primary">Import Defaults</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-[600] font-public-sans text-primary">Default MOQ (units)</label>
-            <input
-              type="number"
-              min={1}
-              value={config.defaultMoq}
-              onChange={(e) => setConfig((c) => ({ ...c, defaultMoq: Math.max(1, parseInt(e.target.value) || 1) }))}
-              className="h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
-            />
-            <p className="text-[11px] font-public-sans text-muted-text">You can edit per-product in the next step</p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-[600] font-public-sans text-primary">Lead Time</label>
-            <select
-              value={config.defaultLeadTime}
-              onChange={(e) => setConfig((c) => ({ ...c, defaultLeadTime: e.target.value }))}
-              className="h-9 px-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
-            >
-              {LEAD_TIMES.map((lt) => (
-                <option key={lt.value} value={lt.value}>{lt.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] font-[600] font-public-sans text-primary">Shipping Zones</label>
-          <div className="flex flex-wrap gap-2">
-            {SHIPPING_ZONES.map((zone) => {
-              const selected = config.enabledZones.includes(zone.value)
-              return (
-                <button
-                  key={zone.value}
-                  type="button"
-                  onClick={() => toggleZone(zone.value)}
-                  className={`h-8 px-3 rounded border text-[12px] font-[500] font-public-sans transition-colors ${
-                    selected
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-border-warm bg-muted-bg/30 text-primary hover:border-accent'
-                  }`}
-                >
-                  {zone.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft size={14} className="mr-1.5" aria-hidden="true" />
-          Back
-        </Button>
-        <Button variant="primary" size="sm" onClick={onNext} disabled={!canProceed}>
-          Review {products.length} products
-          <ChevronRight size={14} className="ml-1.5" aria-hidden="true" />
-        </Button>
       </div>
     </div>
   )
 }
 
-// ─── Step 3: Review ───────────────────────────────────────────────────────────
+// ─── Preview Step ─────────────────────────────────────────────────────────────
 
-function ReviewStep({
-  products,
-  config,
+const PREVIEW_ROWS = 5
+
+function PreviewStep({
+  parseState,
   categories,
-  overrides,
-  setOverrides,
   onBack,
   onImport,
   importing,
 }: {
-  products: ShopifyProduct[]
-  config: ImportConfig
+  parseState: ParseState
   categories: Category[]
-  overrides: Record<string, RowOverride>
-  setOverrides: React.Dispatch<React.SetStateAction<Record<string, RowOverride>>>
   onBack: () => void
   onImport: () => void
   importing: boolean
 }) {
-  const catMap = Object.fromEntries(categories.map((c) => [c.slug, c.name]))
+  const { products, categoryMap, detected } = parseState
 
-  function getOverride(handle: string): RowOverride {
-    return overrides[handle] ?? { price: '', moq: '', skip: false }
+  const unmatchedCount = products.filter((p) => p.sourceCategory && !categoryMap[p.sourceCategory]).length
+  const withVariants = products.filter((p) => p.variants.length > 0).length
+
+  const formatBadge: Record<string, string> = {
+    WooCommerce: 'bg-blue-50 border-blue-200 text-blue-700',
+    Shopify: 'bg-green-50 border-green-200 text-green-700',
+    Generic: 'bg-muted-bg border-border-warm text-muted-text',
   }
-
-  function updateOverride(handle: string, patch: Partial<RowOverride>) {
-    setOverrides((prev) => ({ ...prev, [handle]: { ...getOverride(handle), ...patch } }))
-  }
-
-  const activeProducts = products.filter((p) => !getOverride(p.handle).skip)
-  const skippedCount = products.length - activeProducts.length
 
   return (
-    <div className="space-y-4">
-      {/* Header bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[15px] font-[600] font-public-sans text-primary">
-            {activeProducts.length} product{activeProducts.length !== 1 ? 's' : ''} ready to import
+    <div className="max-w-2xl space-y-5">
+      {/* Detected summary */}
+      <div className="flex items-center gap-3 p-4 rounded border border-border-warm bg-muted-bg/30">
+        <div className="flex-1">
+          <p className="text-[14px] font-[600] font-public-sans text-primary">
+            {products.length} product{products.length !== 1 ? 's' : ''} ready to import
           </p>
-          {skippedCount > 0 && (
-            <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
-              {skippedCount} product{skippedCount !== 1 ? 's' : ''} skipped
+          <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
+            {withVariants > 0 && `${withVariants} with variants · `}
+            {unmatchedCount > 0
+              ? `${products.length - unmatchedCount} categories matched, ${unmatchedCount} unmatched`
+              : 'all categories matched'}
+          </p>
+        </div>
+        <span className={`text-[11px] font-[600] font-public-sans px-2 py-1 rounded border ${formatBadge[detected]}`}>
+          {detected}
+        </span>
+      </div>
+
+      {/* Preview table */}
+      <div className="border border-border-warm rounded overflow-hidden">
+        <div className="px-4 py-2.5 bg-muted-bg/40 border-b border-border-warm flex items-center justify-between">
+          <p className="text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.04em]">
+            Preview
+          </p>
+          {products.length > PREVIEW_ROWS && (
+            <p className="text-[12px] font-public-sans text-muted-text">
+              Showing {PREVIEW_ROWS} of {products.length}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack} disabled={importing}>
-            <ArrowLeft size={14} className="mr-1.5" aria-hidden="true" />
-            Back
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onImport}
-            disabled={importing || activeProducts.length === 0}
-          >
-            {importing ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5" />
-                Importing…
-              </>
-            ) : (
-              `Import ${activeProducts.length} product${activeProducts.length !== 1 ? 's' : ''}`
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="border border-border-warm rounded overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px] font-public-sans">
-            <thead>
-              <tr className="border-b border-border-warm bg-muted-bg/40">
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-8" />
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Product</th>
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Category</th>
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-16">Vars</th>
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-36">Wholesale Price (₹)</th>
-                <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-24">MOQ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-warm">
-              {products.map((p) => {
-                const ov = getOverride(p.handle)
-                const price = computePrice(p, config, ov.price)
-                const catSlug = config.typeToCategory[p.shopifyType] ?? ''
-                const catName = catMap[catSlug] ?? catSlug
-
-                return (
-                  <tr
-                    key={p.handle}
-                    className={`transition-colors ${ov.skip ? 'opacity-40 bg-muted-bg/20' : 'hover:bg-muted-bg/20'}`}
-                  >
-                    {/* Skip toggle */}
-                    <td className="px-4 py-2.5">
-                      <button
-                        type="button"
-                        onClick={() => updateOverride(p.handle, { skip: !ov.skip })}
-                        title={ov.skip ? 'Include this product' : 'Skip this product'}
-                        className="text-muted-text hover:text-error transition-colors"
-                        aria-label={ov.skip ? 'Include' : 'Skip'}
-                      >
-                        <X size={13} />
-                      </button>
-                    </td>
-
-                    {/* Product name */}
-                    <td className="px-4 py-2.5">
-                      <p className="font-[500] text-primary leading-snug max-w-[220px] truncate" title={p.name}>
-                        {p.name}
+        <table className="w-full text-[13px] font-public-sans">
+          <thead>
+            <tr className="border-b border-border-warm">
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Product Name</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-28">Price</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Category</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-14 text-center">Vars</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-warm">
+            {products.slice(0, PREVIEW_ROWS).map((p, i) => {
+              const catName = categoryMap[p.sourceCategory] || null
+              return (
+                <tr key={i} className="hover:bg-muted-bg/20 transition-colors">
+                  <td className="px-4 py-2.5">
+                    <p className="font-[500] text-primary truncate max-w-[200px]" title={p.name}>
+                      {p.name}
+                    </p>
+                    {p.sourceCategory && !catName && (
+                      <p className="text-[11px] text-amber-600 mt-0.5 truncate max-w-[200px]">
+                        {p.sourceCategory} → unmatched
                       </p>
-                      {p.tags.length > 0 && (
-                        <p className="text-[11px] text-muted-text truncate max-w-[220px]">
-                          {p.tags.slice(0, 3).join(', ')}
-                        </p>
-                      )}
-                    </td>
-
-                    {/* Category */}
-                    <td className="px-4 py-2.5 text-primary">{catName || '—'}</td>
-
-                    {/* Variants */}
-                    <td className="px-4 py-2.5 text-muted-text text-center">
-                      {p.variants.length > 0 ? p.variants.length : '—'}
-                    </td>
-
-                    {/* Wholesale price (editable) */}
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-text">₹</span>
-                        <input
-                          type="number"
-                          min={1}
-                          placeholder={String(Math.round(price))}
-                          value={ov.price}
-                          onChange={(e) => updateOverride(p.handle, { price: e.target.value })}
-                          disabled={ov.skip}
-                          className="w-24 h-7 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors disabled:opacity-40"
-                        />
-                      </div>
-                      {!ov.price && p.minPrice > 0 && (
-                        <p className="text-[11px] text-muted-text mt-0.5">
-                          Shopify: {formatInr(p.minPrice)}
-                        </p>
-                      )}
-                    </td>
-
-                    {/* MOQ (editable) */}
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="number"
-                        min={1}
-                        placeholder={String(config.defaultMoq)}
-                        value={ov.moq}
-                        onChange={(e) => updateOverride(p.handle, { moq: e.target.value })}
-                        disabled={ov.skip}
-                        className="w-16 h-7 px-2 rounded border border-border-warm bg-transparent text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors disabled:opacity-40"
-                      />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 tabular-nums">
+                    {p.minPrice > 0
+                      ? <span className="text-primary">₹{p.minPrice.toLocaleString('en-IN')}</span>
+                      : <span className="text-amber-600 text-[12px]">No price</span>}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {catName
+                      ? <span className="text-primary">{catName}</span>
+                      : <span className="text-muted-text italic text-[12px]">No category</span>}
+                  </td>
+                  <td className="px-4 py-2.5 text-muted-text text-center">
+                    {p.variants.length > 0 ? p.variants.length : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+        {products.length > PREVIEW_ROWS && (
+          <div className="px-4 py-2.5 border-t border-border-warm bg-muted-bg/20">
+            <p className="text-[12px] font-public-sans text-muted-text">
+              + {products.length - PREVIEW_ROWS} more product{products.length - PREVIEW_ROWS !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
       </div>
 
-      <p className="text-[12px] font-public-sans text-muted-text">
-        Leave price/MOQ blank to use the defaults from the previous step. Click × to skip a product.
-      </p>
+      {/* Unmatched category warning */}
+      {unmatchedCount > 0 && (
+        <div className="flex items-start gap-2 p-3 rounded border border-amber-200 bg-amber-50/60">
+          <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
+          <p className="text-[12px] font-public-sans text-amber-700">
+            {unmatchedCount} product{unmatchedCount !== 1 ? 's have' : ' has'} an unrecognized category. AI will classify and auto-create the missing L1/L2/L3 categories during import.
+          </p>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={onBack} disabled={importing}>
+          <ArrowLeft size={14} className="mr-1.5" aria-hidden="true" />
+          Back
+        </Button>
+        <Button variant="primary" size="sm" onClick={onImport} disabled={importing}>
+          {importing ? (
+            <>
+              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5" />
+              Importing…
+            </>
+          ) : (
+            `Import ${products.length} product${products.length !== 1 ? 's' : ''}`
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
 
-// ─── Step Done ────────────────────────────────────────────────────────────────
+// ─── Done Step ────────────────────────────────────────────────────────────────
 
-function DoneStep({ result, onImportMore }: { result: ImportResult; onImportMore: () => void }) {
+function DoneStep({
+  summary,
+  onImportMore,
+}: {
+  summary: ImportSummary
+  onImportMore: () => void
+}) {
   const router = useRouter()
+  const { result, detected } = summary
   const allGood = result.errors.length === 0
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-xl space-y-5">
       <div className={`border rounded-lg p-6 ${allGood ? 'border-success/30 bg-success/5' : 'border-amber-200 bg-amber-50/60'}`}>
         <div className="flex items-center gap-3 mb-4">
           {allGood
@@ -714,10 +826,17 @@ function DoneStep({ result, onImportMore }: { result: ImportResult; onImportMore
         </div>
 
         <div className="space-y-1 text-[14px] font-public-sans">
-          <p><span className="font-[600] text-success">{result.created}</span> <span className="text-primary">product{result.created !== 1 ? 's' : ''} created successfully</span></p>
+          <p>
+            <span className="font-[600] text-success">{result.created}</span>{' '}
+            <span className="text-primary">product{result.created !== 1 ? 's' : ''} created</span>
+          </p>
           {result.skipped > 0 && (
-            <p><span className="font-[600] text-muted-text">{result.skipped}</span> <span className="text-muted-text">skipped (already exist or invalid)</span></p>
+            <p>
+              <span className="font-[600] text-muted-text">{result.skipped}</span>{' '}
+              <span className="text-muted-text">skipped (already exist or invalid)</span>
+            </p>
           )}
+          <p className="text-[12px] text-muted-text mt-2">Detected format: {detected}</p>
         </div>
 
         {result.errors.length > 0 && (
@@ -734,16 +853,25 @@ function DoneStep({ result, onImportMore }: { result: ImportResult; onImportMore
         )}
       </div>
 
-      <p className="text-[13px] font-public-sans text-muted-text">
-        Product images were not imported — open each product in the edit page to add photos.
-      </p>
+      <div className="p-4 rounded border border-border-warm bg-muted-bg/30">
+        <p className="text-[13px] font-[600] font-public-sans text-primary mb-1.5">Defaults applied</p>
+        <ul className="text-[12px] font-public-sans text-muted-text space-y-0.5 list-disc list-inside">
+          <li>MOQ: 1 unit per order</li>
+          <li>Shipping: India (Domestic)</li>
+          <li>Lead time: 1–2 weeks</li>
+          <li>Product images: not imported</li>
+        </ul>
+        <p className="text-[12px] font-public-sans text-muted-text mt-2">
+          Open any product to edit pricing, zones, and add photos.
+        </p>
+      </div>
 
       <div className="flex items-center gap-3">
         <Button variant="primary" size="sm" onClick={() => router.push('/portal/products')}>
           View Products
         </Button>
         <Button variant="ghost" size="sm" onClick={onImportMore}>
-          Import Another CSV
+          Import Another File
         </Button>
       </div>
     </div>
@@ -754,72 +882,38 @@ function DoneStep({ result, onImportMore }: { result: ImportResult; onImportMore
 
 export default function ImportPage() {
   const [step, setStep] = useState<Step>('upload')
-  const [products, setProducts] = useState<ShopifyProduct[]>([])
-  const [config, setConfig] = useState<ImportConfig>({
-    typeToCategory: {},
-    priceMode: 'retail',
-    pricePercent: 60,
-    defaultMoq: 10,
-    defaultLeadTime: 'ONE_TO_TWO_WEEKS',
-    enabledZones: ['DOMESTIC'],
-  })
-  const [overrides, setOverrides] = useState<Record<string, RowOverride>>({})
+  const [processing, setProcessing] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
-  const [result, setResult] = useState<ImportResult | null>(null)
+  const [parseState, setParseState] = useState<ParseState | null>(null)
+  const [summary, setSummary] = useState<ImportSummary | null>(null)
 
-  const { data: categoriesData } = useCategories()
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories()
   const categories = categoriesData ?? []
 
-  function handleParsed(parsed: ShopifyProduct[]) {
-    setProducts(parsed)
-    // Pre-fill category mapping where Shopify type exactly matches a category name
-    const autoMap: Record<string, string> = {}
-    for (const type of [...new Set(parsed.map((p) => p.shopifyType))]) {
-      const match = categories.find((c) => c.name.toLowerCase() === type.toLowerCase())
-      if (match) autoMap[type] = match.slug
-    }
-    setConfig((c) => ({ ...c, typeToCategory: autoMap }))
-    setOverrides({})
-    setStep('configure')
-  }
+  // Step 1: parse the file client-side, show preview
+  const handleFile = useCallback(
+    async (file: File) => {
+      setProcessing('Reading file…')
+      try {
+        const state = await parseFile(file, categories, setProcessing)
+        setParseState(state)
+        setStep('preview')
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Could not parse file')
+      } finally {
+        setProcessing(null)
+      }
+    },
+    [categories],
+  )
 
+  // Step 2: user confirmed preview — call the API
   async function handleImport() {
+    if (!parseState) return
     setImporting(true)
     try {
-      const activeProducts = products.filter((p) => !overrides[p.handle]?.skip)
-      const payload = activeProducts.map((p) => {
-        const ov = overrides[p.handle] ?? { price: '', moq: '' }
-        const wholesalePriceInr = computePrice(p, config, ov.price)
-        const moq = parseInt(ov.moq || '') || config.defaultMoq
-        const catSlug = config.typeToCategory[p.shopifyType]
-
-        return {
-          name: p.name,
-          shortDescription: p.shortDescription || p.name.slice(0, 160),
-          fullDescription: p.descriptionHtml || null,
-          categories: catSlug ? [catSlug] : [],
-          tags: p.tags,
-          wholesalePriceInr,
-          moq,
-          weightGrams: p.weightGrams || 100,
-          leadTime: config.defaultLeadTime,
-          enabledZones: config.enabledZones,
-          availability: p.status === 'active' ? 'ACTIVE' : 'INACTIVE',
-          variants: p.variants
-            .filter((v) => v.sku)
-            .map((v) => ({
-              sku: v.sku,
-              priceInr: config.priceMode === 'retail'
-                ? v.price || wholesalePriceInr
-                : Math.max(0.01, (v.price || wholesalePriceInr) * config.pricePercent / 100),
-              stock: v.stock,
-              attributes: v.attributes,
-            })),
-        }
-      })
-
-      const res = await api.post('/products/import-shopify', { products: payload })
-      setResult(res.data.data)
+      const result = await importProducts(parseState)
+      setSummary({ result, detected: parseState.detected })
       setStep('done')
     } catch (err) {
       toast.error(getApiError(err))
@@ -830,24 +924,12 @@ export default function ImportPage() {
 
   function reset() {
     setStep('upload')
-    setProducts([])
-    setConfig({ typeToCategory: {}, priceMode: 'retail', pricePercent: 60, defaultMoq: 10, defaultLeadTime: 'ONE_TO_TWO_WEEKS', enabledZones: ['DOMESTIC'] })
-    setOverrides({})
-    setResult(null)
+    setParseState(null)
+    setSummary(null)
   }
-
-  // Step progress indicators
-  const STEPS: { key: Step; label: string }[] = [
-    { key: 'upload', label: 'Upload' },
-    { key: 'configure', label: 'Configure' },
-    { key: 'review', label: 'Review' },
-    { key: 'done', label: 'Done' },
-  ]
-  const currentIndex = STEPS.findIndex((s) => s.key === step)
 
   return (
     <div>
-      {/* Page header */}
       <div className="flex items-center gap-3 mb-8">
         <Link
           href="/portal/products"
@@ -858,65 +940,32 @@ export default function ImportPage() {
         </Link>
         <div>
           <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
-            Import from Shopify
+            Import Products
           </h1>
           <p className="text-[13px] font-public-sans text-muted-text mt-0.5">
-            Upload your Shopify product export CSV to list products on Solomon Bharat
+            Upload any product CSV — columns are detected automatically
           </p>
         </div>
       </div>
 
-      {/* Progress bar */}
-      {step !== 'done' && (
-        <div className="flex items-center gap-0 mb-8 max-w-sm">
-          {STEPS.filter((s) => s.key !== 'done').map((s, idx) => {
-            const done = currentIndex > idx
-            const active = currentIndex === idx
-            return (
-              <div key={s.key} className="flex items-center flex-1 last:flex-none">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-[700] transition-colors ${
-                    done ? 'bg-success text-white' : active ? 'bg-accent text-white' : 'bg-muted-bg text-muted-text'
-                  }`}>
-                    {done ? '✓' : idx + 1}
-                  </div>
-                  <span className={`text-[12px] font-[500] font-public-sans ${active ? 'text-primary' : 'text-muted-text'}`}>
-                    {s.label}
-                  </span>
-                </div>
-                {idx < 2 && <div className="flex-1 h-px bg-border-warm mx-3" />}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Step content */}
-      {step === 'upload' && <UploadStep onParsed={handleParsed} />}
-      {step === 'configure' && (
-        <ConfigureStep
-          products={products}
-          config={config}
-          setConfig={setConfig}
-          categories={categories}
-          onBack={() => setStep('upload')}
-          onNext={() => setStep('review')}
+      {step === 'upload' && (
+        <UploadStep
+          onFile={handleFile}
+          processing={processing}
+          categoriesLoading={categoriesLoading}
         />
       )}
-      {step === 'review' && (
-        <ReviewStep
-          products={products}
-          config={config}
+      {step === 'preview' && parseState && (
+        <PreviewStep
+          parseState={parseState}
           categories={categories}
-          overrides={overrides}
-          setOverrides={setOverrides}
-          onBack={() => setStep('configure')}
+          onBack={() => setStep('upload')}
           onImport={handleImport}
           importing={importing}
         />
       )}
-      {step === 'done' && result && (
-        <DoneStep result={result} onImportMore={reset} />
+      {step === 'done' && summary && (
+        <DoneStep summary={summary} onImportMore={reset} />
       )}
     </div>
   )

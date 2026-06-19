@@ -38,8 +38,7 @@ export interface Product {
   brandId: string
   brandName: string
   brandSlug: string
-  shortDescription: string
-  description?: string
+  description: string
   photos: ProductPhoto[]
   wholesalePrice: number // INR
   moq: number
@@ -123,8 +122,7 @@ function mapProduct(raw: Record<string, any>): Product {
     brandId: raw.brandProfileId ?? raw.brandId ?? '',
     brandName: (bp.brandName as string) ?? raw.brandName ?? '',
     brandSlug: (bp.slug as string) ?? raw.brandSlug ?? '',
-    shortDescription: raw.shortDescription ?? '',
-    description: raw.fullDescription ?? raw.description,
+    description: raw.description ?? raw.fullDescription ?? raw.shortDescription ?? '',
     photos: photos.map((ph) => ({
       id: ph.id ?? '',
       url: ph.url,

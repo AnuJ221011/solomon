@@ -7,8 +7,7 @@ const shippingZoneEnum = z.enum([
 
 export const createProductSchema = z.object({
   name: z.string().min(1).max(80),
-  shortDescription: z.string().min(1).max(160),
-  fullDescription: z.string().optional(),
+  description: z.string().min(1),
   wholesalePriceInr: z.number().positive(),
   moq: z.number().int().positive(),
   leadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']),

@@ -138,7 +138,7 @@ export const listProducts = async ({
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
-      { shortDescription: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
       { tags: { has: search } },
     ];
   }
@@ -271,10 +271,17 @@ const _rankProducts = async (products, buyerProfile) => {
 };
 
 
-export const listMyProducts = async (userId, query) => {
+export const listMyProducts = async (userId) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
   if (!brand) throw createError('Brand profile not found', 404);
-  return listProducts({ ...query, brandId: brand.id });
+  return prisma.product.findMany({
+    where: { brandProfileId: brand.id },
+    include: {
+      photos: { orderBy: { position: 'asc' }, take: 1 },
+      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 };
 
 // Ensures a product belongs to the requesting brand

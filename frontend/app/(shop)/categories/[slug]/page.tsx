@@ -42,7 +42,6 @@ function toTypedProduct(p: ApiProduct): Product {
     brandId: p.brandId,
     brandName: p.brandName,
     brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription,
     description: p.description,
     images: (p.photos ?? []).sort((a, b) => a.position - b.position).map((ph) => ph.url),
     wholesalePrice: p.wholesalePrice,

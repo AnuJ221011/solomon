@@ -15,7 +15,7 @@ function adaptProduct(p: HookProduct): GlobalProduct {
     brandId: p.brandId,
     brandName: p.brandName,
     brandSlug: p.brandSlug,
-    shortDescription: p.shortDescription,
+    description: p.description,
     images: p.photos.map((ph) => ph.url),
     wholesalePrice: p.wholesalePrice,
     moq: p.moq,

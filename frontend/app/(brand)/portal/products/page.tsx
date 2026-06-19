@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Plus, Upload, Search } from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useMyProducts } from '@/hooks/queries/useProducts'
@@ -84,7 +84,7 @@ export default function ProductsPage() {
             className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5')}
           >
             <Upload size={14} aria-hidden="true" />
-            Import from Shopify
+            Import Products
           </Link>
           <Link
             href="/portal/products/new"

@@ -4,7 +4,7 @@ import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, Trash2, Upload, ImageIcon, ChevronDown,
-  Plus, RefreshCw, Loader2, X,
+  Plus, RefreshCw, Loader2, X, Check, Search,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -14,6 +14,94 @@ import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 import { useCategories } from '@/hooks/queries/useCategories'
+import type { Category } from '@/hooks/queries/useCategories'
+
+// ─── Category picker ──────────────────────────────────────────────────────────
+
+function CategoryPicker({
+  categories,
+  selected,
+  onToggle,
+}: {
+  categories: Category[]
+  selected: string[]
+  onToggle: (name: string) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [])
+
+  const trimmed = query.trim()
+  const filtered = categories
+    .filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase()))
+    .slice(0, 10)
+  const canAdd = selected.length < 2
+
+  return (
+    <div ref={containerRef} className="space-y-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map((name) => (
+            <span key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary text-white text-[12px] font-[500] font-public-sans">
+              {name}
+              <button type="button" onClick={() => onToggle(name)} className="hover:opacity-70 transition-opacity" aria-label={`Remove ${name}`}>
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {canAdd && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+            placeholder="Search categories…"
+            className="w-full h-10 pl-9 pr-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+          />
+          {open && (
+            <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-surface border border-border-warm rounded shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+              {filtered.length === 0 && !trimmed && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">Type to search categories…</p>
+              )}
+              {filtered.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => { onToggle(c.name); setQuery(''); setOpen(false) }}
+                  disabled={selected.includes(c.name)}
+                  className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-primary hover:bg-muted-bg transition-colors flex items-center justify-between disabled:opacity-40"
+                >
+                  <span>{c.name}</span>
+                  {selected.includes(c.name) && <Check size={13} className="text-accent shrink-0" />}
+                </button>
+              ))}
+              {filtered.length === 0 && trimmed && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">No categories match "{trimmed}"</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!canAdd && (
+        <p className="text-[12px] font-public-sans text-muted-text">Max 2 categories selected. Remove one to change.</p>
+      )}
+    </div>
+  )
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -39,8 +127,7 @@ const SHIPPING_ZONES: { label: string; value: string }[] = [
 interface ProductForm {
   name: string
   categories: string[]
-  shortDescription: string
-  fullDescription: string
+  description: string
   wholesalePriceInr: string
   moq: string
   leadTime: string
@@ -779,8 +866,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
   const [form, setForm] = useState<ProductForm>({
     name: '',
     categories: [],
-    shortDescription: '',
-    fullDescription: '',
+    description: '',
     wholesalePriceInr: '',
     moq: '',
     leadTime: 'ONE_TO_TWO_WEEKS',
@@ -795,8 +881,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
     setForm({
       name: product.name ?? '',
       categories: product.categories ?? [],
-      shortDescription: product.shortDescription ?? '',
-      fullDescription: product.fullDescription ?? '',
+      description: product.description ?? '',
       wholesalePriceInr: product.wholesalePriceInr != null ? String(product.wholesalePriceInr) : '',
       moq: product.moq != null ? String(product.moq) : '',
       leadTime: product.leadTime ?? 'ONE_TO_TWO_WEEKS',
@@ -830,8 +915,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
       api.patch(`/products/${product?.id}`, {
         name: form.name.trim(),
         categories: form.categories,
-        shortDescription: form.shortDescription.trim(),
-        fullDescription: form.fullDescription.trim() || undefined,
+        description: form.description.trim(),
         wholesalePriceInr: Number(form.wholesalePriceInr),
         moq: Number(form.moq),
         leadTime: form.leadTime,
@@ -904,48 +988,22 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
           </Field>
 
           <Field label="Categories" hint="Select up to 2 categories">
-            <div className="flex flex-wrap gap-2">
-              {categoryList.length === 0 && (
-                <p className="text-[13px] font-public-sans text-muted-text">Loading categories…</p>
-              )}
-              {categoryList.map((cat: { id: string; name: string; slug: string }) => {
-                const selected = form.categories.includes(cat.name)
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => toggleCategory(cat.name)}
-                    className={`h-8 px-3 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
-                      selected
-                        ? 'border-accent bg-accent text-white'
-                        : 'border-border-warm bg-muted-bg/30 text-primary hover:border-accent'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                )
-              })}
-            </div>
-          </Field>
-
-          <Field label="Short Description" hint="Max 160 characters — shown on product cards">
-            <textarea
-              value={form.shortDescription}
-              onChange={(e) => set('shortDescription')(e.target.value)}
-              maxLength={160}
-              rows={2}
-              className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none"
+            <CategoryPicker
+              categories={categoryList}
+              selected={form.categories}
+              onToggle={toggleCategory}
             />
           </Field>
 
-          <Field label="Full Description">
+          <Field label="Description">
             <textarea
-              value={form.fullDescription}
-              onChange={(e) => set('fullDescription')(e.target.value)}
+              value={form.description}
+              onChange={(e) => set('description')(e.target.value)}
               rows={5}
               className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none"
             />
           </Field>
+
 
           <Field label="Tags" hint="Comma-separated">
             <TextInput value={form.tags} onChange={set('tags')} placeholder="handmade, cotton, block print" />

@@ -86,8 +86,7 @@ export const importProductsFromShopify = async (userId) => {
         brandProfileId: brand.id,
         name: sp.title.slice(0, 80),
         slug,
-        shortDescription: sp.body_html?.replace(/<[^>]*>/g, '').slice(0, 160) ?? sp.title,
-        fullDescription: sp.body_html,
+        description: sp.body_html ?? sp.title,
         wholesalePriceInr: price,
         moq: 1,
         leadTime: 'ONE_TO_TWO_WEEKS',
@@ -152,7 +151,7 @@ export const handleProductUpdate = async (shopDomain, payload) => {
     where: { brandProfileId: store.brandProfileId, name: sp.title },
     data: {
       availability: sp.status === 'active' ? 'ACTIVE' : 'INACTIVE',
-      shortDescription: sp.body_html?.replace(/<[^>]*>/g, '').slice(0, 160) ?? sp.title,
+      description: sp.body_html ?? sp.title,
     },
   });
   logger.info('Shopify product update synced', { shopDomain, title: sp.title });

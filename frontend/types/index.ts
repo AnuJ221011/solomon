@@ -46,8 +46,7 @@ export interface Product {
   brandId: string
   brandName: string
   brandSlug: string
-  shortDescription: string
-  description?: string
+  description: string
   images: string[] // Cloudinary URLs
   wholesalePrice: number // INR
   displayPrice?: number // local currency

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, RefreshCw, Check, Search } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -33,8 +33,7 @@ const SHIPPING_ZONES: { label: string; value: string }[] = [
 interface ProductForm {
   name: string
   categories: string[]
-  shortDescription: string
-  fullDescription: string
+  description: string
   wholesalePriceInr: string
   moq: string
   leadTime: string
@@ -101,6 +100,114 @@ function TextInput({ value, onChange, placeholder, type = 'text', maxLength }: {
   )
 }
 
+// ─── Category picker ──────────────────────────────────────────────────────────
+
+import type { Category } from '@/hooks/queries/useCategories'
+
+function CategoryPicker({
+  categories,
+  selected,
+  onToggle,
+  onCreateNew,
+  creating,
+}: {
+  categories: Category[]
+  selected: string[]
+  onToggle: (name: string) => void
+  onCreateNew: (name: string) => void
+  creating: boolean
+}) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [])
+
+  const trimmed = query.trim()
+  const filtered = categories
+    .filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase()))
+    .slice(0, 10)
+  const exactMatch = categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
+  const canAdd = selected.length < 2
+
+  return (
+    <div ref={containerRef} className="space-y-2">
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map((name) => (
+            <span key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary text-white text-[12px] font-[500] font-public-sans">
+              {name}
+              <button type="button" onClick={() => onToggle(name)} className="hover:opacity-70 transition-opacity" aria-label={`Remove ${name}`}>
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Search input — hidden once 2 selected */}
+      {canAdd && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+            placeholder="Search categories…"
+            className="w-full h-10 pl-9 pr-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+          />
+
+          {open && (
+            <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-surface border border-border-warm rounded shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+              {filtered.length === 0 && !trimmed && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">Type to search categories…</p>
+              )}
+              {filtered.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => { onToggle(c.name); setQuery(''); setOpen(false) }}
+                  disabled={selected.includes(c.name)}
+                  className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-primary hover:bg-muted-bg transition-colors flex items-center justify-between disabled:opacity-40"
+                >
+                  <span>{c.name}</span>
+                  {selected.includes(c.name) && <Check size={13} className="text-accent shrink-0" />}
+                </button>
+              ))}
+              {trimmed && !exactMatch && (
+                <button
+                  type="button"
+                  onClick={() => { onCreateNew(trimmed); setQuery(''); setOpen(false) }}
+                  disabled={creating}
+                  className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-accent hover:bg-muted-bg transition-colors border-t border-border-warm flex items-center gap-1.5"
+                >
+                  {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                  Create "{trimmed}"
+                </button>
+              )}
+              {filtered.length === 0 && trimmed && exactMatch && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">No other matches</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!canAdd && (
+        <p className="text-[12px] font-public-sans text-muted-text">Max 2 categories selected. Remove one to change.</p>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NewProductPage() {
@@ -111,10 +218,6 @@ export default function NewProductPage() {
   const { data: categoryList = [], isLoading: catsLoading } = useCategories()
 
   // ── Category creation ──────────────────────────────────────────────────────
-  const [showNewCat, setShowNewCat] = useState(false)
-  const [newCatName, setNewCatName] = useState('')
-  const newCatRef = useRef<HTMLInputElement>(null)
-
   const createCategory = useMutation({
     mutationFn: (name: string) => api.post('/categories', { name }),
     onSuccess: (_, name) => {
@@ -123,22 +226,14 @@ export default function NewProductPage() {
         if (f.categories.includes(name) || f.categories.length >= 2) return f
         return { ...f, categories: [...f.categories, name] }
       })
-      setNewCatName('')
-      setShowNewCat(false)
       toast.success(`Category "${name}" created and selected.`)
     },
     onError: (err) => toast.error(getApiError(err)),
   })
 
-  function submitNewCategory() {
-    const name = newCatName.trim()
-    if (!name) return
-    createCategory.mutate(name)
-  }
-
   // ── Product form ───────────────────────────────────────────────────────────
   const [form, setForm] = useState<ProductForm>({
-    name: '', categories: [], shortDescription: '', fullDescription: '',
+    name: '', categories: [], description: '',
     wholesalePriceInr: '', moq: '', leadTime: 'ONE_TO_TWO_WEEKS',
     weightKg: '', tags: '', availability: 'ACTIVE',
     enabledZones: ['DOMESTIC'],
@@ -262,7 +357,7 @@ export default function NewProductPage() {
 
     if (!form.name.trim())                                              { toast.error('Product name is required.'); return }
     if (form.categories.length === 0)                                   { toast.error('Select at least one category.'); return }
-    if (!form.shortDescription.trim())                                  { toast.error('Short description is required.'); return }
+    if (!form.description.trim())                                       { toast.error('Description is required.'); return }
     if (!form.wholesalePriceInr || Number(form.wholesalePriceInr) <= 0) { toast.error('Wholesale price must be a positive number.'); return }
     if (!form.moq || Number(form.moq) < 1)                              { toast.error('MOQ must be at least 1.'); return }
     if (!form.weightKg || Number(form.weightKg) <= 0)                   { toast.error('Weight must be a positive number.'); return }
@@ -280,8 +375,7 @@ export default function NewProductPage() {
       const res = await api.post('/products', {
         name:             form.name.trim(),
         categories:       form.categories,
-        shortDescription: form.shortDescription.trim(),
-        fullDescription:  form.fullDescription.trim() || undefined,
+        description:      form.description.trim(),
         wholesalePriceInr: Number(form.wholesalePriceInr),
         moq:              Number(form.moq),
         leadTime:         form.leadTime,
@@ -394,63 +488,25 @@ export default function NewProductPage() {
             <TextInput value={form.name} onChange={set('name')} placeholder="e.g. Hand-Block Printed Cotton Saree" maxLength={80} />
           </Field>
 
-          <Field label="Category" required hint="Select up to 2 · Can't find yours? Create a new one.">
+          <Field label="Category" required hint="Select up to 2. Type a new name to create it.">
             {catsLoading ? (
               <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
                 <Loader2 size={14} className="animate-spin" />Loading categories…
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {categoryList.map((c) => {
-                  const active = form.categories.includes(c.name)
-                  return (
-                    <button key={c.id} type="button" onClick={() => toggleCategory(c.name)}
-                      className={`px-3 h-8 rounded border text-[13px] font-[500] font-public-sans transition-colors ${active ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'}`}>
-                      {c.name}
-                    </button>
-                  )
-                })}
-                {showNewCat ? (
-                  <div className="flex items-center gap-1.5">
-                    <input ref={newCatRef} autoFocus type="text" value={newCatName}
-                      onChange={(e) => setNewCatName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); submitNewCategory() }
-                        if (e.key === 'Escape') { setShowNewCat(false); setNewCatName('') }
-                      }}
-                      placeholder="Category name"
-                      className="h-8 px-2.5 w-36 rounded border border-accent bg-muted-bg/30 text-[13px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none" />
-                    <button type="button" onClick={submitNewCategory}
-                      disabled={createCategory.isPending || !newCatName.trim()}
-                      className="h-8 px-3 rounded border border-accent bg-accent text-white text-[13px] font-[500] font-public-sans disabled:opacity-50 flex items-center gap-1">
-                      {createCategory.isPending ? <Loader2 size={12} className="animate-spin" /> : 'Add'}
-                    </button>
-                    <button type="button" onClick={() => { setShowNewCat(false); setNewCatName('') }}
-                      className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary">
-                      <X size={13} />
-                    </button>
-                  </div>
-                ) : (
-                  <button type="button"
-                    onClick={() => { setShowNewCat(true); setTimeout(() => newCatRef.current?.focus(), 50) }}
-                    className="h-8 px-3 rounded border border-dashed border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:border-accent hover:text-accent transition-colors flex items-center gap-1.5">
-                    <Plus size={13} />New category
-                  </button>
-                )}
-              </div>
+              <CategoryPicker
+                categories={categoryList}
+                selected={form.categories}
+                onToggle={toggleCategory}
+                onCreateNew={(name) => createCategory.mutate(name)}
+                creating={createCategory.isPending}
+              />
             )}
           </Field>
 
-          <Field label="Short Description" required hint="Max 160 characters — shown on product cards">
-            <textarea value={form.shortDescription} onChange={(e) => set('shortDescription')(e.target.value)}
-              placeholder="A concise one-liner about this product..." maxLength={160} rows={2}
-              className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none" />
-            <p className="text-[11px] font-public-sans text-muted-text text-right">{form.shortDescription.length}/160</p>
-          </Field>
-
-          <Field label="Full Description" hint="Shown on product detail page">
-            <textarea value={form.fullDescription} onChange={(e) => set('fullDescription')(e.target.value)}
-              placeholder="Materials, craftsmanship, care instructions..." rows={5}
+          <Field label="Description" required>
+            <textarea value={form.description} onChange={(e) => set('description')(e.target.value)}
+              placeholder="Describe the product — materials, craftsmanship, dimensions, care instructions…" rows={5}
               className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none" />
           </Field>
 
