@@ -55,7 +55,7 @@ export const getCart = async (userId) => {
   });
 
   if (!cart) {
-    return prisma.cart.create({ where: { userId }, data: { userId }, include: { items: true } });
+    return prisma.cart.create({ data: { userId }, include: { items: true } });
   }
   return cart;
 };

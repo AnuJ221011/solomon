@@ -856,7 +856,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
   const router = useRouter()
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ['product', slug],
+    queryKey: ['product-raw', slug],
     queryFn: () => api.get(`/products/${slug}`).then((r) => r.data.data),
   })
 

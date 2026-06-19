@@ -109,10 +109,14 @@ export const listProducts = async ({
         const vals = Array.isArray(values) ? values.filter(Boolean) : [];
         if (vals.length === 0) continue;
         andConditions.push({
-          attributeValues: {
+          variants: {
             some: {
-              attribute: { name: attrName },
-              value: vals.length === 1 ? vals[0] : { in: vals },
+              attributes: {
+                some: {
+                  name: attrName,
+                  value: vals.length === 1 ? vals[0] : { in: vals },
+                },
+              },
             },
           },
         });

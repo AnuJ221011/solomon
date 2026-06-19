@@ -74,7 +74,20 @@ export function useWallet() {
     queryKey: ['wallet'],
     queryFn: async () => {
       const response = await api.get('/referrals/wallet')
-      return response.data.data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw: any = response.data.data ?? {}
+      return {
+        balance: Number(raw.balanceInr ?? raw.balance ?? 0),
+        credits: (raw.credits ?? []).map((c: any) => ({
+          id: c.id,
+          amount: Number(c.amountInr ?? c.amount ?? 0),
+          type: c.type ?? 'REFERRAL',
+          description: c.description ?? c.reason ?? '',
+          createdAt: c.createdAt,
+          expiresAt: c.expiresAt,
+          status: c.status,
+        })),
+      }
     },
     staleTime: 60 * 1000,
   })
