@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageCircle } from 'lucide-react'
+import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { PhotoGallery } from '@/components/pdp/PhotoGallery'
@@ -202,6 +202,7 @@ function PDPSkeleton() {
 // ─── Inner page ───────────────────────────────────────────────────────────────
 
 function ProductDetailInner({ slug }: { slug: string }) {
+  const router = useRouter()
   const { data: rawProduct, isLoading, isError } = useProduct(slug)
   const { track } = useRecentlyViewed()
 
@@ -255,9 +256,18 @@ function ProductDetailInner({ slug }: { slug: string }) {
 
           {/* Breadcrumb */}
           <nav
-            className="flex items-center gap-1.5 mb-8 text-[12px] font-public-sans text-muted-text"
+            className="flex items-center gap-0.5 mb-8 text-[12px] font-public-sans text-muted-text"
             aria-label="Breadcrumb"
           >
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-1 mr-3 font-playfair font-bold hover:text-primary transition-colors"
+            >
+              <ArrowLeft size={13} />
+              Back
+            </button>
+            <span aria-hidden="true">/</span>
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span aria-hidden="true">/</span>
             <Link href="/catalogue" className="hover:text-primary transition-colors">Catalogue</Link>
