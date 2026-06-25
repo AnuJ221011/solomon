@@ -15,27 +15,8 @@ const toSlug = (str) =>
 const W2 = 'ONE_TO_TWO_WEEKS';
 const W3 = 'TWO_TO_FOUR_WEEKS';
 const ACT = 'ACTIVE';
-const pics = (kw, s) => ({ __kw: kw, __s: s });
-
-async function resolvePhotos(photoSpec) {
-  const { __kw: kw, __s: s } = photoSpec;
-  const fallback = [0,1,2,3].map(i => ({ url: `https://picsum.photos/seed/${s+i}/800/600`, publicId: `seed/ph${s+i}`, position: i }));
-  if (!process.env.PEXELS_API_KEY) return fallback;
-  try {
-    const query = encodeURIComponent(kw.replace(/,/g, ' '));
-    const res = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=4&orientation=landscape`, {
-      headers: { Authorization: process.env.PEXELS_API_KEY },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data.photos) && data.photos.length
-      ? data.photos.map((p, i) => ({ url: p.src.large, publicId: String(p.id), position: i }))
-      : fallback;
-  } catch (err) {
-    console.warn(`  ⚠ Pexels failed for "${kw}": ${err.message} — using picsum`);
-    return fallback;
-  }
-}
+const p = (kw, s, i) => ({ url: `https://picsum.photos/seed/${s}/800/600`, publicId: `seed/ph${s}`, position: i });
+const pics = (kw, s) => [p(kw,s,0), p(kw,s+1,1), p(kw,s+2,2), p(kw,s+3,3)];
 
 const BRANDS = [
 
@@ -551,7 +532,7 @@ async function main() {
       });
       totalProducts++;
 
-      const productPhotos = photos ? await resolvePhotos(photos) : [];
+      const productPhotos = photos ?? [];
       await prisma.productPhoto.deleteMany({ where: { productId: product.id } });
       await prisma.productPhoto.createMany({
         data: productPhotos.map((ph) => ({ productId: product.id, url: ph.url, publicId: ph.publicId, position: ph.position })),

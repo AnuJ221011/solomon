@@ -20,13 +20,31 @@ const prisma = new PrismaClient({ adapter })
 const slug = (name) =>
   name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
+async function fetchCategoryImage(categoryName) {
+  const seed = Math.abs([...categoryName].reduce((a, c) => a + c.charCodeAt(0), 0)) % 1000 + 1001
+  const fallback = `https://picsum.photos/seed/${seed}/400/300`
+  if (!process.env.PEXELS_API_KEY) return fallback
+  try {
+    const query = encodeURIComponent(categoryName.replace(/&/g, '').replace(/\s+/g, ' ').trim())
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=1&orientation=landscape`,
+      { headers: { Authorization: process.env.PEXELS_API_KEY } }
+    )
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    return data.photos?.[0]?.src?.large ?? fallback
+  } catch (err) {
+    console.warn(`  ⚠ Pexels failed for "${categoryName}": ${err.message} — using picsum`)
+    return fallback
+  }
+}
+
 // ─── Taxonomy definition ──────────────────────────────────────────────────────
 // Each L1 has L2s, each L2 has L3s and attributes.
 
 const TAXONOMY = [
   {
     name: 'Textiles & Fabric', sortOrder: 1,
-    imageUrl: 'https://picsum.photos/seed/1001/400/300',
     subcategories: [
       {
         name: 'Block Print Textiles', sortOrder: 1,
@@ -69,7 +87,6 @@ const TAXONOMY = [
   },
   {
     name: 'Home Décor & Living', sortOrder: 2,
-    imageUrl: 'https://picsum.photos/seed/1002/400/300',
     subcategories: [
       {
         name: 'Candles & Holders', sortOrder: 1,
@@ -120,7 +137,6 @@ const TAXONOMY = [
   },
   {
     name: 'Jewellery & Accessories', sortOrder: 3,
-    imageUrl: 'https://picsum.photos/seed/1003/400/300',
     subcategories: [
       {
         name: 'Fine Jewellery', sortOrder: 1,
@@ -161,7 +177,6 @@ const TAXONOMY = [
   },
   {
     name: 'Apparel & Clothing', sortOrder: 4,
-    imageUrl: 'https://picsum.photos/seed/1004/400/300',
     subcategories: [
       {
         name: 'Tops', sortOrder: 1,
@@ -214,7 +229,6 @@ const TAXONOMY = [
   },
   {
     name: 'Food & Wellness', sortOrder: 5,
-    imageUrl: 'https://picsum.photos/seed/1005/400/300',
     subcategories: [
       {
         name: 'Teas & Infusions', sortOrder: 1,
@@ -259,7 +273,6 @@ const TAXONOMY = [
   },
   {
     name: 'Art & Craft Objects', sortOrder: 6,
-    imageUrl: 'https://picsum.photos/seed/1006/400/300',
     subcategories: [
       {
         name: 'Wall Art', sortOrder: 1,
@@ -292,7 +305,6 @@ const TAXONOMY = [
   },
   {
     name: 'Stationery & Paper Goods', sortOrder: 7,
-    imageUrl: 'https://picsum.photos/seed/1007/400/300',
     subcategories: [
       {
         name: 'Notebooks & Journals', sortOrder: 1,
@@ -331,7 +343,6 @@ const TAXONOMY = [
   },
   {
     name: 'Ceramics & Pottery', sortOrder: 8,
-    imageUrl: 'https://picsum.photos/seed/1008/400/300',
     subcategories: [
       {
         name: 'Tableware', sortOrder: 1,
@@ -365,7 +376,6 @@ const TAXONOMY = [
   },
   {
     name: 'Leather & Bags', sortOrder: 9,
-    imageUrl: 'https://picsum.photos/seed/1009/400/300',
     subcategories: [
       {
         name: 'Bags', sortOrder: 1,
@@ -398,7 +408,6 @@ const TAXONOMY = [
   },
   {
     name: 'Beauty & Ritual', sortOrder: 10,
-    imageUrl: 'https://picsum.photos/seed/1010/400/300',
     subcategories: [
       {
         name: 'Skincare', sortOrder: 1,
@@ -457,6 +466,7 @@ async function upsertCategory({ name, parentId = null, level, sortOrder, imageUr
 }
 
 async function upsertAttribute(categoryId, { name, inputType, options, required = false, sortOrder = 0 }) {
+  if (!prisma.categoryAttribute) return null
   const existing = await prisma.categoryAttribute.findFirst({
     where: { categoryId, name },
   })
@@ -478,11 +488,12 @@ async function main() {
   let l1Count = 0, l2Count = 0, l3Count = 0, attrCount = 0
 
   for (const l1 of TAXONOMY) {
+    const imageUrl = await fetchCategoryImage(l1.name)
     const l1Cat = await upsertCategory({
       name: l1.name,
       level: 1,
       sortOrder: l1.sortOrder,
-      imageUrl: l1.imageUrl,
+      imageUrl,
     })
     l1Count++
 
