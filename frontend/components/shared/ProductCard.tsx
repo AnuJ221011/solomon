@@ -103,6 +103,12 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
     }
   }
 
+  function handleCardClick() {
+    if (!isAuthenticated) {
+      openAuthModal('login')
+    }
+  }
+
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
@@ -138,7 +144,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
     <div className={cn('group flex flex-col', !inStock && 'opacity-60', className)}>
 
       {/* ── Image ─────────────────────────────────────────────────────── */}
-      <Link href={`/products/${slug}`} className="relative block aspect-square overflow-hidden rounded-sm bg-[#F0EBE3]">
+      <Link href={`/products/${slug}`} onClick={handleCardClick} className="relative block aspect-square overflow-hidden rounded-sm bg-[#F0EBE3]">
         {imageSrc ? (
           <Image
             src={imageSrc}
@@ -233,6 +239,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
         {/* Product name */}
         <Link
           href={`/products/${slug}`}
+          onClick={handleCardClick}
           className="text-[14px] font-[500] font-public-sans text-primary leading-snug line-clamp-2 hover:underline"
         >
           {name}

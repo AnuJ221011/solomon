@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { formatCurrency, formatINR } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartStore } from '@/lib/store/useCartStore'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/types'
@@ -190,6 +191,8 @@ export function ProductInfo({ product }: { product: Product }) {
 
   const { requireAuth } = useAuth()
   const addItem = useCartStore((s) => s.addItem)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const openAuthModal = useAuthStore((s) => s.openAuthModal)
 
   const basePrice = displayPrice ?? wholesalePrice
   const activePrice = selectedVariant ? selectedVariant.priceInr : basePrice
@@ -247,25 +250,36 @@ export function ProductInfo({ product }: { product: Product }) {
       </h1>
 
       {/* 3. Price block */}
-      <div className="mb-4">
-        <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-1.5">
-          Wholesale price
-        </p>
-        <p className="font-public-sans text-[38px] font-[600] text-primary tracking-[-0.025em] leading-none">
-          {formatCurrency(activePrice, priceCurrency)}
-          {variants.length > 0 && !selectedVariant && (
-            <span className="text-[14px] font-[400] text-muted-text ml-2 tracking-normal">from</span>
-          )}
-        </p>
-        <p className="font-public-sans text-[13px] text-muted-text mt-1.5">
-          Suggested retail:&nbsp;
-          <span className="text-primary font-[500]">{formatCurrency(suggestedRetail, priceCurrency)}</span>
-          &nbsp;/ unit
-        </p>
-        {showINREquiv && (
-          <p className="font-public-sans text-[12px] text-muted-text mt-0.5">
-            {formatINR(wholesalePrice)} per unit (INR)
+      <div
+        className={cn('mb-4 relative', !isAuthenticated && 'cursor-pointer')}
+        onClick={!isAuthenticated ? () => openAuthModal('login') : undefined}
+      >
+        <div className={cn(!isAuthenticated && 'blur-sm select-none pointer-events-none')}>
+          <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] mb-1.5">
+            Wholesale price
           </p>
+          <p className="font-public-sans text-[38px] font-[600] text-primary tracking-[-0.025em] leading-none">
+            {formatCurrency(activePrice, priceCurrency)}
+            {variants.length > 0 && !selectedVariant && (
+              <span className="text-[14px] font-[400] text-muted-text ml-2 tracking-normal">from</span>
+            )}
+          </p>
+          <p className="font-public-sans text-[13px] text-muted-text mt-1.5">
+            Suggested retail:&nbsp;
+            <span className="text-primary font-[500]">{formatCurrency(suggestedRetail, priceCurrency)}</span>
+            &nbsp;/ unit
+          </p>
+          {showINREquiv && (
+            <p className="font-public-sans text-[12px] text-muted-text mt-0.5">
+              {formatINR(wholesalePrice)} per unit (INR)
+            </p>
+          )}
+        </div>
+        {!isAuthenticated && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+            <p className="font-public-sans text-[14px] font-[600] text-primary">Sign in to see price</p>
+            <p className="font-public-sans text-[12px] text-muted-text">Wholesale pricing for verified buyers</p>
+          </div>
         )}
       </div>
 
@@ -333,8 +347,12 @@ export function ProductInfo({ product }: { product: Product }) {
       <p className="font-public-sans text-[13px] text-muted-text mb-4">
         Min. order:&nbsp;
         <span className="font-[600] text-primary">{moq} units</span>
-        &nbsp;·&nbsp;
-        <span className="text-primary font-[500]">{formatCurrency(minOrderValue, priceCurrency)} total</span>
+        {isAuthenticated && (
+          <>
+            &nbsp;·&nbsp;
+            <span className="text-primary font-[500]">{formatCurrency(minOrderValue, priceCurrency)} total</span>
+          </>
+        )}
       </p>
 
       {/* 5. Trust / attribute badges */}
