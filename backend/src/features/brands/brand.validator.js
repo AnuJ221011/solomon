@@ -25,6 +25,15 @@ export const updateBrandProfileSchema = z.object({
   payoutSpeed: z.enum(['NET_30', 'EXPRESS']).optional(),
 });
 
+export const bankAccountSchema = z.object({
+  accountHolderName: z.string().min(1).max(100),
+  bankName: z.string().min(1).max(100),
+  accountNumber: z.string().min(5).max(25),
+  ifscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format'),
+  accountType: z.enum(['SAVINGS', 'CURRENT']),
+  upiId: z.string().max(50).optional().or(z.literal('')),
+});
+
 export const brandQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),

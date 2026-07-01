@@ -1,6 +1,24 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 
+export const getMyBankAccount = async (userId) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { userId } });
+  if (!brand) throw createError('Brand profile not found', 404);
+  return prisma.bankAccount.findUnique({ where: { brandProfileId: brand.id } });
+};
+
+export const upsertMyBankAccount = async (userId, data) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { userId } });
+  if (!brand) throw createError('Brand profile not found', 404);
+  const { accountHolderName, bankName, accountNumber, ifscCode, accountType, upiId } = data;
+  const payload = { accountHolderName, bankName, accountNumber, ifscCode, accountType, upiId: upiId || null };
+  return prisma.bankAccount.upsert({
+    where: { brandProfileId: brand.id },
+    create: { brandProfileId: brand.id, ...payload },
+    update: payload,
+  });
+};
+
 export const getBrandBySlug = async (slug) => {
   const brand = await prisma.brandProfile.findUnique({
     where: { slug },

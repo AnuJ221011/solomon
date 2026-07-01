@@ -44,6 +44,16 @@ router.post('/brands/:id/reject', async (req, res) => {
   sendSuccess(res, brand, 'Brand application has been rejected.');
 });
 
+router.post('/brands/:id/suspend', async (req, res) => {
+  const brand = await adminService.suspendBrand(req.params.id);
+  sendSuccess(res, brand, 'Brand has been suspended.');
+});
+
+router.post('/brands/:id/unsuspend', async (req, res) => {
+  const brand = await adminService.unsuspendBrand(req.params.id);
+  sendSuccess(res, brand, 'Brand has been reactivated.');
+});
+
 router.post('/brands/:id/level', validate(z.object({ level: z.string() })), async (req, res) => {
   const brand = await adminService.overrideAchievementLevel(req.params.id, req.body.level);
   sendSuccess(res, brand, 'Achievement level overridden by admin.');

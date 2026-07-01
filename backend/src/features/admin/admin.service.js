@@ -29,6 +29,20 @@ export const rejectBrand = async (brandProfileId) => {
   });
 };
 
+export const suspendBrand = async (brandProfileId) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { id: brandProfileId } });
+  if (!brand) throw createError('Brand not found', 404);
+  if (brand.status === 'SUSPENDED') throw createError('Brand is already suspended', 400);
+  return prisma.brandProfile.update({ where: { id: brandProfileId }, data: { status: 'SUSPENDED' } });
+};
+
+export const unsuspendBrand = async (brandProfileId) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { id: brandProfileId } });
+  if (!brand) throw createError('Brand not found', 404);
+  if (brand.status !== 'SUSPENDED') throw createError('Brand is not suspended', 400);
+  return prisma.brandProfile.update({ where: { id: brandProfileId }, data: { status: 'APPROVED' } });
+};
+
 export const suspendUser = async (userId) => {
   return prisma.user.update({ where: { id: userId }, data: { isActive: false } });
 };

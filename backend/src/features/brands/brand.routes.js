@@ -3,7 +3,7 @@ import * as ctrl from './brand.controller.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
-import { updateBrandProfileSchema, brandQuerySchema } from './brand.validator.js';
+import { updateBrandProfileSchema, brandQuerySchema, bankAccountSchema } from './brand.validator.js';
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 
@@ -16,6 +16,8 @@ router.get('/', validateQuery(brandQuerySchema), ctrl.listBrands);
 router.get('/me/profile', authenticate, authorize('BRAND'), ctrl.getMyBrand);
 router.patch('/me/profile', authenticate, authorize('BRAND'), validate(updateBrandProfileSchema), ctrl.updateMyBrand);
 router.get('/me/dashboard', authenticate, authorize('BRAND'), ctrl.getDashboardStats);
+router.get('/me/bank-account', authenticate, authorize('BRAND'), ctrl.getMyBankAccount);
+router.post('/me/bank-account', authenticate, authorize('BRAND'), validate(bankAccountSchema), ctrl.upsertMyBankAccount);
 
 // Payout CSV export for brand
 router.get('/me/payouts/export', authenticate, authorize('BRAND'), async (req, res) => {

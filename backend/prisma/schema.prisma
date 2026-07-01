@@ -93,6 +93,11 @@ enum PayoutSpeed {
   EXPRESS
 }
 
+enum BankAccountType {
+  SAVINGS
+  CURRENT
+}
+
 enum ReturnStatus {
   REQUESTED
   APPROVED
@@ -238,6 +243,7 @@ model BrandProfile {
   promotedListings     PromotedListing[]
   crmContacts          CrmContact[]
   shopifyStore         ShopifyStore?
+  bankAccount          BankAccount?
 
   @@index([slug])
   @@index([status])
@@ -698,6 +704,20 @@ model Payout {
 
   @@index([brandProfileId])
   @@index([isPaid])
+}
+
+model BankAccount {
+  id                 String          @id @default(cuid())
+  brandProfileId     String          @unique
+  brandProfile       BrandProfile    @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+  accountHolderName  String
+  bankName           String
+  accountNumber      String
+  ifscCode           String
+  accountType        BankAccountType @default(SAVINGS)
+  upiId              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
 // ─────────────────────────────────────────────
