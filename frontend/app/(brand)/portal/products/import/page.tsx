@@ -31,6 +31,7 @@ interface ParsedProduct {
   weightGrams: number
   variants: ParsedVariant[]
   minPrice: number
+  stock: number  // product-level stock for simple products (no variants)
 }
 
 interface ImportResult {
@@ -209,7 +210,8 @@ function parseWoocommerce(text: string): ParsedProduct[] {
         if (an && av) attrs.push({ name: an, value: av })
       }
       if (vSku || attrs.length > 0) {
-        variants.push({ sku: vSku, price: vPrice, stock: parseInt(vRow['stock'] ?? '0', 10) || 0, weightGrams: vWeightGrams, attributes: attrs })
+        const _s = parseInt(vRow['stock'] ?? '', 10)
+        variants.push({ sku: vSku, price: vPrice, stock: isNaN(_s) ? 100 : _s, weightGrams: vWeightGrams, attributes: attrs })
       }
     }
 
@@ -218,7 +220,11 @@ function parseWoocommerce(text: string): ParsedProduct[] {
         ? Math.min(...variants.map((v) => v.price).filter((p) => p > 0)) || effectivePrice
         : effectivePrice
 
-    products.push({ handle: id, name, description: descHtml || shortDescText, sourceCategory: category, images: imageUrls, tags, status: 'active', weightGrams, variants, minPrice })
+    const _ps = parseInt(row['stock'] ?? '', 10)
+    const productStock = variants.length > 0
+      ? variants.reduce((s, v) => s + v.stock, 0)
+      : (isNaN(_ps) ? 100 : _ps)
+    products.push({ handle: id, name, description: descHtml || shortDescText, sourceCategory: category, images: imageUrls, tags, status: 'active', weightGrams, variants, minPrice, stock: productStock })
   }
   return products
 }
@@ -264,7 +270,7 @@ function parseShopify(text: string): ParsedProduct[] {
       variants.push({
         sku,
         price: parseFloat(row['variant_price'] ?? '0') || 0,
-        stock: parseInt(row['variant_inventory_qty'] ?? '0', 10) || 0,
+        stock: (() => { const n = parseInt(row['variant_inventory_qty'] ?? '', 10); return isNaN(n) ? 100 : n })(),
         weightGrams: parseInt(row['variant_grams'] ?? '0', 10) || 0,
         attributes: attrs,
       })
@@ -275,6 +281,9 @@ function parseShopify(text: string): ParsedProduct[] {
     const minPrice = variants.length ? Math.min(...variants.map((v) => v.price).filter((p) => p > 0)) : 0
     const images = [...new Set(groupRows.map((r) => (r['image_src'] ?? '').trim()).filter(Boolean))]
 
+    const shopifyStock = variants.length > 0
+      ? variants.reduce((s, v) => s + v.stock, 0)
+      : 100
     products.push({
       handle,
       name: (first['title'] ?? handle).slice(0, 80),
@@ -286,6 +295,7 @@ function parseShopify(text: string): ParsedProduct[] {
       weightGrams,
       variants,
       minPrice,
+      stock: shopifyStock,
     })
   }
   return products
@@ -384,7 +394,8 @@ function parseGeneric(text: string): ParsedProduct[] {
     }
 
     const sku = (row[skuCol] ?? '').trim()
-    const stock = parseInt(row[stockCol] ?? '0', 10) || 0
+    const _stock = parseInt(row[stockCol] ?? '', 10)
+    const stock = isNaN(_stock) ? 100 : _stock
     const variants: ParsedVariant[] = sku
       ? [{ sku, price, stock, weightGrams, attributes: [] }]
       : []
@@ -404,6 +415,7 @@ function parseGeneric(text: string): ParsedProduct[] {
       weightGrams,
       variants,
       minPrice: price,
+      stock: variants.length > 0 ? variants.reduce((s, v) => s + v.stock, 0) : stock,
     })
   })
 
@@ -539,7 +551,7 @@ function UploadStep({
   // Processing overlay
   if (processing) {
     return (
-      <div className="max-w-xl">
+      <div>
         <div className="flex flex-col items-center justify-center gap-5 border-2 border-dashed border-border-warm rounded-lg p-16">
           <div className="w-10 h-10 border-[3px] border-accent border-t-transparent rounded-full animate-spin" />
           <p className="text-[15px] font-[600] font-public-sans text-primary">{processing}</p>
@@ -551,7 +563,7 @@ function UploadStep({
   const disabled = categoriesLoading
 
   return (
-    <div className="max-w-xl">
+    <div>
       {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true) }}
@@ -661,6 +673,52 @@ function UploadStep({
 
 const PREVIEW_ROWS = 5
 
+function ImageModal({ product, onClose }: { product: ParsedProduct; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-warm">
+          <p className="text-[14px] font-[600] font-public-sans text-primary truncate pr-4" title={product.name}>
+            {product.name}
+          </p>
+          <span className="text-[12px] font-public-sans text-muted-text shrink-0 mr-3">
+            {product.images.length} image{product.images.length !== 1 ? 's' : ''}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted-text hover:text-primary transition-colors text-[20px] leading-none shrink-0"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <div className="overflow-y-auto p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {product.images.map((src, i) => (
+              <div key={i} className="aspect-square rounded border border-border-warm overflow-hidden bg-muted-bg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`${product.name} image ${i + 1}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PreviewStep({
   parseState,
   categories,
@@ -675,6 +733,7 @@ function PreviewStep({
   importing: boolean
 }) {
   const { products, categoryMap, detected } = parseState
+  const [imageModalProduct, setImageModalProduct] = useState<ParsedProduct | null>(null)
 
   const unmatchedCount = products.filter((p) => p.sourceCategory && !categoryMap[p.sourceCategory]).length
   const withVariants = products.filter((p) => p.variants.length > 0).length
@@ -686,7 +745,11 @@ function PreviewStep({
   }
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <>
+    {imageModalProduct && (
+      <ImageModal product={imageModalProduct} onClose={() => setImageModalProduct(null)} />
+    )}
+    <div className="space-y-5">
       {/* Detected summary */}
       <div className="flex items-center gap-3 p-4 rounded border border-border-warm bg-muted-bg/30">
         <div className="flex-1">
@@ -717,18 +780,26 @@ function PreviewStep({
             </p>
           )}
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full text-[13px] font-public-sans">
           <thead>
             <tr className="border-b border-border-warm">
-              <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Product Name</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text min-w-[180px]">Product Name</th>
               <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-28">Price</th>
               <th className="text-left px-4 py-2.5 font-[600] text-muted-text">Category</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-20">Weight</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-16 text-center">Images</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-16 text-center">Stock</th>
               <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-14 text-center">Vars</th>
+              <th className="text-left px-4 py-2.5 font-[600] text-muted-text w-20">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-warm">
             {products.slice(0, PREVIEW_ROWS).map((p, i) => {
               const catName = categoryMap[p.sourceCategory] || null
+              const weightDisplay = p.weightGrams >= 1000
+                ? `${(p.weightGrams / 1000).toFixed(2).replace(/\.?0+$/, '')} kg`
+                : p.weightGrams > 0 ? `${p.weightGrams} g` : '—'
               return (
                 <tr key={i} className="hover:bg-muted-bg/20 transition-colors">
                   <td className="px-4 py-2.5">
@@ -751,14 +822,50 @@ function PreviewStep({
                       ? <span className="text-primary">{catName}</span>
                       : <span className="text-muted-text italic text-[12px]">No category</span>}
                   </td>
+                  <td className="px-4 py-2.5 text-muted-text tabular-nums">
+                    {weightDisplay}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    {p.images.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setImageModalProduct(p)}
+                        className="relative w-10 h-10 rounded border border-border-warm overflow-hidden inline-block hover:ring-2 hover:ring-accent/50 transition-all"
+                        title={`${p.images.length} image${p.images.length !== 1 ? 's' : ''} — click to view all`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.images[0]} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        {p.images.length > 1 && (
+                          <span className="absolute bottom-0 right-0 bg-black/60 text-white text-[9px] font-[600] px-1 leading-4">
+                            +{p.images.length - 1}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-amber-600 text-[12px]">None</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-center tabular-nums">
+                    <span className="text-primary">{p.stock}</span>
+                  </td>
                   <td className="px-4 py-2.5 text-muted-text text-center">
                     {p.variants.length > 0 ? p.variants.length : '—'}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-block text-[11px] font-[600] px-2 py-0.5 rounded border ${
+                      p.status === 'active'
+                        ? 'text-[#1E5F1E] bg-[#F0FAF0] border-[#B2DDB2]'
+                        : 'text-[#444748] bg-[#F5F0E8] border-[#E5E1D8]'
+                    }`}>
+                      {p.status === 'active' ? 'Active' : 'Inactive'}
+                    </span>
                   </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
+        </div>
         {products.length > PREVIEW_ROWS && (
           <div className="px-4 py-2.5 border-t border-border-warm bg-muted-bg/20">
             <p className="text-[12px] font-public-sans text-muted-text">
@@ -796,6 +903,7 @@ function PreviewStep({
         </Button>
       </div>
     </div>
+    </>
   )
 }
 
@@ -813,7 +921,7 @@ function DoneStep({
   const allGood = result.errors.length === 0
 
   return (
-    <div className="max-w-xl space-y-5">
+    <div className="space-y-5">
       <div className={`border rounded-lg p-6 ${allGood ? 'border-success/30 bg-success/5' : 'border-amber-200 bg-amber-50/60'}`}>
         <div className="flex items-center gap-3 mb-4">
           {allGood

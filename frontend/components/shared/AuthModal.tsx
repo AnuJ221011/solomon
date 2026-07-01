@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
+import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
@@ -11,6 +12,12 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
 import type { User } from '@/types'
+
+function roleDestination(role: string) {
+  if (role === 'ADMIN') return '/admin'
+  if (role === 'BRAND') return '/portal'
+  return null // buyers stay on the current page
+}
 
 // ─── API response shapes ──────────────────────────────────────────────────────
 
@@ -53,6 +60,7 @@ interface LoginForm {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AuthModal() {
+  const router = useRouter()
   const isAuthModalOpen = useAuthStore((s) => s.isAuthModalOpen)
   const authModalTab = useAuthStore((s) => s.authModalTab)
   const closeAuthModal = useAuthStore((s) => s.closeAuthModal)
@@ -182,6 +190,9 @@ export function AuthModal() {
       }
       setUser(user)
       closeAuthModal()
+
+      const dest = roleDestination(user.role)
+      if (dest) router.push(dest)
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

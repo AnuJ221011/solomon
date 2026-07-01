@@ -1,5 +1,6 @@
-﻿'use client'
+'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -17,18 +18,41 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// ─── Nav groups ────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/admin/brands', label: 'Brands', icon: Building2 },
-  { href: '/admin/pending-brands', label: 'Pending Brands', icon: Clock },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/admin/products', label: 'Products', icon: Package },
-  { href: '/admin/payouts', label: 'Payouts', icon: CreditCard },
-  { href: '/admin/returns', label: 'Returns', icon: RotateCcw },
-  { href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },
+type NavItem = { href: string; label: string; icon: React.ElementType; exact?: boolean }
+type NavGroup = { label: string; items: NavItem[] }
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+    ],
+  },
+  {
+    label: 'Catalogue',
+    items: [
+      { href: '/admin/brands', label: 'Brands', icon: Building2 },
+      { href: '/admin/pending-brands', label: 'Pending Brands', icon: Clock },
+      { href: '/admin/products', label: 'Products', icon: Package },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { href: '/admin/users', label: 'Users', icon: Users },
+      { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+      { href: '/admin/returns', label: 'Returns', icon: RotateCcw },
+      { href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { href: '/admin/payouts', label: 'Payouts', icon: CreditCard },
+    ],
+  },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -47,71 +71,82 @@ export function AdminSidebar() {
     .join('')
     .toUpperCase()
 
-  const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href
     return pathname.startsWith(href)
   }
 
   return (
-    <aside className="h-screen w-[280px] bg-primary flex flex-col fixed left-0 top-0 z-30">
+    <aside className="h-screen w-[260px] bg-white border-r border-[#E5E1D8] flex flex-col fixed left-0 top-0 z-30">
+
       {/* Logo */}
-      <div className="p-6 border-b border-white/10">
+      <div className="px-6 h-16 flex items-center border-b border-[#E5E1D8] shrink-0">
         <Link href="/" className="block">
-          <span className="font-playfair text-[20px] text-white font-[600] tracking-[-0.01em]">
+          <span className="font-playfair text-[18px] text-[#1A1A1A] font-[600] tracking-[-0.01em]">
             Solomon Bharat
           </span>
         </Link>
-        <span className="block text-[11px] font-public-sans text-white/40 mt-0.5 tracking-[0.08em] uppercase">
-          Admin Portal
-        </span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <ul className="space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const active = isActive(href)
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-2.5 mx-3 rounded',
-                    'text-[14px] font-[600] font-public-sans',
-                    'transition-colors',
-                    active
-                      ? 'text-accent border-l-[3px] border-accent bg-white/[8%] -ml-[3px] pl-[calc(1rem-3px)]'
-                      : 'text-white/70 hover:text-white hover:bg-white/[5%]'
-                  )}
-                >
-                  <Icon size={16} aria-hidden="true" className="shrink-0" />
-                  {label}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="flex-1 overflow-y-auto py-3 px-3">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label} className="mb-5">
+            <p className="px-3 mb-1 text-[10px] font-[700] font-public-sans text-[#A68B67] tracking-[0.1em] uppercase">
+              {group.label}
+            </p>
+            <ul className="space-y-0.5">
+              {group.items.map(({ href, label, icon: Icon, exact }) => {
+                const active = isActive(href, exact)
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={cn(
+                        'flex items-center gap-2.5 px-3 py-2 rounded-md',
+                        'text-[13.5px] font-public-sans transition-colors',
+                        active
+                          ? 'bg-[#F5F0E8] text-[#1A1A1A] font-[600]'
+                          : 'text-[#444748] font-[400] hover:bg-[#F9F7F2] hover:text-[#1A1A1A]'
+                      )}
+                    >
+                      <Icon
+                        size={15}
+                        aria-hidden="true"
+                        className={cn('shrink-0', active ? 'text-[#A68B67]' : 'text-[#9CA3AF]')}
+                      />
+                      {label}
+                      {active && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       {/* Profile section */}
-      <div className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
-            <span className="text-[12px] font-[600] font-public-sans text-white/80">
+      <div className="px-4 py-4 border-t border-[#E5E1D8] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E5E1D8] flex items-center justify-center shrink-0">
+            <span className="text-[11px] font-[700] font-public-sans text-[#A68B67]">
               {adminInitials}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-[600] font-public-sans text-white truncate">
+            <p className="text-[13px] font-[600] font-public-sans text-[#1A1A1A] truncate leading-tight">
               {adminName}
             </p>
-            <p className="text-[11px] font-public-sans text-white/50">Administrator</p>
+            <p className="text-[11px] font-public-sans text-[#9CA3AF] leading-tight">Administrator</p>
           </div>
           <button
             type="button"
             onClick={logout}
             aria-label="Sign out"
-            className="text-white/40 hover:text-white/70 transition-colors"
+            className="text-[#C4BDB4] hover:text-[#444748] transition-colors p-1"
           >
             <LogOut size={14} aria-hidden="true" />
           </button>

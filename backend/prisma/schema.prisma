@@ -199,6 +199,21 @@ model BrandProfile {
   pickupPincode        String?   // used for Shiprocket rate calculation
   logoUrl              String?
   bannerUrl            String?
+  // Onboarding extras
+  registrationType     String?
+  tagline              String?
+  phone                String?
+  wholesaleProductCount Int?
+  defaultLeadTime      LeadTime?
+  defaultShippingZones ShippingZone[]
+  // Identity & business document URLs (Cloudinary)
+  aadharUrl            String?
+  panUrl               String?
+  gstCertUrl           String?
+  incorporateCertUrl   String?
+  msmeCertUrl          String?
+  isoCertUrl           String?
+  iecCertUrl           String?
   status               BrandStatus     @default(PENDING)
   achievementLevel     AchievementLevel @default(L1_SPROUT)
   isAdminOverride      Boolean         @default(false)

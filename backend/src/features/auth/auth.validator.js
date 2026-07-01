@@ -22,19 +22,21 @@ export const brandSignupSchema = z.object({
   password: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
   brandName: z.string().min(1).max(100),
   category: z.array(z.string()).min(1),
+  registrationType: z.enum(['individual', 'business']).optional(),
   countryOfOrigin: z.string().length(2).default('IN'),
-  gstNumber: z.string().optional(),
-  businessRegNumber: z.string().optional(),
+  phone: z.string().optional(),
+  tagline: z.string().max(120).optional(),
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
   city: z.string().max(100).optional(),
   state: z.string().max(100).optional(),
   yearFounded: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
   brandStory: z.string().max(1000).optional(),
-  existingRetailPartners: z.string().max(500).optional(),
+  wholesaleProductCount: z.number().int().min(1).optional(),
+  minimumOrderValue: z.number().int().min(1).optional(),
+  leadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']).optional(),
+  shippingZones: z.array(z.string()).optional(),
   referralToken: z.string().optional(),
-}).refine((d) => d.gstNumber || d.businessRegNumber, {
-  message: 'Either GST number or business registration number is required',
 });
 
 export const loginSchema = z.object({
