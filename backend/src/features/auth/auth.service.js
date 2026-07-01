@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
+import { v2 as cloudinary } from 'cloudinary';
 import prisma from '../../config/db.js';
+import { env } from '../../config/env.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -12,6 +14,48 @@ import { sendOtpEmail, sendWelcomeEmail } from '../../shared/utils/email.js';
 import { createError } from '../../shared/utils/createError.js';
 import { recordSignupAttribution } from '../share-links/shareLink.service.js';
 import { recordReferralSignup } from '../referrals/referral.service.js';
+
+cloudinary.config({
+  cloud_name: env.CLOUDINARY_CLOUD_NAME,
+  api_key: env.CLOUDINARY_API_KEY,
+  api_secret: env.CLOUDINARY_API_SECRET,
+});
+
+// Upload a single file buffer to Cloudinary and return the secure URL
+function uploadDoc(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'auto' },
+      (err, result) => (err ? reject(err) : resolve(result.secure_url)),
+    );
+    stream.end(buffer);
+  });
+}
+
+// Upload all document files (req.files map) and return a URL map
+async function uploadDocs(files = {}) {
+  const uploads = {};
+  const map = {
+    brandLogo: 'logoUrl',
+    brandBanner: 'bannerUrl',
+    aadhar: 'aadharUrl',
+    pan: 'panUrl',
+    gstCert: 'gstCertUrl',
+    incorporateCert: 'incorporateCertUrl',
+    msmeCert: 'msmeCertUrl',
+    isoCert: 'isoCertUrl',
+    iecCert: 'iecCertUrl',
+  };
+  await Promise.all(
+    Object.entries(map).map(async ([field, urlKey]) => {
+      const file = files[field]?.[0];
+      if (file) {
+        uploads[urlKey] = await uploadDoc(file.buffer, `Solomon-Bharat2/docs`);
+      }
+    }),
+  );
+  return uploads;
+}
 
 const SALT_ROUNDS = 12;
 
@@ -65,17 +109,41 @@ export const registerBuyer = async ({
 
 export const registerBrand = async ({
   email, password, brandName, category, countryOfOrigin,
-  gstNumber, businessRegNumber,
-  instagramHandle, websiteUrl, city, state, yearFounded, brandStory, existingRetailPartners,
+  registrationType, phone, tagline,
+  instagramHandle, websiteUrl, city, state, yearFounded, brandStory,
+  wholesaleProductCount, minimumOrderValue, leadTime, shippingZones,
   referralToken,
+  files, // multer req.files — uploaded document buffers
 }) => {
+  // Upload documents to Cloudinary (gracefully skip if Cloudinary is unconfigured)
+  const docUrls = env.CLOUDINARY_CLOUD_NAME ? await uploadDocs(files).catch(() => ({})) : {};
+
+  const profileData = {
+    brandName,
+    category,
+    countryOfOrigin: countryOfOrigin ?? 'IN',
+    registrationType: registrationType ?? 'individual',
+    tagline: tagline ?? null,
+    phone: phone ?? null,
+    instagramHandle: instagramHandle ?? null,
+    websiteUrl: websiteUrl || null,
+    city: city ?? null,
+    state: state ?? null,
+    yearFounded: yearFounded ?? null,
+    brandStory: brandStory ?? null,
+    wholesaleProductCount: wholesaleProductCount ?? null,
+    minimumOrderValue: minimumOrderValue ?? 0,
+    defaultLeadTime: leadTime ?? null,
+    defaultShippingZones: shippingZones ?? [],
+    ...docUrls,
+  };
+
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (existing) {
-    // Already verified — hard stop
     if (existing.isEmailVerified) throw createError('Email already registered', 409);
 
-    // Unverified account from a previous attempt — update fields and resend OTP
+    // Unverified account from a previous attempt — refresh fields and resend OTP
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
@@ -84,20 +152,7 @@ export const registerBrand = async ({
       data: {
         passwordHash,
         name: brandName,
-        brandProfile: {
-          update: {
-            brandName, slug, category, countryOfOrigin,
-            gstNumber: gstNumber ?? null,
-            businessRegNumber: businessRegNumber ?? null,
-            instagramHandle: instagramHandle ?? null,
-            websiteUrl: websiteUrl || null,
-            city: city ?? null,
-            state: state ?? null,
-            yearFounded: yearFounded ?? null,
-            brandStory: brandStory ?? null,
-            existingRetailPartners: existingRetailPartners ?? null,
-          },
-        },
+        brandProfile: { update: { ...profileData, slug } },
       },
     });
 
@@ -119,23 +174,7 @@ export const registerBrand = async ({
       passwordHash,
       name: brandName,
       role: 'BRAND',
-      brandProfile: {
-        create: {
-          brandName,
-          slug,
-          category,
-          countryOfOrigin,
-          gstNumber,
-          businessRegNumber,
-          instagramHandle,
-          websiteUrl: websiteUrl || null,
-          city: city ?? null,
-          state: state ?? null,
-          yearFounded,
-          brandStory,
-          existingRetailPartners,
-        },
-      },
+      brandProfile: { create: { ...profileData, slug } },
     },
   });
 

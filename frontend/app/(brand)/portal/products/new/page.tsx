@@ -17,15 +17,9 @@ const LEAD_TIMES: { label: string; value: string }[] = [
   { label: '2–4 weeks',  value: 'TWO_TO_FOUR_WEEKS' },
 ]
 
-const SHIPPING_ZONES: { label: string; value: string }[] = [
-  { label: 'India (Domestic)',  value: 'DOMESTIC' },
-  { label: 'South Asia',        value: 'SOUTH_ASIA' },
-  { label: 'Southeast Asia',    value: 'SOUTHEAST_ASIA' },
-  { label: 'Middle East',       value: 'MIDDLE_EAST' },
-  { label: 'Europe',            value: 'EUROPE' },
-  { label: 'North America',     value: 'NORTH_AMERICA' },
-  { label: 'Oceania',           value: 'OCEANIA' },
-  { label: 'Rest of World',     value: 'REST_OF_WORLD' },
+const ALL_SHIPPING_ZONES = [
+  'DOMESTIC', 'SOUTH_ASIA', 'SOUTHEAST_ASIA', 'MIDDLE_EAST',
+  'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD',
 ]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -40,7 +34,6 @@ interface ProductForm {
   weightKg: string
   tags: string
   availability: 'ACTIVE' | 'INACTIVE' | 'COMING_SOON'
-  enabledZones: string[]
 }
 
 interface AttributeAxis {
@@ -236,7 +229,6 @@ export default function NewProductPage() {
     name: '', categories: [], description: '',
     wholesalePriceInr: '', moq: '', leadTime: 'ONE_TO_TWO_WEEKS',
     weightKg: '', tags: '', availability: 'ACTIVE',
-    enabledZones: ['DOMESTIC'],
   })
   const [files, setFiles]       = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
@@ -251,14 +243,6 @@ export default function NewProductPage() {
       if (has) return { ...f, categories: f.categories.filter((c) => c !== cat) }
       if (f.categories.length >= 2) { toast.error('Max 2 categories allowed.'); return f }
       return { ...f, categories: [...f.categories, cat] }
-    })
-  }
-
-  function toggleZone(zone: string) {
-    setForm((f) => {
-      const has = f.enabledZones.includes(zone)
-      if (has) return { ...f, enabledZones: f.enabledZones.filter((z) => z !== zone) }
-      return { ...f, enabledZones: [...f.enabledZones, zone] }
     })
   }
 
@@ -361,8 +345,6 @@ export default function NewProductPage() {
     if (!form.wholesalePriceInr || Number(form.wholesalePriceInr) <= 0) { toast.error('Wholesale price must be a positive number.'); return }
     if (!form.moq || Number(form.moq) < 1)                              { toast.error('MOQ must be at least 1.'); return }
     if (!form.weightKg || Number(form.weightKg) <= 0)                   { toast.error('Weight must be a positive number.'); return }
-    if (form.enabledZones.length === 0)                                 { toast.error('Select at least one shipping zone.'); return }
-
     if (hasVariants) {
       if (variantRows.length === 0) { toast.error('Generate variants or turn off the variants toggle.'); return }
       const invalid = variantRows.find((r) => !r.sku.trim() || !r.priceInr || Number(r.priceInr) <= 0)
@@ -382,7 +364,7 @@ export default function NewProductPage() {
         weightGrams:      Math.round(Number(form.weightKg) * 1000),
         tags:             form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         availability:     form.availability,
-        enabledZones:     form.enabledZones,
+        enabledZones:     ALL_SHIPPING_ZONES,
       })
 
       const productId: string = res.data.data?.id
@@ -431,7 +413,7 @@ export default function NewProductPage() {
         <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">Add Product</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
         {/* ── Photos ──────────────────────────────────────────────────────── */}
         <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
@@ -678,25 +660,6 @@ export default function NewProductPage() {
               )}
             </div>
           )}
-        </div>
-
-        {/* ── Shipping zones ───────────────────────────────────────────────── */}
-        <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
-          <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">
-            Shipping Zones <span className="text-error ml-0.5">*</span>
-          </h2>
-          <p className="text-[12px] font-public-sans text-muted-text -mt-2">Select every region you can ship to.</p>
-          <div className="flex flex-wrap gap-2">
-            {SHIPPING_ZONES.map(({ label, value }) => {
-              const active = form.enabledZones.includes(value)
-              return (
-                <button key={value} type="button" onClick={() => toggleZone(value)}
-                  className={`px-3 h-8 rounded border text-[13px] font-[500] font-public-sans transition-colors ${active ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'}`}>
-                  {label}
-                </button>
-              )
-            })}
-          </div>
         </div>
 
         {/* ── Availability ─────────────────────────────────────────────────── */}

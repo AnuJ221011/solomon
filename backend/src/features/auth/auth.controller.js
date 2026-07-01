@@ -17,7 +17,10 @@ export const buyerSignup = async (req, res) => {
 };
 
 export const brandSignup = async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.registerBrand(req.body);
+  const { user, accessToken, refreshToken } = await authService.registerBrand({
+    ...req.body,
+    files: req.files ?? {},
+  });
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
   sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Brand registered, awaiting admin approval.', 201);
 };

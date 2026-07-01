@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -20,9 +20,24 @@ interface AuthResponse {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+function roleDestination(role: string) {
+  if (role === 'ADMIN') return '/admin'
+  if (role === 'BRAND') return '/portal'
+  return '/catalogue'
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const setUser = useAuthStore((s) => s.setUser)
+  const existingUser = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s._hasHydrated)
+
+  // Already logged in — skip the login page entirely
+  useEffect(() => {
+    if (hasHydrated && existingUser) {
+      router.replace(roleDestination(existingUser.role))
+    }
+  }, [hasHydrated, existingUser, router])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -50,13 +65,7 @@ export default function LoginPage() {
         localStorage.setItem('sb_token', data.accessToken)
       }
       setUser(data.user)
-
-      // Redirect based on role
-      if (data.user.role === 'BRAND') {
-        router.push('/portal')
-      } else {
-        router.push('/catalogue')
-      }
+      router.push(roleDestination(data.user.role))
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

@@ -161,12 +161,12 @@ export default function ProductsPage() {
           <p className="text-[14px] font-public-sans text-muted-text mb-6">
             Add your first product to start selling on Solomon Bharat.
           </p>
-          <Button size="sm" className="gap-1.5" asChild>
+          {/* <Button size="sm" className="gap-1.5" asChild>
             <Link href="/portal/products/new">
               <Plus size={14} aria-hidden="true" />
               Add your first product
             </Link>
-          </Button>
+          </Button> */}
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center">

@@ -20,56 +20,58 @@ export default function BrandPortalLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex min-h-screen bg-[#F9F7F2]">
       {/* Sidebar — hidden on mobile */}
       <div className="hidden lg:block">
         <PortalSidebar />
       </div>
 
       {/* Main area */}
-      <div className="flex-1 lg:ml-[280px] flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-[260px] flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-16 border-b border-border-warm bg-surface flex items-center justify-between px-6 sticky top-0 z-20">
+        <header className="h-16 border-b border-[#E5E1D8] bg-white flex items-center justify-between px-6 sticky top-0 z-20">
           {/* Search */}
           <div className="relative max-w-[280px] w-full hidden sm:block">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
               aria-hidden="true"
             />
             <input
               type="search"
               placeholder="Search orders, products..."
-              className="w-full h-9 pl-9 pr-4 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+              className="w-full h-9 pl-9 pr-4 rounded-md border border-[#E5E1D8] bg-[#F9F7F2] text-[13.5px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67] transition-colors"
             />
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-2.5 ml-auto">
             {/* Notification bell */}
             <button
               type="button"
               aria-label="Notifications"
-              className="w-9 h-9 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors relative"
+              className="w-9 h-9 flex items-center justify-center rounded-md border border-[#E5E1D8] text-[#9CA3AF] hover:text-[#1A1A1A] hover:bg-[#F5F0E8] transition-colors relative"
             >
-              <Bell size={16} aria-hidden="true" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
+              <Bell size={15} aria-hidden="true" />
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
             </button>
 
             {/* Currency switcher */}
             <button
               type="button"
-              className="h-9 px-3 rounded border border-border-warm text-[12px] font-[600] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+              className="h-9 px-3 rounded-md border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:text-[#1A1A1A] hover:bg-[#F5F0E8] transition-colors"
             >
               INR ₹
             </button>
 
+            <div className="h-5 w-px bg-[#E5E1D8]" />
+
             {/* Avatar */}
             <div
-              className="w-10 h-10 rounded bg-muted-bg flex items-center justify-center shrink-0 cursor-pointer border border-border-warm"
+              className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E5E1D8] flex items-center justify-center shrink-0 cursor-pointer"
               aria-label="User menu"
             >
-              <span className="text-[13px] font-[600] font-public-sans text-primary">AR</span>
+              <span className="text-[11px] font-[700] font-public-sans text-[#A68B67]">AR</span>
             </div>
           </div>
         </header>
@@ -81,12 +83,12 @@ export default function BrandPortalLayout({
       </div>
 
       {/* Mobile bottom tab bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface border-t border-border-warm flex">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#E5E1D8] flex">
         {MOBILE_TABS.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
-            className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-[600] font-public-sans text-muted-text hover:text-primary transition-colors"
+            className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 text-[10px] font-[600] font-public-sans text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
           >
             {label}
           </Link>
