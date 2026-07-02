@@ -58,6 +58,7 @@ export interface Product {
   tags: string[]
   achievementLevel?: 1 | 2 | 3 | 4 | 5
   brandMinimumOrderValue?: number
+  brandLogoUrl?: string | null
   inStock: boolean
   variants?: ProductVariant[]
   countryOfOrigin?: string

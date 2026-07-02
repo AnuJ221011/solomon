@@ -29,6 +29,7 @@ export interface ProductVariant {
 export interface ProductBrandInfo {
   achievementLevel: number
   minimumOrderValue: number
+  logoUrl: string | null
 }
 
 export interface Product {
@@ -140,6 +141,7 @@ function mapProduct(raw: Record<string, any>): Product {
     brand: {
       achievementLevel: ACHIEVEMENT_LEVEL[(bp.achievementLevel as string)] ?? 1,
       minimumOrderValue: (bp.minimumOrderValue as number) ?? 0,
+      logoUrl: (bp.logoUrl as string | null) ?? null,
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     variants: (raw.variants ?? []).map((v: any) => ({

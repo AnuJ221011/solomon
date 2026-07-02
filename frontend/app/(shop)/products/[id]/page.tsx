@@ -52,7 +52,7 @@ interface ApiProduct {
   description: string; photos?: Array<{ id: string; url: string; position: number }>
   wholesalePrice: number; moq: number; leadTime: string; weight: number
   category: string; tags: string[]
-  brand?: { achievementLevel: number; minimumOrderValue?: number }
+  brand?: { achievementLevel: number; minimumOrderValue?: number; logoUrl?: string | null }
   variants?: ApiVariant[]
   inStock: boolean
   countryOfOrigin?: string
@@ -71,6 +71,7 @@ function toTypedFromApi(p: ApiProduct): Product {
     weight: p.weight, category: p.category, tags: p.tags ?? [],
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
     brandMinimumOrderValue: p.brand?.minimumOrderValue,
+    brandLogoUrl: p.brand?.logoUrl,
     inStock: p.inStock,
     countryOfOrigin: p.countryOfOrigin,
     freeShippingAboveInr: p.freeShippingAboveInr,
@@ -298,7 +299,7 @@ function ProductDetailInner({ slug }: { slug: string }) {
               >
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-muted-bg border border-border-warm flex-shrink-0">
                   <img
-                    src={`https://picsum.photos/seed/${product.brandSlug}-logo/64/64`}
+                    src={product.brandLogoUrl ?? `https://picsum.photos/seed/${product.brandSlug}-logo/64/64`}
                     alt=""
                     width={32}
                     height={32}
