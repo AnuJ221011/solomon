@@ -62,6 +62,7 @@ export interface Product {
   variants?: ProductVariant[]
   countryOfOrigin?: string
   freeShippingAboveInr?: number | null
+  returnsWindowDays?: number | null
 }
 
 // ─── Brands ───────────────────────────────────────────────────────────────────

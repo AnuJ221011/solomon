@@ -52,6 +52,7 @@ export interface Product {
   availability: string
   countryOfOrigin: string
   freeShippingAboveInr: number | null
+  returnsWindowDays: number | null
 }
 
 export interface ProductsParams {
@@ -153,6 +154,7 @@ function mapProduct(raw: Record<string, any>): Product {
     inStock: raw.availability === 'ACTIVE',
     availability: raw.availability ?? '',
     countryOfOrigin: raw.countryOfOrigin ?? 'IN',
+    returnsWindowDays: (bp.returnsWindowDays as number | null) ?? null,
     freeShippingAboveInr: (() => {
       const rates: Array<{ freeShippingAboveInr?: string | number | null }> = bp.shippingRates ?? []
       const rate = rates.find((r) => r.freeShippingAboveInr != null)

@@ -166,6 +166,7 @@ export function ProductInfo({ product }: { product: Product }) {
     variants = [],
     countryOfOrigin,
     freeShippingAboveInr,
+    returnsWindowDays,
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -446,14 +447,16 @@ export function ProductInfo({ product }: { product: Product }) {
               <span className="border-b border-dotted border-muted-text/60 cursor-default">{shipFromCountry}</span>
             </span>
           </div>
+          {returnsWindowDays != null && (
           <div className="flex items-start gap-3">
             <RotateCcw size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
             <span className="font-public-sans text-[13px] text-muted-text leading-snug">
               Eligible for{' '}
               <span className="border-b border-dotted border-muted-text/60 cursor-default">free returns</span>
-              {' '}on first-time orders within 60 days
+              {' '}on first-time orders within {returnsWindowDays} days
             </span>
           </div>
+          )}
         </div>
       </div>
 

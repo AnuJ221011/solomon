@@ -125,6 +125,7 @@ export default function SettingsPage() {
   const [gstNumber, setGstNumber] = useState('')
   const [businessRegNumber, setBusinessRegNumber] = useState('')
   const [minimumOrderValue, setMinimumOrderValue] = useState('')
+  const [returnsWindowDays, setReturnsWindowDays] = useState('')
 
   // ── CSV export ─────────────────────────────────────────────────────────────
   const [csvExporting, setCsvExporting] = useState(false)
@@ -285,6 +286,7 @@ export default function SettingsPage() {
     setGstNumber(brandProfile.gstNumber ?? '')
     setBusinessRegNumber(brandProfile.businessRegNumber ?? '')
     setMinimumOrderValue(brandProfile.minimumOrderValue != null ? String(brandProfile.minimumOrderValue) : '')
+    setReturnsWindowDays(brandProfile.returnsWindowDays != null ? String(brandProfile.returnsWindowDays) : '')
   }, [brandProfile])
 
   // ── Populate shipping zone rates ───────────────────────────────────────────
@@ -328,6 +330,7 @@ export default function SettingsPage() {
       gstNumber: gstNumber.trim() || undefined,
       businessRegNumber: businessRegNumber.trim() || undefined,
       minimumOrderValue: minimumOrderValue !== '' ? Number(minimumOrderValue) : undefined,
+      returnsWindowDays: returnsWindowDays !== '' ? Number(returnsWindowDays) : null,
     })
   }
 
@@ -581,6 +584,14 @@ export default function SettingsPage() {
                 <input type="number" min={0} value={minimumOrderValue} onChange={(e) => setMinimumOrderValue(e.target.value)}
                   placeholder="e.g. 5000"
                   className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none" />
+              </div>
+            </Field>
+            <Field label="Returns Window (days)" hint="Leave blank to hide the returns policy on your product pages.">
+              <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
+                <input type="number" min={1} max={365} value={returnsWindowDays} onChange={(e) => setReturnsWindowDays(e.target.value)}
+                  placeholder="e.g. 60"
+                  className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none" />
+                <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-l border-border-warm shrink-0">days</span>
               </div>
             </Field>
           </div>

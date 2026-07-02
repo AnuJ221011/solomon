@@ -57,6 +57,7 @@ interface ApiProduct {
   inStock: boolean
   countryOfOrigin?: string
   freeShippingAboveInr?: number | null
+  returnsWindowDays?: number | null
 }
 
 function toTypedFromApi(p: ApiProduct): Product {
@@ -73,6 +74,7 @@ function toTypedFromApi(p: ApiProduct): Product {
     inStock: p.inStock,
     countryOfOrigin: p.countryOfOrigin,
     freeShippingAboveInr: p.freeShippingAboveInr,
+    returnsWindowDays: p.returnsWindowDays,
     variants: (p.variants ?? []).map((v) => ({
       id: v.id, sku: v.sku, priceInr: v.priceInr,
       stock: v.stock, status: v.status, attributes: v.attributes,

@@ -228,6 +228,7 @@ model BrandProfile {
   avgDispatchDays      Float           @default(0)
   payoutSpeed          PayoutSpeed     @default(NET_30)
   minimumOrderValue    Int             @default(0)
+  returnsWindowDays    Int?
   approvedAt           DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt

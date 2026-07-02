@@ -21,6 +21,7 @@ export const updateBrandProfileSchema = z.object({
   }).optional(),
   existingRetailPartners: z.string().max(500).optional(),
   minimumOrderValue: z.number().int().min(0).optional(),
+  returnsWindowDays: z.number().int().min(1).max(365).nullable().optional(),
   pickupPincode: z.string().max(10).optional(),
   payoutSpeed: z.enum(['NET_30', 'EXPRESS']).optional(),
 });
