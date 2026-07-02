@@ -60,6 +60,8 @@ export interface Product {
   brandMinimumOrderValue?: number
   inStock: boolean
   variants?: ProductVariant[]
+  countryOfOrigin?: string
+  freeShippingAboveInr?: number | null
 }
 
 // ─── Brands ───────────────────────────────────────────────────────────────────

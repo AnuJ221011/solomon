@@ -164,6 +164,8 @@ export function ProductInfo({ product }: { product: Product }) {
     wholesalePrice, displayPrice, currency,
     moq, leadTime, weight, category, tags, images, inStock,
     variants = [],
+    countryOfOrigin,
+    freeShippingAboveInr,
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -238,8 +240,15 @@ export function ProductInfo({ product }: { product: Product }) {
     }, 'request_samples')
   }
 
-  const freeShipThreshold = FREE_SHIP[priceCurrency] ?? 200
+  const freeShipThreshold = freeShippingAboveInr ?? FREE_SHIP[priceCurrency] ?? 15000
   const deliveryRange = getDeliveryRange(leadTime)
+  const shipFromCountry = (() => {
+    try {
+      return new Intl.DisplayNames(['en'], { type: 'region' }).of(countryOfOrigin ?? 'IN') ?? 'India'
+    } catch {
+      return 'India'
+    }
+  })()
 
   return (
     <div className="flex flex-col">
@@ -434,7 +443,7 @@ export function ProductInfo({ product }: { product: Product }) {
             <Globe size={15} className="text-muted-text mt-0.5 flex-shrink-0" aria-hidden="true" />
             <span className="font-public-sans text-[13px] text-muted-text leading-snug">
               Ships from{' '}
-              <span className="border-b border-dotted border-muted-text/60 cursor-default">India</span>
+              <span className="border-b border-dotted border-muted-text/60 cursor-default">{shipFromCountry}</span>
             </span>
           </div>
           <div className="flex items-start gap-3">

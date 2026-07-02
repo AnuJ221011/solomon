@@ -55,6 +55,8 @@ interface ApiProduct {
   brand?: { achievementLevel: number; minimumOrderValue?: number }
   variants?: ApiVariant[]
   inStock: boolean
+  countryOfOrigin?: string
+  freeShippingAboveInr?: number | null
 }
 
 function toTypedFromApi(p: ApiProduct): Product {
@@ -69,6 +71,8 @@ function toTypedFromApi(p: ApiProduct): Product {
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
     brandMinimumOrderValue: p.brand?.minimumOrderValue,
     inStock: p.inStock,
+    countryOfOrigin: p.countryOfOrigin,
+    freeShippingAboveInr: p.freeShippingAboveInr,
     variants: (p.variants ?? []).map((v) => ({
       id: v.id, sku: v.sku, priceInr: v.priceInr,
       stock: v.stock, status: v.status, attributes: v.attributes,

@@ -50,6 +50,8 @@ export interface Product {
   variants: ProductVariant[]
   inStock: boolean
   availability: string
+  countryOfOrigin: string
+  freeShippingAboveInr: number | null
 }
 
 export interface ProductsParams {
@@ -150,6 +152,12 @@ function mapProduct(raw: Record<string, any>): Product {
     })),
     inStock: raw.availability === 'ACTIVE',
     availability: raw.availability ?? '',
+    countryOfOrigin: raw.countryOfOrigin ?? 'IN',
+    freeShippingAboveInr: (() => {
+      const rates: Array<{ freeShippingAboveInr?: string | number | null }> = bp.shippingRates ?? []
+      const rate = rates.find((r) => r.freeShippingAboveInr != null)
+      return rate ? Number(rate.freeShippingAboveInr) : null
+    })(),
   }
 }
 
