@@ -303,7 +303,8 @@ export default function OrdersPage() {
         <>
           {/* Table */}
           <div className="bg-surface border border-border-warm rounded overflow-hidden mb-4">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-border-warm">
                   {['Order #', 'Buyer', 'Status', 'Amount', 'Date', 'Actions'].map((col) => (
@@ -373,6 +374,7 @@ export default function OrdersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Pagination */}

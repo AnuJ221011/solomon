@@ -57,7 +57,7 @@ export function TestimonialsSection() {
 
             {/* Big decorative quote mark */}
             <div
-              className="font-playfair text-[120px] lg:text-[160px] leading-[0.7] text-primary/[0.07] select-none mb-4"
+              className="font-playfair text-[80px] sm:text-[120px] lg:text-[160px] leading-[0.7] text-primary/[0.07] select-none mb-4"
               aria-hidden="true"
             >
               &ldquo;
@@ -65,7 +65,7 @@ export function TestimonialsSection() {
 
             <Stars count={FEATURED.rating} />
 
-            <blockquote className="font-playfair font-[400] text-[22px] lg:text-[28px] text-primary leading-[1.45] mt-5">
+            <blockquote className="font-playfair font-[400] text-[18px] sm:text-[22px] lg:text-[28px] text-primary leading-[1.45] mt-5">
               {FEATURED.review}
             </blockquote>
 

@@ -240,7 +240,7 @@ function BankAccountSection() {
           </div>
         ) : isSaved && !editing ? (
           /* ── Read-only summary ── */
-          <div className="grid grid-cols-2 gap-x-10 gap-y-3 text-[14px] font-public-sans">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3 text-[14px] font-public-sans">
             {[
               ['Account Holder', saved.accountHolderName],
               ['Bank Name',      saved.bankName],
@@ -529,7 +529,7 @@ export default function PayoutsPage() {
         <p className="text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-3">
           Payout Speed
         </p>
-        <div className="flex gap-3 max-w-[600px]">
+        <div className="flex flex-col sm:flex-row gap-3 max-w-[600px]">
           <SpeedOption
             icon={<Clock size={16} />}
             title="Standard — Net 30"
@@ -548,7 +548,7 @@ export default function PayoutsPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {isLoading ? (
           <>
             <StatCardSkeleton />

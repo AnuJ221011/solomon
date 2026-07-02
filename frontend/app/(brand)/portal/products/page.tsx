@@ -176,7 +176,8 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="bg-surface border border-border-warm rounded overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-border-warm">
                 {['', 'Product Name', 'Category', 'Price (INR)', 'Status', 'Actions'].map((col) => (
@@ -259,6 +260,7 @@ export default function ProductsPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

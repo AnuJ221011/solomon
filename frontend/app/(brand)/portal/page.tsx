@@ -166,7 +166,7 @@ export default function PortalOverviewPage() {
 
       {/* Stat cards */}
       {dashLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           {Array.from({ length: 5 }).map((_, i) => (
             <StatCardSkeleton key={i} />
           ))}
@@ -176,7 +176,7 @@ export default function PortalOverviewPage() {
           <p className="text-[14px] font-public-sans text-error">Failed to load dashboard stats.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <StatCard
             label="GMV This Month"
             value={`₹${(stats?.gmvThisMonth ?? 0).toLocaleString('en-IN')}`}
