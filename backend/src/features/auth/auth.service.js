@@ -112,6 +112,7 @@ export const registerBrand = async ({
   registrationType, phone, tagline,
   instagramHandle, websiteUrl, city, state, yearFounded, brandStory,
   wholesaleProductCount, minimumOrderValue, leadTime, shippingZones,
+  returnsWindowDays,
   referralToken,
   files, // multer req.files — uploaded document buffers
 }) => {
@@ -135,6 +136,7 @@ export const registerBrand = async ({
     minimumOrderValue: minimumOrderValue ?? 0,
     defaultLeadTime: leadTime ?? null,
     defaultShippingZones: shippingZones ?? [],
+    returnsWindowDays: returnsWindowDays ?? null,
     ...docUrls,
   };
 

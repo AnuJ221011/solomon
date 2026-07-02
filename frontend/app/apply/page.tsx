@@ -153,7 +153,7 @@ interface FormState {
   city: string; state: string; websiteOrInstagram: string
   brandLogoFile: File | null; brandBannerFile: File | null
   brandStory: string
-  wholesaleProductCount: string; minimumOrderValue: string; leadTime: string
+  wholesaleProductCount: string; minimumOrderValue: string; leadTime: string; returnsWindowDays: string
   aadharFile: File | null; panFile: File | null
   gstCertFile: File | null; incorporateCertFile: File | null
   msmeCertFile: File | null; isoCertFile: File | null; iecCertFile: File | null
@@ -168,7 +168,7 @@ const INITIAL_FORM: FormState = {
   city: '', state: '', websiteOrInstagram: '',
   brandLogoFile: null, brandBannerFile: null,
   brandStory: '',
-  wholesaleProductCount: '', minimumOrderValue: '', leadTime: '',
+  wholesaleProductCount: '', minimumOrderValue: '', leadTime: '', returnsWindowDays: '',
   aadharFile: null, panFile: null,
   gstCertFile: null, incorporateCertFile: null,
   msmeCertFile: null, isoCertFile: null, iecCertFile: null,
@@ -876,6 +876,7 @@ export default function ApplyPage() {
           wholesaleProductCount: Number(form.wholesaleProductCount),
           minimumOrderValue: Number(form.minimumOrderValue),
           leadTime: form.leadTime,
+          ...(form.returnsWindowDays && { returnsWindowDays: Number(form.returnsWindowDays) }),
           shippingZones: ALL_SHIPPING_ZONES,
           bankAccountHolderName: form.bankAccountHolderName.trim(),
           bankName: form.bankName.trim(),
@@ -1288,6 +1289,15 @@ export default function ApplyPage() {
                 </Select>
                 <FieldHint>How long it typically takes to ship after receiving an order.</FieldHint>
               </div>
+
+              <div>
+                <FieldLabel>Returns window <span className="text-muted-text font-[400] normal-case">(optional)</span></FieldLabel>
+                <Input
+                  id="returnsWindowDays" type="number" min={1} max={365} placeholder="e.g. 60"
+                  value={form.returnsWindowDays} onChange={(e) => set('returnsWindowDays', e.target.value)} disabled={loading}
+                />
+                <FieldHint>Number of days buyers can return first-time orders. Leave blank if you don't offer returns.</FieldHint>
+              </div>
             </>
           )}
 
@@ -1448,6 +1458,7 @@ export default function ApplyPage() {
                   <ReviewRow label="Wholesale styles" value={form.wholesaleProductCount} />
                   <ReviewRow label="Minimum order value" value={`₹${Number(form.minimumOrderValue).toLocaleString('en-IN')}`} />
                   <ReviewRow label="Lead time" value={LEAD_TIMES.find((l) => l.value === form.leadTime)?.label} />
+                  {form.returnsWindowDays && <ReviewRow label="Returns window" value={`${form.returnsWindowDays} days`} />}
                   <ReviewRow label="Shipping" value="All regions worldwide" />
                 </div>
                 <div className="px-5 py-4">

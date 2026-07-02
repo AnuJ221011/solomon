@@ -35,6 +35,7 @@ export const brandSignupSchema = z.object({
   wholesaleProductCount: z.number().int().min(1).optional(),
   minimumOrderValue: z.number().int().min(1).optional(),
   leadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']).optional(),
+  returnsWindowDays: z.number().int().min(1).max(365).optional(),
   shippingZones: z.array(z.string()).optional(),
   referralToken: z.string().optional(),
 });
