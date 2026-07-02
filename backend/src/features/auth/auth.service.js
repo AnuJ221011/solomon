@@ -113,6 +113,8 @@ export const registerBrand = async ({
   instagramHandle, websiteUrl, city, state, yearFounded, brandStory,
   wholesaleProductCount, minimumOrderValue, leadTime, shippingZones,
   returnsWindowDays,
+  bankAccountHolderName, bankName, bankAccountNumber,
+  bankIfscCode, bankAccountType, bankUpiId,
   referralToken,
   files, // multer req.files — uploaded document buffers
 }) => {
@@ -140,6 +142,17 @@ export const registerBrand = async ({
     ...docUrls,
   };
 
+  const bankData = bankAccountHolderName && bankName && bankAccountNumber && bankIfscCode
+    ? {
+        accountHolderName: bankAccountHolderName,
+        bankName,
+        accountNumber: bankAccountNumber,
+        ifscCode: bankIfscCode,
+        accountType: bankAccountType ?? 'SAVINGS',
+        upiId: bankUpiId || null,
+      }
+    : null;
+
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (existing) {
@@ -149,14 +162,23 @@ export const registerBrand = async ({
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { email },
       data: {
         passwordHash,
         name: brandName,
         brandProfile: { update: { ...profileData, slug } },
       },
+      include: { brandProfile: { select: { id: true } } },
     });
+
+    if (bankData && updatedUser.brandProfile?.id) {
+      await prisma.bankAccount.upsert({
+        where: { brandProfileId: updatedUser.brandProfile.id },
+        update: bankData,
+        create: { brandProfileId: updatedUser.brandProfile.id, ...bankData },
+      });
+    }
 
     const otp = generateOtp();
     await storeOtp(email, otp);
@@ -176,7 +198,13 @@ export const registerBrand = async ({
       passwordHash,
       name: brandName,
       role: 'BRAND',
-      brandProfile: { create: { ...profileData, slug } },
+      brandProfile: {
+        create: {
+          ...profileData,
+          slug,
+          ...(bankData && { bankAccount: { create: bankData } }),
+        },
+      },
     },
   });
 

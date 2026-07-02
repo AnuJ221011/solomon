@@ -36,6 +36,12 @@ export const brandSignupSchema = z.object({
   minimumOrderValue: z.number().int().min(1).optional(),
   leadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']).optional(),
   returnsWindowDays: z.number().int().min(1).max(365).optional(),
+  bankAccountHolderName: z.string().min(1).max(100).optional(),
+  bankName: z.string().min(1).max(100).optional(),
+  bankAccountNumber: z.string().min(5).max(25).optional(),
+  bankIfscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format').optional(),
+  bankAccountType: z.enum(['SAVINGS', 'CURRENT']).optional(),
+  bankUpiId: z.string().max(50).optional().or(z.literal('')),
   shippingZones: z.array(z.string()).optional(),
   referralToken: z.string().optional(),
 });
