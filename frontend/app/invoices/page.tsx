@@ -191,7 +191,7 @@ export default function InvoicesPage() {
     <AccountPageWrapper title="Invoices" description="Download and manage your order invoices">
 
       {/* Filter tabs */}
-      <div className="flex gap-1 mb-6 border-b border-border-warm">
+      <div className="flex gap-1 mb-6 border-b border-border-warm overflow-x-auto scrollbar-none">
         {ALL_TABS.map((t) => (
           <button
             key={t}

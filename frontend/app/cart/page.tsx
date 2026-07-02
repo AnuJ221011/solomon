@@ -269,7 +269,7 @@ export default function CartPage() {
     <div className="bg-bg min-h-screen flex flex-col pb-20">
       <NavBar />
 
-      <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 lg:px-16 py-10">
+      <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 sm:px-6 lg:px-16 py-6 sm:py-10">
         {/* Heading row */}
         <div className="flex items-center gap-4 mb-8">
           <button
@@ -281,11 +281,11 @@ export default function CartPage() {
             <ArrowLeft size={16} aria-hidden="true" />
           </button>
 
-          <h1 className="font-playfair font-[500] text-primary text-[36px] leading-[1.1] flex-shrink-0">
+          <h1 className="font-playfair font-[500] text-primary text-[24px] sm:text-[36px] leading-[1.1] flex-shrink-0">
             Carts
           </h1>
 
-          <div className="relative flex-1 max-w-[420px]">
+          <div className="relative flex-1 max-w-[420px] hidden sm:block">
             <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text" aria-hidden="true" />
             <input
               type="text"

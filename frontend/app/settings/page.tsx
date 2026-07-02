@@ -374,7 +374,8 @@ export default function SettingsPage() {
 
         <Section title="Team" description="Invite colleagues to browse and place orders on your behalf.">
           <div className="border border-border-warm rounded overflow-hidden">
-            <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[480px]">
               <thead>
                 <tr className="border-b border-border-warm bg-muted-bg/40">
                   {['Name', 'Email', 'Role', 'Added', ''].map((col, i) => (
@@ -445,6 +446,7 @@ export default function SettingsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row gap-2">

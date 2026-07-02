@@ -99,7 +99,7 @@ export default function WalletPage() {
   return (
     <AccountPageWrapper title="Wallet & Credits" description="Store credits earned through referrals and promotions">
 
-      <div className="bg-primary text-white rounded p-8 mb-6">
+      <div className="bg-primary text-white rounded p-4 sm:p-8 mb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[12px] leading-[1.3] font-[400] font-public-sans text-white/60 uppercase tracking-[0.07em]">
@@ -108,7 +108,7 @@ export default function WalletPage() {
             {isLoading ? (
               <div className="h-12 bg-white/10 rounded animate-pulse w-32 mt-2" />
             ) : (
-              <p className="text-[48px] leading-none font-[600] font-public-sans text-white mt-2">
+              <p className="text-[32px] sm:text-[48px] leading-none font-[600] font-public-sans text-white mt-2">
                 {fmt(balance)}
               </p>
             )}

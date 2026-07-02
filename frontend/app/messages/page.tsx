@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, Suspense } from 'react'
-import { Send, Search, MessageSquare } from 'lucide-react'
+import { Send, Search, MessageSquare, ArrowLeft } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -117,6 +117,7 @@ function MessagesInner() {
   const initialPartnerName = searchParams.get('name') ?? ''
 
   const [activePartnerId, setActivePartnerId] = useState<string | null>(initialPartnerId)
+  const [mobileView, setMobileView] = useState<'threads' | 'chat'>(initialPartnerId ? 'chat' : 'threads')
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -158,11 +159,14 @@ function MessagesInner() {
     <AccountPageWrapper title="Messages" description="Direct conversations with brands">
 
       <div
-        className="border border-border-warm rounded overflow-hidden flex"
-        style={{ height: 'calc(100vh - 280px)', minHeight: '520px' }}
+        className="border border-border-warm rounded overflow-hidden flex h-[calc(100dvh-200px)] min-h-[400px] md:h-[calc(100vh-280px)] md:min-h-[520px]"
       >
         {/* Left — thread list */}
-        <div className="w-[300px] flex-shrink-0 border-r border-border-warm flex flex-col">
+        <div className={cn(
+          'flex-shrink-0 border-r border-border-warm flex flex-col',
+          'w-full md:w-[300px]',
+          mobileView === 'chat' ? 'hidden md:flex' : 'flex'
+        )}>
           <div className="px-3 py-3 border-b border-border-warm">
             <div className="relative">
               <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" aria-hidden="true" />
@@ -171,7 +175,7 @@ function MessagesInner() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search conversations…"
-                className="w-full h-8 pl-8 pr-3 rounded border border-border-warm bg-muted-bg text-[12px] font-public-sans text-primary placeholder:text-muted-text/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
+                className="w-full h-10 pl-8 pr-3 rounded border border-border-warm bg-muted-bg text-[13px] font-public-sans text-primary placeholder:text-muted-text/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
               />
             </div>
           </div>
@@ -192,7 +196,7 @@ function MessagesInner() {
             {!convsLoading && initialPartnerId && !conversations.find((c) => c.partnerId === initialPartnerId) && (
               <button
                 type="button"
-                onClick={() => setActivePartnerId(initialPartnerId)}
+                onClick={() => { setActivePartnerId(initialPartnerId); setMobileView('chat') }}
                 className={cn(
                   'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors border-b border-border-warm',
                   activePartnerId === initialPartnerId ? 'bg-muted-bg' : 'hover:bg-muted-bg/60'
@@ -218,7 +222,7 @@ function MessagesInner() {
                 key={conv.partnerId}
                 conv={conv}
                 active={conv.partnerId === activePartnerId}
-                onClick={() => setActivePartnerId(conv.partnerId)}
+                onClick={() => { setActivePartnerId(conv.partnerId); setMobileView('chat') }}
               />
             ))}
           </div>
@@ -226,13 +230,27 @@ function MessagesInner() {
 
         {/* Right — active conversation */}
         {!hasActiveThread ? (
-          <div className="flex-1 flex items-center justify-center font-public-sans text-[14px] text-muted-text">
+          <div className={cn(
+            'flex-1 items-center justify-center font-public-sans text-[14px] text-muted-text',
+            mobileView === 'threads' ? 'hidden md:flex' : 'flex'
+          )}>
             {convsLoading ? 'Loading…' : 'Select a conversation'}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={cn(
+            'flex-1 flex-col min-w-0',
+            mobileView === 'threads' ? 'hidden md:flex' : 'flex'
+          )}>
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-warm bg-surface flex-shrink-0">
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border-warm bg-surface flex-shrink-0">
+              <button
+                type="button"
+                aria-label="Back to conversations"
+                onClick={() => setMobileView('threads')}
+                className="md:hidden w-8 h-8 flex items-center justify-center -ml-1 text-muted-text hover:text-primary transition-colors flex-shrink-0"
+              >
+                <ArrowLeft size={18} aria-hidden="true" />
+              </button>
               <BrandAvatar initial={getInitial(displayName)} size="sm" />
               <div>
                 <p className="font-public-sans text-[13px] font-[600] text-primary">{displayName}</p>

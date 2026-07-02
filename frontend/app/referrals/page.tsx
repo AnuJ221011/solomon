@@ -196,7 +196,8 @@ export default function ReferralsPage() {
             />
           ) : (
             <div className="border border-border-warm rounded bg-surface overflow-hidden">
-              <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[400px]">
                 <thead>
                   <tr className="border-b border-border-warm bg-muted-bg/40">
                     {['Email', 'Status', 'Referred', 'Reward'].map((col) => (
@@ -243,6 +244,7 @@ export default function ReferralsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

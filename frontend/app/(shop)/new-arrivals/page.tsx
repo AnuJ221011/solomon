@@ -66,7 +66,7 @@ export default function NewArrivalsPage() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-[36px] leading-[1.15] font-[500] font-playfair text-primary">
+          <h1 className="text-[24px] sm:text-[36px] leading-[1.15] font-[500] font-playfair text-primary">
             New Arrivals
           </h1>
           <p className="text-[15px] font-public-sans text-muted-text mt-1">

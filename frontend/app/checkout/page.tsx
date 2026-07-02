@@ -236,7 +236,7 @@ export default function CheckoutPage() {
     <div className="bg-bg min-h-screen flex flex-col">
       <NavBar />
 
-      <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 lg:px-16 py-12">
+      <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 sm:px-6 lg:px-16 py-8 sm:py-12">
         {/* Back link */}
         <Link
           href="/cart"
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
           Back to cart
         </Link>
 
-        <h1 className="text-[32px] leading-[1.2] font-[500] font-playfair text-primary mb-10">
+        <h1 className="text-[24px] sm:text-[32px] leading-[1.2] font-[500] font-playfair text-primary mb-8 sm:mb-10">
           Checkout
         </h1>
 
@@ -259,7 +259,7 @@ export default function CheckoutPage() {
                 <SectionHeading>Shipping address</SectionHeading>
                 <div className="flex flex-col gap-5">
                   {/* Full name + company */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="full-name">
                         Full name <span className="text-error">*</span>
@@ -317,7 +317,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* City + State + Postcode */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="city">
                         City <span className="text-error">*</span>
@@ -361,7 +361,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Country + Phone */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="country">
                         Country <span className="text-error">*</span>
