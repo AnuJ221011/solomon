@@ -6,6 +6,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Check, Eye, EyeOff,
   Upload, X, FileText, User, Building2,
+  Sparkles, RotateCcw, Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -738,6 +739,29 @@ export default function ApplyPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [polishingStory, setPolishingStory] = useState(false)
+  const [prevStory, setPrevStory] = useState<string | null>(null)
+
+  async function polishStory() {
+    if (!form.brandStory.trim()) return
+    setPolishingStory(true)
+    try {
+      const res = await api.post('/products/ai/polish', { field: 'brandStory', value: form.brandStory })
+      setPrevStory(form.brandStory)
+      set('brandStory', res.data.data.cleaned)
+    } catch {
+      // silently fail — user's text is unchanged
+    } finally {
+      setPolishingStory(false)
+    }
+  }
+
+  function undoStory() {
+    if (!prevStory) return
+    set('brandStory', prevStory)
+    setPrevStory(null)
+  }
+
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
@@ -1237,11 +1261,25 @@ export default function ApplyPage() {
           {/* ── Step 3: Your brand story ─────────────────────────────────── */}
           {step === 3 && (
             <div>
-              <div className="flex items-baseline justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-1.5 gap-2">
                 <FieldLabel>Brand story</FieldLabel>
-                <span className={cn('text-[12px]', form.brandStory.length < 100 ? 'text-[#B0ACA3]' : 'text-[#1A1A1A]')}>
-                  {form.brandStory.length} / 1000
-                </span>
+                <div className="flex items-center gap-3">
+                  {prevStory ? (
+                    <button type="button" onClick={undoStory}
+                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#888] hover:text-[#1A1A1A] transition-colors shrink-0">
+                      <RotateCcw size={11} />Undo
+                    </button>
+                  ) : (
+                    <button type="button" onClick={polishStory} disabled={polishingStory || loading}
+                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#7C6A5E] hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0">
+                      {polishingStory ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                      {polishingStory ? 'Polishing…' : 'Polish'}
+                    </button>
+                  )}
+                  <span className={cn('text-[12px]', form.brandStory.length < 100 ? 'text-[#B0ACA3]' : 'text-[#1A1A1A]')}>
+                    {form.brandStory.length} / 1000
+                  </span>
+                </div>
               </div>
               <Textarea
                 id="brandStory" value={form.brandStory} onChange={(v) => set('brandStory', v)}

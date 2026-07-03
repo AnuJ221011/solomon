@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Upload, Link2, Trash2, X } from 'lucide-react'
+import { Plus, Upload, Link2, Trash2, X, Sparkles, RotateCcw, Loader2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -57,15 +57,38 @@ function Section({ title, description, children }: { title: string; description?
   )
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, action, children }: { label: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
-        {label}
-      </label>
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em]">
+          {label}
+        </label>
+        {action}
+      </div>
       {children}
       {hint && <p className="text-[11px] font-public-sans text-muted-text mt-1">{hint}</p>}
     </div>
+  )
+}
+
+function PolishButton({ loading, canUndo, onPolish, onUndo }: {
+  loading: boolean; canUndo: boolean; onPolish: () => void; onUndo: () => void
+}) {
+  if (canUndo) {
+    return (
+      <button type="button" onClick={onUndo}
+        className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors shrink-0">
+        <RotateCcw size={11} />Undo
+      </button>
+    )
+  }
+  return (
+    <button type="button" onClick={onPolish} disabled={loading}
+      className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-accent hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0">
+      {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+      {loading ? 'Polishing…' : 'Polish'}
+    </button>
   )
 }
 
@@ -113,6 +136,30 @@ export default function SettingsPage() {
   const [countryOfOrigin, setCountryOfOrigin] = useState('IN')
   const [yearFounded, setYearFounded] = useState('')
   const [brandStory, setBrandStory] = useState('')
+  const [polishingStory, setPolishingStory] = useState(false)
+  const [prevStory, setPrevStory] = useState<string | null>(null)
+
+  async function polishStory() {
+    if (!brandStory.trim()) return
+    setPolishingStory(true)
+    try {
+      const res = await api.post('/products/ai/polish', { field: 'brandStory', value: brandStory })
+      setPrevStory(brandStory)
+      setBrandStory(res.data.data.cleaned)
+      toast.success('Brand story polished.')
+    } catch {
+      toast.error('AI polish failed — try again.')
+    } finally {
+      setPolishingStory(false)
+    }
+  }
+
+  function undoStory() {
+    if (!prevStory) return
+    setBrandStory(prevStory)
+    setPrevStory(null)
+  }
+
   const [description, setDescription] = useState('')
   const [existingRetailPartners, setExistingRetailPartners] = useState('')
   const [categories, setCategories] = useState<string[]>([])
@@ -483,7 +530,8 @@ export default function SettingsPage() {
       {/* ── Brand Story ────────────────────────────────────────────────────── */}
       <Section title="Brand Story" description="Tell buyers about your brand — this appears on your storefront.">
         <div className="space-y-5">
-          <Field label="Brand Story" hint="Share your origin story and what makes your brand special (max 1000 characters).">
+          <Field label="Brand Story" hint="Share your origin story and what makes your brand special (max 1000 characters)."
+            action={<PolishButton loading={polishingStory} canUndo={!!prevStory} onPolish={polishStory} onUndo={undoStory} />}>
             <textarea rows={5} value={brandStory} onChange={(e) => setBrandStory(e.target.value)}
               maxLength={1000} placeholder="Tell us the story behind your brand..." className={TEXTAREA_CLS} />
             <p className="text-[11px] font-public-sans text-muted-text mt-1 text-right">{brandStory.length}/1000</p>

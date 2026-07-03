@@ -98,7 +98,7 @@ router.post('/ai/polish', authenticate, authorize('BRAND'), async (req, res) => 
   const { field, value } = req.body;
   if (!field || !value?.trim()) return sendSuccess(res, { cleaned: value ?? '' });
 
-  const allowed = ['name', 'description', 'tags'];
+  const allowed = ['name', 'description', 'tags', 'brandStory'];
   if (!allowed.includes(field)) throw createError('Invalid field', 400);
   if (!process.env.GEMINI_API_KEY) throw createError('AI polishing is not configured', 503);
 
@@ -139,6 +139,20 @@ ${value}`,
 Return ONLY the comma-separated tags, no explanation.
 
 Input: "${value}"`,
+
+    brandStory: `You are a brand content editor for a B2B wholesale marketplace selling Indian artisan goods.
+Polish this brand story:
+- Remove excessive emojis (keep at most 1–2 if they add warmth)
+- Fix irregular spacing: collapse multiple blank lines to one, remove trailing spaces
+- Fix inconsistent punctuation
+- Preserve the authentic, personal voice — do NOT make it sound corporate or generic
+- Do NOT add, remove, or change any factual information
+- Max 1000 characters — trim at a natural sentence boundary only if over the limit
+
+Return ONLY the cleaned brand story, no explanation.
+
+Input:
+${value}`,
   };
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
