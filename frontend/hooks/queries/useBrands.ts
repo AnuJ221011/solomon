@@ -20,6 +20,7 @@ export interface Brand {
   logo?: string
   banner?: string
   description: string
+  brandStory?: string | null
   location: string
   yearFounded?: number
   achievementLevel: number
@@ -88,6 +89,7 @@ function normaliseBrand(raw: any): Brand {
     logo: raw.logo ?? raw.logoUrl ?? undefined,
     banner: raw.banner ?? raw.bannerUrl ?? undefined,
     description: raw.description ?? '',
+    brandStory: raw.brandStory ?? null,
     location: raw.location ?? [raw.city, raw.state].filter(Boolean).join(', ') ?? raw.countryOfOrigin ?? '',
     yearFounded: raw.yearFounded,
     achievementLevel: ACHIEVEMENT_MAP[raw.achievementLevel] ?? (typeof raw.achievementLevel === 'number' ? raw.achievementLevel : 1),

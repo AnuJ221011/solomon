@@ -175,9 +175,23 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
           )}
 
           {/* Description */}
-          <p className="text-[16px] leading-[1.5] font-[400] font-public-sans text-muted-text mt-3 max-w-[640px]">
-            {brand.description}
-          </p>
+          {brand.description && (
+            <p className="text-[16px] leading-[1.5] font-[400] font-public-sans text-muted-text mt-3 max-w-[640px]">
+              {brand.description}
+            </p>
+          )}
+
+          {/* Brand story */}
+          {brand.brandStory && (
+            <div className="mt-5 pt-5 border-t border-border-warm max-w-[640px]">
+              <p className="text-[11px] font-[600] uppercase tracking-[0.08em] text-muted-text font-public-sans mb-2">
+                Our story
+              </p>
+              <p className="text-[15px] leading-[1.7] font-[400] font-public-sans text-primary whitespace-pre-wrap">
+                {brand.brandStory}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

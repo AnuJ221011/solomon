@@ -237,7 +237,7 @@ export function BrandDetailDrawer({ brandId, onClose }: Props) {
 
               {/* Brand info */}
               <Section title="Brand">
-                <DetailRow label="Tagline" value={brand.description} />
+                <DetailRow label="Short Description" value={brand.description} />
                 <DetailRow label="Categories" value={brand.category?.join(', ')} />
                 <DetailRow label="Country of origin" value={brand.countryOfOrigin} />
                 <DetailRow

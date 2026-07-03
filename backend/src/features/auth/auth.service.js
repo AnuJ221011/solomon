@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import prisma from '../../config/db.js';
 import { env } from '../../config/env.js';
 import {
@@ -107,6 +108,20 @@ export const registerBuyer = async ({
   return { user, accessToken, refreshToken };
 };
 
+async function generateBrandDescription(brandStory) {
+  if (!process.env.GEMINI_API_KEY) return null;
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const prompt = `Write a short 1–2 sentence brand description (under 160 characters) for a wholesale marketplace brand, based on their brand story. Be concise, professional, and buyer-focused. Return only the description text with no quotes or extra formatting.\n\nBrand story: ${brandStory}`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim().slice(0, 200);
+    return text.length > 0 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 export const registerBrand = async ({
   email, password, brandName, category, countryOfOrigin,
   registrationType, phone, tagline,
@@ -119,7 +134,10 @@ export const registerBrand = async ({
   files, // multer req.files — uploaded document buffers
 }) => {
   // Upload documents to Cloudinary (gracefully skip if Cloudinary is unconfigured)
-  const docUrls = env.CLOUDINARY_CLOUD_NAME ? await uploadDocs(files).catch(() => ({})) : {};
+  const [docUrls, aiDescription] = await Promise.all([
+    env.CLOUDINARY_CLOUD_NAME ? uploadDocs(files).catch(() => ({})) : Promise.resolve({}),
+    brandStory ? generateBrandDescription(brandStory) : Promise.resolve(null),
+  ]);
 
   const profileData = {
     brandName,
@@ -134,6 +152,7 @@ export const registerBrand = async ({
     state: state ?? null,
     yearFounded: yearFounded ?? null,
     brandStory: brandStory ?? null,
+    description: aiDescription ?? null,
     wholesaleProductCount: wholesaleProductCount ?? null,
     minimumOrderValue: minimumOrderValue ?? 0,
     defaultLeadTime: leadTime ?? null,
