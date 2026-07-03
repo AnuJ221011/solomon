@@ -166,7 +166,7 @@ function mapProduct(raw: Record<string, any>): Product {
     brandStory: (bp.brandStory as string | null) ?? null,
     brandDescription: (bp.description as string | null) ?? null,
     freeShippingAboveInr: (() => {
-      const rates: Array<{ freeShippingAboveInr?: string | number | null }> = bp.shippingRates ?? []
+      const rates = (bp.shippingRates as Array<{ freeShippingAboveInr?: string | number | null }> | null | undefined) ?? []
       const rate = rates.find((r) => r.freeShippingAboveInr != null)
       return rate ? Number(rate.freeShippingAboveInr) : null
     })(),
