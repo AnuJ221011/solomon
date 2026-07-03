@@ -8,6 +8,8 @@ import { createProductSchema, updateProductSchema, productQuerySchema } from './
 import { importProductsFromCsv, importProductsFromJson } from './product.import.js';
 import variantRouter from './variant.routes.js';
 import { sendSuccess } from '../../shared/utils/response.js';
+import { createError } from '../../shared/utils/createError.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import multer from 'multer';
 
 const router = Router();
@@ -89,6 +91,62 @@ router.post('/import-shopify', authenticate, authorize('BRAND'), async (req, res
   const { products, unmatchedCategories = [] } = req.body;
   const result = await importProductsFromJson(req.user.id, products, unmatchedCategories);
   sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
+});
+
+// AI content polishing — clean up name, description, tags using Gemini
+router.post('/ai/polish', authenticate, authorize('BRAND'), async (req, res) => {
+  const { field, value } = req.body;
+  if (!field || !value?.trim()) return sendSuccess(res, { cleaned: value ?? '' });
+
+  const allowed = ['name', 'description', 'tags'];
+  if (!allowed.includes(field)) throw createError('Invalid field', 400);
+  if (!process.env.GEMINI_API_KEY) throw createError('AI polishing is not configured', 503);
+
+  const PROMPTS = {
+    name: `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
+Clean up this product name:
+- Use Title Case capitalisation
+- Remove emojis and special characters (keep hyphens if part of the name)
+- Collapse extra whitespace
+- Max 80 characters — truncate at a natural word boundary if needed
+- Do NOT add words or invent details
+
+Return ONLY the cleaned name, no explanation.
+
+Input: "${value}"`,
+
+    description: `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
+Polish this product description for wholesale buyers:
+- Remove excessive emojis (keep at most 1–2 if they genuinely help)
+- Fix irregular spacing: collapse multiple blank lines to one, remove trailing spaces
+- Standardise bullet points to a single style (use "-" if mixed)
+- Do NOT add, remove, or change any factual information
+- Keep the tone professional and easy to scan
+
+Return ONLY the cleaned description, no explanation.
+
+Input:
+${value}`,
+
+    tags: `Clean up these product tags for a wholesale marketplace:
+- Lowercase everything
+- Remove emojis and special characters from each tag
+- Trim whitespace around each tag
+- Remove exact duplicates (case-insensitive)
+- Keep at most 10 tags (drop extras from the end)
+- Return as comma-separated values only
+
+Return ONLY the comma-separated tags, no explanation.
+
+Input: "${value}"`,
+  };
+
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const result = await model.generateContent(PROMPTS[field]);
+  const cleaned = result.response.text().trim();
+
+  sendSuccess(res, { cleaned });
 });
 
 // Variant sub-routes: /api/products/:productId/variants

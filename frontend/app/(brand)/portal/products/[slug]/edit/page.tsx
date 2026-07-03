@@ -4,7 +4,7 @@ import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, Trash2, Upload, ImageIcon, ChevronDown,
-  Plus, RefreshCw, Loader2, X, Check, Search,
+  Plus, RefreshCw, Loader2, X, Check, Search, Sparkles, RotateCcw,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -186,21 +186,48 @@ function uid() { return String(++_id) }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+type PolishableField = 'name' | 'description' | 'tags'
+
 function Field({
   label,
   hint,
+  action,
   children,
 }: {
   label: string
   hint?: string
+  action?: React.ReactNode
   children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[14px] font-[600] font-public-sans text-primary">{label}</label>
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[14px] font-[600] font-public-sans text-primary">{label}</label>
+        {action}
+      </div>
       {children}
       {hint && <p className="text-[12px] font-public-sans text-muted-text">{hint}</p>}
     </div>
+  )
+}
+
+function PolishButton({ loading, canUndo, onPolish, onUndo }: {
+  loading: boolean; canUndo: boolean; onPolish: () => void; onUndo: () => void
+}) {
+  if (canUndo) {
+    return (
+      <button type="button" onClick={onUndo}
+        className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors shrink-0">
+        <RotateCcw size={11} />Undo
+      </button>
+    )
+  }
+  return (
+    <button type="button" onClick={onPolish} disabled={loading}
+      className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-accent hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0">
+      {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+      {loading ? 'Polishing…' : 'Polish'}
+    </button>
   )
 }
 
@@ -895,6 +922,32 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
   const set = (key: keyof ProductForm) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }))
 
+  const [polishing, setPolishing] = useState<Partial<Record<PolishableField, boolean>>>({})
+  const [prevValues, setPrevValues] = useState<Partial<Record<PolishableField, string>>>({})
+
+  async function polishField(field: PolishableField) {
+    const value = form[field]
+    if (!value.trim()) return
+    setPolishing((p) => ({ ...p, [field]: true }))
+    try {
+      const res = await api.post('/products/ai/polish', { field, value })
+      setPrevValues((p) => ({ ...p, [field]: value }))
+      setForm((f) => ({ ...f, [field]: res.data.data.cleaned }))
+      toast.success('Content polished.')
+    } catch {
+      toast.error('AI polish failed — try again.')
+    } finally {
+      setPolishing((p) => ({ ...p, [field]: false }))
+    }
+  }
+
+  function undoField(field: PolishableField) {
+    const prev = prevValues[field]
+    if (!prev) return
+    setForm((f) => ({ ...f, [field]: prev }))
+    setPrevValues((p) => { const n = { ...p }; delete n[field]; return n })
+  }
+
   function toggleCategory(cat: string) {
     setForm((f) => {
       if (f.categories.includes(cat)) return { ...f, categories: f.categories.filter((c) => c !== cat) }
@@ -983,7 +1036,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
             Core Details
           </h2>
 
-          <Field label="Product Name">
+          <Field label="Product Name"
+            action={<PolishButton loading={!!polishing.name} canUndo={!!prevValues.name} onPolish={() => polishField('name')} onUndo={() => undoField('name')} />}>
             <TextInput value={form.name} onChange={set('name')} placeholder="Product name" />
           </Field>
 
@@ -995,7 +1049,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
             />
           </Field>
 
-          <Field label="Description">
+          <Field label="Description"
+            action={<PolishButton loading={!!polishing.description} canUndo={!!prevValues.description} onPolish={() => polishField('description')} onUndo={() => undoField('description')} />}>
             <textarea
               value={form.description}
               onChange={(e) => set('description')(e.target.value)}
@@ -1004,8 +1059,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
             />
           </Field>
 
-
-          <Field label="Tags" hint="Comma-separated">
+          <Field label="Tags" hint="Comma-separated"
+            action={<PolishButton loading={!!polishing.tags} canUndo={!!prevValues.tags} onPolish={() => polishField('tags')} onUndo={() => undoField('tags')} />}>
             <TextInput value={form.tags} onChange={set('tags')} placeholder="handmade, cotton, block print" />
           </Field>
         </div>

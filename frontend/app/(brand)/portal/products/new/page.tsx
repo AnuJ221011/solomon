@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, RefreshCw, Check, Search } from 'lucide-react'
+import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, RefreshCw, Check, Search, Sparkles, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -66,17 +66,42 @@ function uid() { return String(++_id) }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
-function Field({ label, required, hint, children }: {
-  label: string; required?: boolean; hint?: string; children: React.ReactNode
+type PolishableField = 'name' | 'description' | 'tags'
+
+function Field({ label, required, hint, action, children }: {
+  label: string; required?: boolean; hint?: string; action?: React.ReactNode; children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[14px] font-[600] font-public-sans text-primary">
-        {label}{required && <span className="text-error ml-0.5">*</span>}
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[14px] font-[600] font-public-sans text-primary">
+          {label}{required && <span className="text-error ml-0.5">*</span>}
+        </label>
+        {action}
+      </div>
       {children}
       {hint && <p className="text-[12px] font-public-sans text-muted-text">{hint}</p>}
     </div>
+  )
+}
+
+function PolishButton({ loading, canUndo, onPolish, onUndo }: {
+  loading: boolean; canUndo: boolean; onPolish: () => void; onUndo: () => void
+}) {
+  if (canUndo) {
+    return (
+      <button type="button" onClick={onUndo}
+        className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary transition-colors shrink-0">
+        <RotateCcw size={11} />Undo
+      </button>
+    )
+  }
+  return (
+    <button type="button" onClick={onPolish} disabled={loading}
+      className="inline-flex items-center gap-1 text-[12px] font-[500] font-public-sans text-accent hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0">
+      {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+      {loading ? 'Polishing…' : 'Polish'}
+    </button>
   )
 }
 
@@ -233,6 +258,32 @@ export default function NewProductPage() {
   const [files, setFiles]       = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+
+  const [polishing, setPolishing] = useState<Partial<Record<PolishableField, boolean>>>({})
+  const [prevValues, setPrevValues] = useState<Partial<Record<PolishableField, string>>>({})
+
+  async function polishField(field: PolishableField) {
+    const value = form[field]
+    if (!value.trim()) return
+    setPolishing((p) => ({ ...p, [field]: true }))
+    try {
+      const res = await api.post('/products/ai/polish', { field, value })
+      setPrevValues((p) => ({ ...p, [field]: value }))
+      setForm((f) => ({ ...f, [field]: res.data.data.cleaned }))
+      toast.success('Content polished.')
+    } catch {
+      toast.error('AI polish failed — try again.')
+    } finally {
+      setPolishing((p) => ({ ...p, [field]: false }))
+    }
+  }
+
+  function undoField(field: PolishableField) {
+    const prev = prevValues[field]
+    if (!prev) return
+    setForm((f) => ({ ...f, [field]: prev }))
+    setPrevValues((p) => { const n = { ...p }; delete n[field]; return n })
+  }
 
   const set = (key: keyof ProductForm) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }))
@@ -466,7 +517,8 @@ export default function NewProductPage() {
             Core Details
           </h2>
 
-          <Field label="Product Name" required hint="Max 80 characters">
+          <Field label="Product Name" required hint="Max 80 characters"
+            action={<PolishButton loading={!!polishing.name} canUndo={!!prevValues.name} onPolish={() => polishField('name')} onUndo={() => undoField('name')} />}>
             <TextInput value={form.name} onChange={set('name')} placeholder="e.g. Hand-Block Printed Cotton Saree" maxLength={80} />
           </Field>
 
@@ -486,13 +538,15 @@ export default function NewProductPage() {
             )}
           </Field>
 
-          <Field label="Description" required>
+          <Field label="Description" required
+            action={<PolishButton loading={!!polishing.description} canUndo={!!prevValues.description} onPolish={() => polishField('description')} onUndo={() => undoField('description')} />}>
             <textarea value={form.description} onChange={(e) => set('description')(e.target.value)}
               placeholder="Describe the product — materials, craftsmanship, dimensions, care instructions…" rows={5}
               className="w-full px-3 py-2 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none" />
           </Field>
 
-          <Field label="Tags" hint="Comma-separated, up to 10">
+          <Field label="Tags" hint="Comma-separated, up to 10"
+            action={<PolishButton loading={!!polishing.tags} canUndo={!!prevValues.tags} onPolish={() => polishField('tags')} onUndo={() => undoField('tags')} />}>
             <TextInput value={form.tags} onChange={set('tags')} placeholder="handmade, cotton, block print" />
           </Field>
         </div>
