@@ -11,6 +11,7 @@ import {
   CreditCard,
   BarChart2,
   Settings,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -55,6 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
 export function PortalSidebar() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
   const brandName = user?.name ?? 'Brand'
   const brandInitials = brandName
     .split(' ')
@@ -135,13 +137,14 @@ export function PortalSidebar() {
             </p>
             <p className="text-[11px] font-public-sans text-[#9CA3AF] leading-tight">Brand Portal</p>
           </div>
-          <Link
-            href="/portal/settings"
-            aria-label="Settings"
+          <button
+            type="button"
+            onClick={logout}
+            aria-label="Sign out"
             className="text-[#C4BDB4] hover:text-[#444748] transition-colors p-1"
           >
-            <Settings size={14} aria-hidden="true" />
-          </Link>
+            <LogOut size={14} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </aside>

@@ -1,6 +1,11 @@
-﻿import { Bell, Search } from 'lucide-react'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Bell, Search } from 'lucide-react'
 import { PortalSidebar } from '@/components/brand-portal/PortalSidebar'
 import Link from 'next/link'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 
 // ─── Mobile bottom tab items ──────────────────────────────────────────────────
 
@@ -19,6 +24,31 @@ export default function BrandPortalLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
+  const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const hasHydrated = useAuthStore((s) => s._hasHydrated)
+  const notificationCount = useAuthStore((s) => s.notificationCount)
+
+  const brandName = user?.name ?? ''
+  const brandInitials = brandName
+    .split(' ')
+    .filter(Boolean)
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    if (!isAuthenticated || user?.role !== 'BRAND') {
+      router.replace('/')
+    }
+  }, [hasHydrated, isAuthenticated, user, router])
+
+  if (!hasHydrated) return null
+  if (!isAuthenticated || user?.role !== 'BRAND') return null
+
   return (
     <div className="flex min-h-screen bg-[#F9F7F2]">
       {/* Sidebar — hidden on mobile */}
@@ -46,32 +76,28 @@ export default function BrandPortalLayout({
 
           {/* Right actions */}
           <div className="flex items-center gap-2.5 ml-auto">
-            {/* Notification bell */}
+            {/* Notification bell — dot shown only when there are unread notifications */}
             <button
               type="button"
               aria-label="Notifications"
               className="w-9 h-9 flex items-center justify-center rounded-md border border-[#E5E1D8] text-[#9CA3AF] hover:text-[#1A1A1A] hover:bg-[#F5F0E8] transition-colors relative"
             >
               <Bell size={15} aria-hidden="true" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
-            </button>
-
-            {/* Currency switcher */}
-            <button
-              type="button"
-              className="h-9 px-3 rounded-md border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:text-[#1A1A1A] hover:bg-[#F5F0E8] transition-colors"
-            >
-              INR ₹
+              {notificationCount > 0 && (
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
+              )}
             </button>
 
             <div className="h-5 w-px bg-[#E5E1D8]" />
 
-            {/* Avatar */}
+            {/* Avatar with real initials */}
             <div
               className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E5E1D8] flex items-center justify-center shrink-0 cursor-pointer"
               aria-label="User menu"
             >
-              <span className="text-[11px] font-[700] font-public-sans text-[#A68B67]">AR</span>
+              <span className="text-[11px] font-[700] font-public-sans text-[#A68B67]">
+                {brandInitials}
+              </span>
             </div>
           </div>
         </header>

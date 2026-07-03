@@ -24,6 +24,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const hasHydrated = useAuthStore((s) => s._hasHydrated)
+  const notificationCount = useAuthStore((s) => s.notificationCount)
+
+  const adminName = user?.name ?? 'Admin'
+  const adminInitials = adminName
+    .split(' ')
+    .filter(Boolean)
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -71,13 +81,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               )}
             >
               <Bell size={15} aria-hidden="true" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
+              {notificationCount > 0 && (
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#A68B67]" aria-hidden="true" />
+              )}
             </button>
 
             <div className="h-5 w-px bg-[#E5E1D8]" />
-            <span className="text-[11px] font-[700] font-public-sans text-[#A68B67] px-2.5 py-1 rounded-md bg-[#F5F0E8] tracking-[0.08em] uppercase">
-              Admin
-            </span>
+            <div
+              className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E5E1D8] flex items-center justify-center shrink-0"
+              aria-label={adminName}
+            >
+              <span className="text-[11px] font-[700] font-public-sans text-[#A68B67]">
+                {adminInitials}
+              </span>
+            </div>
           </div>
         </header>
 
