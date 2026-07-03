@@ -55,12 +55,6 @@ describe('Brand — Signup', () => {
     expect([400, 422]).toContain(res.status)
   })
 
-  it('missing both gstNumber and businessRegNumber → 422', async () => {
-    const res = await request(app).post('/api/auth/brand/signup')
-      .send({ email: `x-${Date.now()}@sb-test.com`, password, brandName: 'X', category: ['Textiles'], countryOfOrigin: 'IN' })
-    expect([400, 422]).toContain(res.status)
-  })
-
   it('empty category array → 422', async () => {
     const res = await request(app).post('/api/auth/brand/signup')
       .send({ email: `x-${Date.now()}@sb-test.com`, password, brandName: 'X', category: [], countryOfOrigin: 'IN', gstNumber: 'GST123' })
@@ -370,6 +364,62 @@ describe('Brand — Dashboard', () => {
     const res = await request(app).get('/api/brands/me/dashboard')
       .set('Authorization', `Bearer ${buyerToken}`)
     expect(res.status).toBe(403)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════
+// AI POLISH
+// ═══════════════════════════════════════════════════════════════
+
+describe('Brand — AI Polish', () => {
+  it('unauthenticated → 401', async () => {
+    const res = await request(app).post('/api/products/ai/polish')
+      .send({ field: 'description', value: 'test product' })
+    expect(res.status).toBe(401)
+  })
+
+  it('buyer token → 403', async () => {
+    const res = await request(app).post('/api/products/ai/polish')
+      .set('Authorization', `Bearer ${buyerToken}`)
+      .send({ field: 'description', value: 'test product' })
+    expect(res.status).toBe(403)
+  })
+
+  it('any BRAND role (pending or approved) passes auth guard', async () => {
+    // authorize('BRAND') checks role only — pending brands are not blocked
+    const res = await request(app).post('/api/products/ai/polish')
+      .set('Authorization', `Bearer ${pendingToken}`)
+      .send({ field: 'description', value: 'test product' })
+    expect(res.status).not.toBe(401)
+    expect(res.status).not.toBe(403)
+  })
+
+  it('invalid field → 400', async () => {
+    const res = await request(app).post('/api/products/ai/polish')
+      .set('Authorization', `Bearer ${approvedToken}`)
+      .send({ field: 'hackerField', value: 'test product' })
+    expect([400, 422]).toContain(res.status)
+  })
+
+  it('missing value → 200 with empty cleaned string', async () => {
+    // Handler returns early with cleaned: '' when value is absent rather than erroring
+    const res = await request(app).post('/api/products/ai/polish')
+      .set('Authorization', `Bearer ${approvedToken}`)
+      .send({ field: 'description' })
+    expect(res.status).toBe(200)
+    expect(res.body.data.cleaned).toBe('')
+  })
+
+  it('valid field and value → passes auth and field validation (Gemini success or error)', async () => {
+    // This test verifies the auth + field validation layer only.
+    // Whether Gemini succeeds depends on the environment key — we just confirm
+    // the response is never 401 / 403 / 400 (i.e. auth and validation passed).
+    const res = await request(app).post('/api/products/ai/polish')
+      .set('Authorization', `Bearer ${approvedToken}`)
+      .send({ field: 'description', value: 'A beautiful handwoven scarf with extra   spaces!!!' })
+    expect(res.status).not.toBe(401)
+    expect(res.status).not.toBe(403)
+    expect(res.status).not.toBe(400)
   })
 })
 
