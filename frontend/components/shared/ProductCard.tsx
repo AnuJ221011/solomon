@@ -227,7 +227,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
 
         {/* Price */}
         <div className="text-[16px] font-[700] font-public-sans text-primary leading-none">
-          <Price amountInr={wholesalePrice} size="md" className="!text-[16px] !font-[700]" />
+          <Price amountInr={wholesalePrice} size="md" className="!text-[16px] !font-[700]" interactive={false} />
         </div>
 
         {/* Product name */}

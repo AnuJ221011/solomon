@@ -9,6 +9,8 @@ interface PriceProps {
   amountInr: number
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  /** When false, blurred price is non-clickable (no modal). Default true. */
+  interactive?: boolean
 }
 
 const sizeClass = {
@@ -29,7 +31,7 @@ export function useFormatPrice() {
     }).format(convertFromINR(amountInr))
 }
 
-export function Price({ amountInr, className, size = 'md' }: PriceProps) {
+export function Price({ amountInr, className, size = 'md', interactive = true }: PriceProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
   const { currency, convertFromINR } = useCurrencyStore()
@@ -43,6 +45,16 @@ export function Price({ amountInr, className, size = 'md' }: PriceProps) {
   }).format(converted)
 
   if (!isAuthenticated) {
+    if (!interactive) {
+      return (
+        <span
+          className={cn('select-none rounded blur-[5px]', sizeClass[size], className)}
+          aria-hidden="true"
+        >
+          ₹0,000
+        </span>
+      )
+    }
     return (
       <button
         type="button"
