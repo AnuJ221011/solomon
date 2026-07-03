@@ -30,6 +30,8 @@ export interface ProductBrandInfo {
   achievementLevel: number
   minimumOrderValue: number
   logoUrl: string | null
+  brandStory: string | null
+  brandDescription: string | null
 }
 
 export interface Product {
@@ -54,6 +56,8 @@ export interface Product {
   countryOfOrigin: string
   freeShippingAboveInr: number | null
   returnsWindowDays: number | null
+  brandStory: string | null
+  brandDescription: string | null
 }
 
 export interface ProductsParams {
@@ -142,6 +146,8 @@ function mapProduct(raw: Record<string, any>): Product {
       achievementLevel: ACHIEVEMENT_LEVEL[(bp.achievementLevel as string)] ?? 1,
       minimumOrderValue: (bp.minimumOrderValue as number) ?? 0,
       logoUrl: (bp.logoUrl as string | null) ?? null,
+      brandStory: (bp.brandStory as string | null) ?? null,
+      brandDescription: (bp.description as string | null) ?? null,
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     variants: (raw.variants ?? []).map((v: any) => ({
@@ -157,6 +163,8 @@ function mapProduct(raw: Record<string, any>): Product {
     availability: raw.availability ?? '',
     countryOfOrigin: raw.countryOfOrigin ?? 'IN',
     returnsWindowDays: (bp.returnsWindowDays as number | null) ?? null,
+    brandStory: (bp.brandStory as string | null) ?? null,
+    brandDescription: (bp.description as string | null) ?? null,
     freeShippingAboveInr: (() => {
       const rates: Array<{ freeShippingAboveInr?: string | number | null }> = bp.shippingRates ?? []
       const rate = rates.find((r) => r.freeShippingAboveInr != null)

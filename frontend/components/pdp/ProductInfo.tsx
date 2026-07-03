@@ -167,6 +167,8 @@ export function ProductInfo({ product }: { product: Product }) {
     countryOfOrigin,
     freeShippingAboveInr,
     returnsWindowDays,
+    brandStory,
+    brandDescription,
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -495,17 +497,24 @@ export function ProductInfo({ product }: { product: Product }) {
         <ExpandableSection title="Shipping & Returns">
           <div className="flex flex-col gap-2.5">
             <p>Lead time: <span className="text-primary font-[500]">{leadTime}</span> from order confirmation.</p>
-            <p>Orders dispatched from {brandName}'s warehouse. Tracking info provided on dispatch. International shipments via our logistics partners.</p>
-            <p>Bulk orders (10× MOQ or above) may qualify for dedicated freight — contact your account manager.</p>
-            <p className="pt-1 border-t border-border-warm mt-1">Free returns on first-time orders within <span className="text-primary font-[500]">60 days</span> of delivery.</p>
+            <p>Orders dispatched from <span className="text-primary font-[500]">{brandName}</span>. Tracking info provided on dispatch.</p>
+            {returnsWindowDays != null && (
+              <p className="pt-1 border-t border-border-warm mt-1">
+                Free returns on first-time orders within{' '}
+                <span className="text-primary font-[500]">{returnsWindowDays} days</span> of delivery.
+              </p>
+            )}
           </div>
         </ExpandableSection>
 
         <ExpandableSection title="About the Brand">
-          <p className="mb-3">
-            {description ??
-              `${brandName} is a curated brand on Solomon Bharat, India's B2B wholesale marketplace. Products are crafted using traditional methods and responsibly sourced materials.`}
-          </p>
+          {brandStory ? (
+            <p className="mb-3 whitespace-pre-wrap">{brandStory}</p>
+          ) : brandDescription ? (
+            <p className="mb-3">{brandDescription}</p>
+          ) : (
+            <p className="mb-3 text-muted-text italic">No brand story added yet.</p>
+          )}
           <Link
             href={`/brands/${brandSlug}`}
             className="text-[13px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors underline underline-offset-2"

@@ -52,7 +52,7 @@ interface ApiProduct {
   description: string; photos?: Array<{ id: string; url: string; position: number }>
   wholesalePrice: number; moq: number; leadTime: string; weight: number
   category: string; tags: string[]
-  brand?: { achievementLevel: number; minimumOrderValue?: number; logoUrl?: string | null }
+  brand?: { achievementLevel: number; minimumOrderValue?: number; logoUrl?: string | null; brandStory?: string | null; brandDescription?: string | null }
   variants?: ApiVariant[]
   inStock: boolean
   countryOfOrigin?: string
@@ -72,6 +72,8 @@ function toTypedFromApi(p: ApiProduct): Product {
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],
     brandMinimumOrderValue: p.brand?.minimumOrderValue,
     brandLogoUrl: p.brand?.logoUrl,
+    brandStory: p.brand?.brandStory,
+    brandDescription: p.brand?.brandDescription,
     inStock: p.inStock,
     countryOfOrigin: p.countryOfOrigin,
     freeShippingAboveInr: p.freeShippingAboveInr,
