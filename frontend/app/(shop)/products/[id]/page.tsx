@@ -50,7 +50,7 @@ interface ApiProduct {
   id: string; name: string; slug: string; brandId: string
   brandName: string; brandSlug: string
   description: string; photos?: Array<{ id: string; url: string; position: number }>
-  wholesalePrice: number; moq: number; leadTime: string; weight: number
+  wholesalePrice: number; moq: number; stepQty?: number; leadTime: string; weight: number
   category: string; tags: string[]
   brand?: { achievementLevel: number; minimumOrderValue?: number; logoUrl?: string | null; brandStory?: string | null; brandDescription?: string | null }
   variants?: ApiVariant[]
@@ -66,7 +66,7 @@ function toTypedFromApi(p: ApiProduct): Product {
     brandId: p.brandId, brandName: p.brandName, brandSlug: p.brandSlug,
     description: p.description,
     images: (p.photos ?? []).sort((a, b) => a.position - b.position).map((ph) => ph.url),
-    wholesalePrice: p.wholesalePrice, moq: p.moq,
+    wholesalePrice: p.wholesalePrice, moq: p.moq, stepQty: p.stepQty,
     leadTime: p.leadTime as Product['leadTime'],
     weight: p.weight, category: p.category, tags: p.tags ?? [],
     achievementLevel: (p.brand?.achievementLevel ?? undefined) as Product['achievementLevel'],

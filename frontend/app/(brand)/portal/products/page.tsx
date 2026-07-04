@@ -44,6 +44,9 @@ function SkeletonRows() {
           </div>
           <div className="h-4 bg-muted-bg rounded w-1/6" />
           <div className="h-4 bg-muted-bg rounded w-1/8" />
+          <div className="h-4 bg-muted-bg rounded w-16" />
+          <div className="h-4 bg-muted-bg rounded w-16" />
+          <div className="h-4 bg-muted-bg rounded w-20" />
           <div className="h-5 bg-muted-bg rounded w-14" />
           <div className="h-4 bg-muted-bg rounded w-16" />
         </div>
@@ -180,7 +183,7 @@ export default function ProductsPage() {
           <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-border-warm">
-                {['', 'Product Name', 'Category', 'Price (INR)', 'Status', 'Actions'].map((col) => (
+                {['', 'Product Name', 'Category', 'Price (INR)', 'MOQ', 'Variants', 'Lead Time', 'Status', 'Actions'].map((col) => (
                   <th
                     key={col}
                     className="px-4 py-3 text-left text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.04em]"
@@ -235,6 +238,29 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       <span className="tabular-nums text-[14px] font-public-sans">
                         ₹{product.wholesalePrice.toLocaleString('en-IN')}
+                      </span>
+                    </td>
+
+                    {/* MOQ */}
+                    <td className="px-4 py-3">
+                      <span className="tabular-nums text-[14px] font-public-sans text-muted-text">
+                        {product.moq} units
+                      </span>
+                    </td>
+
+                    {/* Variants */}
+                    <td className="px-4 py-3">
+                      <span className="text-[14px] font-public-sans text-muted-text">
+                        {product.variants.length > 0
+                          ? `${product.variants.length} variant${product.variants.length !== 1 ? 's' : ''}`
+                          : <span className="text-[#C4BDB4]">—</span>}
+                      </span>
+                    </td>
+
+                    {/* Lead Time */}
+                    <td className="px-4 py-3">
+                      <span className="text-[14px] font-public-sans text-muted-text">
+                        {product.leadTime || <span className="text-[#C4BDB4]">—</span>}
                       </span>
                     </td>
 

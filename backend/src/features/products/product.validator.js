@@ -10,6 +10,7 @@ export const createProductSchema = z.object({
   description: z.string().min(1),
   wholesalePriceInr: z.number().positive(),
   moq: z.number().int().positive(),
+  stepQty: z.number().int().positive().default(1),
   leadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']),
   weightGrams: z.number().int().positive(),
   hsTariffCode: z.string().optional(),

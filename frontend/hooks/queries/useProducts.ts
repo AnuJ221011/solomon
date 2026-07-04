@@ -45,6 +45,7 @@ export interface Product {
   photos: ProductPhoto[]
   wholesalePrice: number // INR
   moq: number
+  stepQty: number
   leadTime: string
   weight: number
   category: string

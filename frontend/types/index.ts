@@ -52,6 +52,7 @@ export interface Product {
   displayPrice?: number // local currency
   currency?: string
   moq: number
+  stepQty?: number
   leadTime: '1-3 days' | '1-2 weeks' | '2-4 weeks'
   weight: number
   category: string

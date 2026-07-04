@@ -112,12 +112,12 @@ function ExpandableSection({
 
 // ─── Quantity stepper ─────────────────────────────────────────────────────────
 
-function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v: number) => void; min: number }) {
+function QuantityStepper({ value, onChange, min, step = 1 }: { value: number; onChange: (v: number) => void; min: number; step?: number }) {
   return (
     <div className="flex items-center border border-border-warm rounded w-fit" role="group" aria-label="Quantity">
       <button
         type="button"
-        onClick={() => value > min && onChange(value - 1)}
+        onClick={() => value > min && onChange(Math.max(min, value - step))}
         disabled={value <= min}
         className="h-10 px-3 inline-flex items-center justify-center text-primary hover:bg-muted-bg transition-colors rounded-l disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Decrease quantity"
@@ -132,7 +132,7 @@ function QuantityStepper({ value, onChange, min }: { value: number; onChange: (v
       </div>
       <button
         type="button"
-        onClick={() => onChange(value + 1)}
+        onClick={() => onChange(value + step)}
         className="h-10 px-3 inline-flex items-center justify-center text-primary hover:bg-muted-bg transition-colors rounded-r"
         aria-label="Increase quantity"
       >
@@ -162,7 +162,7 @@ export function ProductInfo({ product }: { product: Product }) {
     id, name, brandName, brandSlug,
     description,
     wholesalePrice, displayPrice, currency,
-    moq, leadTime, weight, category, tags, images, inStock,
+    moq, stepQty = 1, leadTime, weight, category, tags, images, inStock,
     variants = [],
     countryOfOrigin,
     freeShippingAboveInr,
@@ -388,8 +388,11 @@ export function ProductInfo({ product }: { product: Product }) {
         <div className="mb-4">
           <p className="font-public-sans text-[12px] font-[500] text-muted-text mb-2">
             Quantity&nbsp;<span className="text-primary">(min. {moq})</span>
+            {stepQty > 1 && (
+              <span className="ml-2 text-muted-text font-[400]">· in steps of {stepQty}</span>
+            )}
           </p>
-          <QuantityStepper value={quantity} onChange={setQuantity} min={moq} />
+          <QuantityStepper value={quantity} onChange={setQuantity} min={moq} step={stepQty} />
         </div>
       )}
 

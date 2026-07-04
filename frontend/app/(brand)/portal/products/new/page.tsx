@@ -30,6 +30,7 @@ interface ProductForm {
   description: string
   wholesalePriceInr: string
   moq: string
+  stepQty: string
   leadTime: string
   weightKg: string
   tags: string
@@ -252,7 +253,7 @@ export default function NewProductPage() {
   // ── Product form ───────────────────────────────────────────────────────────
   const [form, setForm] = useState<ProductForm>({
     name: '', categories: [], description: '',
-    wholesalePriceInr: '', moq: '', leadTime: 'ONE_TO_TWO_WEEKS',
+    wholesalePriceInr: '', moq: '', stepQty: '1', leadTime: 'ONE_TO_TWO_WEEKS',
     weightKg: '', tags: '', availability: 'ACTIVE',
   })
   const [files, setFiles]       = useState<File[]>([])
@@ -411,6 +412,7 @@ export default function NewProductPage() {
         description:      form.description.trim(),
         wholesalePriceInr: Number(form.wholesalePriceInr),
         moq:              Number(form.moq),
+        stepQty:          Number(form.stepQty) || 1,
         leadTime:         form.leadTime,
         weightGrams:      Math.round(Number(form.weightKg) * 1000),
         tags:             form.tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -556,12 +558,15 @@ export default function NewProductPage() {
           <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">
             Pricing & Wholesale Terms
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Field label="Wholesale Price (₹)" required>
               <TextInput value={form.wholesalePriceInr} onChange={set('wholesalePriceInr')} type="number" placeholder="e.g. 1200" />
             </Field>
             <Field label="MOQ (units)" required hint="Minimum order quantity">
-              <TextInput value={form.moq} onChange={set('moq')} type="number" placeholder="e.g. 5" />
+              <TextInput value={form.moq} onChange={set('moq')} type="number" placeholder="e.g. 12" />
+            </Field>
+            <Field label="Order Step (units)" hint="Buyers order in multiples of this">
+              <TextInput value={form.stepQty} onChange={set('stepQty')} type="number" placeholder="e.g. 12" />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
