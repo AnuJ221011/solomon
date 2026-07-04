@@ -52,6 +52,7 @@ function BuyerSignupForm() {
   const [businessName, setBusinessName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [country, setCountry] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +73,10 @@ function BuyerSignupForm() {
       setError('Password must be at least 8 characters and contain a number.')
       return
     }
+    if (!phone.trim() || phone.trim().length < 7) {
+      setError('Please enter a valid phone number.')
+      return
+    }
     if (!country) {
       setError('Please select your country.')
       return
@@ -83,6 +88,7 @@ function BuyerSignupForm() {
         businessName,
         email,
         password,
+        phone: phone.trim(),
         countryCode: country,
       })
 
@@ -138,6 +144,19 @@ function BuyerSignupForm() {
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="buyer-phone">Phone number</Label>
+        <Input
+          id="buyer-phone"
+          type="tel"
+          placeholder="+91 98765 43210"
+          autoComplete="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           disabled={loading}
         />
       </div>

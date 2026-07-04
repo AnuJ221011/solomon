@@ -14,6 +14,7 @@ import {
   RotateCcw,
   ShoppingCart,
   LogOut,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -51,6 +52,12 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Finance',
     items: [
       { href: '/admin/payouts', label: 'Payouts', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Messaging',
+    items: [
+      { href: '/admin/whatsapp', label: 'WhatsApp Broadcasts', icon: MessageSquare },
     ],
   },
 ]

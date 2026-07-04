@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const updateBrandProfileSchema = z.object({
   brandName: z.string().min(1).max(100).optional(),
+  phone: z.string().min(7).optional(),
   description: z.string().optional(),
   brandStory: z.string().max(1000).optional(),
   category: z.array(z.string()).min(1).optional(),

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { env } from '../../config/env.js';
 import { handleInboundMessage } from './conversation.service.js';
-import { createBroadcast, listBroadcasts, getBroadcastDetail } from './broadcast.service.js';
+import { createBroadcast, listBroadcasts, getBroadcastDetail, getContacts } from './broadcast.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { createError } from '../../shared/utils/createError.js';
 import { logger } from '../../shared/utils/logger.js';
@@ -63,6 +63,13 @@ export const startBroadcast = async (req, res) => {
   if (!recipientGroup && !phones?.length) throw createError('recipientGroup or phones[] required', 400);
   const result = await createBroadcast({ name, templateName, languageCode, components, recipientGroup, phones });
   sendSuccess(res, result, 'Broadcast started', 202);
+};
+
+// GET /api/whatsapp/contacts?type=brands|buyers
+export const getContactList = async (req, res) => {
+  const { type } = req.query;
+  if (!['brands', 'buyers'].includes(type)) throw createError('type must be brands or buyers', 400);
+  sendSuccess(res, await getContacts(type));
 };
 
 // GET /api/whatsapp/broadcasts

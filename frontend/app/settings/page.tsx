@@ -274,9 +274,13 @@ export default function SettingsPage() {
   })
 
   function saveProfile() {
+    if (!phone.trim() || phone.trim().length < 7) {
+      toast.error('Please enter a valid phone number.')
+      return
+    }
     updateProfile.mutate({
       businessName,
-      phone,
+      phone: phone.trim(),
       addressLine,
       city,
       state,
@@ -304,8 +308,8 @@ export default function SettingsPage() {
           <Field label="Email Address" htmlFor="email">
             <Input id="email" type="email" value={email} readOnly />
           </Field>
-          <Field label="Phone" htmlFor="phone">
-            <Input id="phone" type="tel" value={phone} onChange={setPhone} placeholder="+1 212 555 0000" />
+          <Field label="Phone number *" htmlFor="phone">
+            <Input id="phone" type="tel" value={phone} onChange={setPhone} placeholder="+91 98765 43210" />
           </Field>
           <Field label="Address" htmlFor="address-line">
             <Input id="address-line" value={addressLine} onChange={setAddressLine} placeholder="Street address" />

@@ -6,7 +6,7 @@ export const buyerSignupSchema = z.object({
   password: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
   businessName: z.string().min(1).max(100),
   countryCode: z.string().length(2),
-  phone: z.string().optional(),
+  phone: z.string().min(7, 'Please enter a valid phone number'),
   // Store type quiz — optional at signup, can be completed later
   storeType: z.enum(STORE_TYPES).optional(),
   aesthetic: z.enum(AESTHETICS).optional(),
@@ -24,7 +24,7 @@ export const brandSignupSchema = z.object({
   category: z.array(z.string()).min(1),
   registrationType: z.enum(['individual', 'business']).optional(),
   countryOfOrigin: z.string().length(2).default('IN'),
-  phone: z.string().optional(),
+  phone: z.string().min(7, 'Please enter a valid phone number'),
   tagline: z.string().max(120).optional(),
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),

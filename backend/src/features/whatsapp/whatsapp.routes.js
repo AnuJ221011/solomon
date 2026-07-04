@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyWebhook, receiveWebhook, startBroadcast, getBroadcasts, getBroadcast } from './whatsapp.controller.js';
+import { verifyWebhook, receiveWebhook, startBroadcast, getBroadcasts, getBroadcast, getContactList } from './whatsapp.controller.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 
@@ -11,6 +11,7 @@ router.post('/webhook', receiveWebhook);
 
 // ── Admin only ────────────────────────────────────────────────────────────────
 router.use(authenticate, authorize('ADMIN'));
+router.get('/contacts', getContactList);
 router.post('/broadcast', startBroadcast);
 router.get('/broadcasts', getBroadcasts);
 router.get('/broadcasts/:id', getBroadcast);

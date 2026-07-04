@@ -131,6 +131,7 @@ export default function SettingsPage() {
 
   // ── Brand profile fields ───────────────────────────────────────────────────
   const [brandName, setBrandName] = useState('')
+  const [phone, setPhone] = useState('')
   const [city, setCity] = useState('')
   const [stateName, setStateName] = useState('')
   const [countryOfOrigin, setCountryOfOrigin] = useState('IN')
@@ -317,6 +318,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!brandProfile) return
     setBrandName(brandProfile.brandName ?? '')
+    setPhone(brandProfile.phone ?? '')
     setCity(brandProfile.city ?? '')
     setStateName(brandProfile.state ?? '')
     setCountryOfOrigin(brandProfile.countryOfOrigin ?? 'IN')
@@ -364,6 +366,7 @@ export default function SettingsPage() {
   function handleSaveProfile() {
     updateProfile.mutate({
       brandName: brandName.trim() || undefined,
+      phone: phone.trim() || undefined,
       city: city.trim() || undefined,
       state: stateName.trim() || undefined,
       countryOfOrigin: countryOfOrigin || undefined,
@@ -460,6 +463,13 @@ export default function SettingsPage() {
               <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)}
                 placeholder="Your brand name" className={INPUT_CLS} />
             </Field>
+            <Field label="Phone number" hint="Used for WhatsApp communications. Include country code.">
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210" className={INPUT_CLS} />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Field label="Country of Origin">
               <select value={countryOfOrigin} onChange={(e) => setCountryOfOrigin(e.target.value)} className={INPUT_CLS}>
                 {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}

@@ -111,6 +111,26 @@ async function processBroadcast(broadcast) {
   logger.info('Broadcast completed', { broadcastId: broadcast.id, sentCount, failedCount, total: broadcast.totalCount });
 }
 
+export async function getContacts(type) {
+  if (type === 'brands') {
+    const list = await prisma.brandProfile.findMany({
+      where: { status: 'APPROVED', phone: { not: null } },
+      select: { id: true, brandName: true, phone: true },
+      orderBy: { brandName: 'asc' },
+    });
+    return list.map((b) => ({ id: b.id, name: b.brandName, phone: b.phone }));
+  }
+  if (type === 'buyers') {
+    const list = await prisma.buyerProfile.findMany({
+      where: { phone: { not: null } },
+      select: { id: true, businessName: true, phone: true },
+      orderBy: { businessName: 'asc' },
+    });
+    return list.map((b) => ({ id: b.id, name: b.businessName, phone: b.phone }));
+  }
+  throw new Error('type must be brands or buyers');
+}
+
 export async function listBroadcasts() {
   return prisma.whatsappBroadcast.findMany({
     orderBy: { createdAt: 'desc' },

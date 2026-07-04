@@ -831,6 +831,7 @@ export default function ApplyPage() {
         if (form.password.length < 8) return 'Password must be at least 8 characters.'
         if (!/\d/.test(form.password)) return 'Password must contain at least one number.'
         if (form.password !== form.confirmPassword) return 'Passwords do not match.'
+        if (!form.phone.trim() || form.phone.trim().length < 7) return 'Please enter a valid phone number.'
         return null
       case 2:
         if (!form.brandName.trim()) return 'Please enter your brand name.'
@@ -890,7 +891,7 @@ export default function ApplyPage() {
           email: form.email, password: form.password,
           brandName: form.brandName, category: [form.primaryCategory, ...form.subCategories].filter(Boolean),
           registrationType, countryOfOrigin: 'IN',
-          ...(form.phone.trim() && { phone: form.phone.trim() }),
+          phone: form.phone.trim(),
           ...(form.tagline.trim() && { tagline: form.tagline.trim() }),
           ...(form.yearFounded && { yearFounded: Number(form.yearFounded) }),
           ...(form.brandStory.trim() && { brandStory: form.brandStory.trim() }),
@@ -1129,9 +1130,7 @@ export default function ApplyPage() {
               </div>
 
               <div>
-                <FieldLabel>
-                  Phone number <span className="text-[#B0ACA3] font-[400]">(optional)</span>
-                </FieldLabel>
+                <FieldLabel>Phone number</FieldLabel>
                 <Input
                   id="phone" type="tel" placeholder="+91 98765 43210"
                   value={form.phone} onChange={(e) => set('phone', e.target.value)} disabled={loading}
@@ -1476,7 +1475,7 @@ export default function ApplyPage() {
                   <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-[#B0ACA3] mb-2">Account</p>
                   <ReviewRow label="Registration type" value={registrationType === 'individual' ? 'Individual' : 'Business'} />
                   <ReviewRow label="Email" value={form.email} />
-                  {form.phone && <ReviewRow label="Phone" value={form.phone} />}
+                  <ReviewRow label="Phone" value={form.phone} />
                 </div>
                 <div className="px-5 py-4">
                   <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-[#B0ACA3] mb-2">Brand</p>

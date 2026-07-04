@@ -541,3 +541,94 @@ export function useAdminCategoryStats() {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+// ─── WhatsApp Broadcasts ───────────────────────────────────────────────────────
+
+export interface WhatsappContact {
+  id: string
+  name: string
+  phone: string
+}
+
+export function useWhatsappContacts(type: 'brands' | 'buyers', enabled: boolean) {
+  return useQuery<WhatsappContact[]>({
+    queryKey: ['whatsapp-contacts', type],
+    queryFn: async () => {
+      const res = await api.get(`/whatsapp/contacts?type=${type}`)
+      return res.data.data ?? []
+    },
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+export interface WhatsappBroadcast {
+  id: string
+  name: string
+  templateName: string
+  status: 'PENDING' | 'RUNNING' | 'DONE'
+  totalCount: number
+  sentCount: number
+  failedCount: number
+  createdAt: string
+}
+
+export interface WhatsappBroadcastRecipient {
+  id: string
+  phone: string
+  name: string | null
+  status: 'PENDING' | 'SENT' | 'FAILED'
+  messageId: string | null
+  error: string | null
+}
+
+export interface WhatsappBroadcastDetail extends WhatsappBroadcast {
+  languageCode: string
+  recipients: WhatsappBroadcastRecipient[]
+}
+
+export function useWhatsappBroadcasts() {
+  return useQuery<WhatsappBroadcast[]>({
+    queryKey: ['whatsapp-broadcasts'],
+    queryFn: async () => {
+      const res = await api.get('/whatsapp/broadcasts')
+      return res.data.data ?? []
+    },
+    staleTime: 30 * 1000,
+  })
+}
+
+export function useWhatsappBroadcast(id: string | null) {
+  return useQuery<WhatsappBroadcastDetail>({
+    queryKey: ['whatsapp-broadcast', id],
+    queryFn: async () => {
+      const res = await api.get(`/whatsapp/broadcasts/${id}`)
+      return res.data.data
+    },
+    enabled: !!id,
+    staleTime: 10 * 1000,
+    refetchInterval: (query) =>
+      query.state.data?.status === 'RUNNING' ? 3000 : false,
+  })
+}
+
+export function useCreateWhatsappBroadcast() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: {
+      name: string
+      templateName: string
+      languageCode?: string
+      recipientGroup?: string
+      phones?: string[]
+    }) => {
+      const res = await api.post('/whatsapp/broadcast', payload)
+      return res.data.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whatsapp-broadcasts'] })
+      toast.success('Broadcast started successfully')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
