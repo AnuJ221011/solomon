@@ -50,4 +50,12 @@ export const env = {
 
   OTP_EXPIRY_MINUTES: parseInt(optional('OTP_EXPIRY_MINUTES', '10'), 10),
   OTP_MAX_ATTEMPTS: parseInt(optional('OTP_MAX_ATTEMPTS', '3'), 10),
+
+  // WhatsApp Cloud API
+  WHATSAPP_ACCESS_TOKEN: optional('WHATSAPP_ACCESS_TOKEN', ''),
+  WHATSAPP_PHONE_NUMBER_ID: optional('WHATSAPP_PHONE_NUMBER_ID', ''),
+  WHATSAPP_GRAPH_VERSION: optional('WHATSAPP_GRAPH_VERSION', 'v22.0'),
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: optional('WHATSAPP_WEBHOOK_VERIFY_TOKEN', 'dev-verify-token'),
+  WHATSAPP_APP_SECRET: optional('WHATSAPP_APP_SECRET', ''),
+  WHATSAPP_USE_MOCK: optional('WHATSAPP_USE_MOCK', 'true') === 'true',
 };

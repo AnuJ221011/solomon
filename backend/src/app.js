@@ -36,6 +36,7 @@ import { messengerRouter } from './features/messenger/index.js';
 import { shopifyRouter } from './features/shopify/index.js';
 import { crmRouter } from './features/crm/index.js';
 import { promotedRouter } from './features/promoted/index.js';
+import { whatsappRouter } from './features/whatsapp/index.js';
 
 const app = express();
 
@@ -46,6 +47,12 @@ app.use(compression());
 app.use(cookieParser());
 // PayPal webhooks need raw body for signature verification
 app.use('/api/payments/paypal/webhook', express.raw({ type: 'application/json' }));
+// WhatsApp webhook needs raw body for HMAC signature verification
+app.use('/api/whatsapp/webhook', express.raw({ type: 'application/json' }), (req, _res, next) => {
+  req.rawBody = req.body;
+  try { req.body = JSON.parse(req.body.toString()); } catch { req.body = {}; }
+  next();
+});
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -89,6 +96,7 @@ app.use('/api/messages', messengerRouter);
 app.use('/api/shopify', shopifyRouter);
 app.use('/api/crm', crmRouter);
 app.use('/api/promoted', promotedRouter);
+app.use('/api/whatsapp', whatsappRouter);
 
 // ─── Error handling ──────────────────────────────────────────
 app.use(notFound);

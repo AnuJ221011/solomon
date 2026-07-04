@@ -23,6 +23,7 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "latest",
     "@prisma/client": "latest",
+    "axios": "^1.18.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.4.0",
     "compression": "^1.7.4",
