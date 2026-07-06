@@ -93,32 +93,53 @@ function Hero() {
   )
 }
 
-// ─── Stats bar ────────────────────────────────────────────────────────────────
+// ─── Country ticker ───────────────────────────────────────────────────────────
 
-const STATS = [
-  { value: '500+', label: 'Brands on platform' },
-  { value: '40+', label: 'Countries reached' },
-  { value: '₹1 Cr+', label: 'Target GMV year 1' },
-  { value: '24–48h', label: 'Application review' },
+const COUNTRIES = [
+  'United Kingdom', 'United States', 'Germany', 'France', 'Netherlands',
+  'Australia', 'Canada', 'UAE', 'Singapore', 'Italy', 'Spain', 'Sweden',
+  'Denmark', 'Norway', 'Belgium', 'Switzerland', 'Japan', 'New Zealand',
 ]
 
 function StatsBar() {
+  const items = [...COUNTRIES, ...COUNTRIES]
+
   return (
-    <section className="bg-surface border-b border-border-warm py-10">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {STATS.map(({ value, label }) => (
-            <div key={label} className="text-center">
-              <p className="font-playfair text-[38px] lg:text-[46px] font-[500] text-primary leading-none">
-                {value}
-              </p>
-              <p className="font-public-sans text-[12px] text-muted-text mt-1.5 uppercase tracking-[0.06em]">
-                {label}
-              </p>
-            </div>
+    <section className="bg-surface border-y border-border-warm py-6 lg:py-8 overflow-hidden">
+      {/* Label */}
+      <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.12em] text-center mb-4">
+        Reaching buyers in
+      </p>
+
+      {/* Scrolling track */}
+
+      <div className="relative overflow-hidden">
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-surface to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-surface to-transparent z-10 pointer-events-none" />
+
+        <div
+          className="flex animate-[ticker_35s_linear_infinite]"
+          style={{ width: 'max-content' }}
+        >
+          {items.map((country, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-5 px-6 font-playfair text-[28px] lg:text-[36px] font-[500] text-primary whitespace-nowrap"
+            >
+              {country}
+              <span className="w-1.5 h-1.5 rounded-full bg-accent/50 flex-shrink-0" aria-hidden="true" />
+            </span>
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes ticker {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+      `}</style>
     </section>
   )
 }
