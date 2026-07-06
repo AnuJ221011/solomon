@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export function FilterSidebar({ onFilterChange, categories, initialCategories = [] }: FilterSidebarProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories)
+  const [categorySearch, setCategorySearch] = useState('')
   const [shipsTo, setShipsTo] = useState('all')
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
@@ -102,29 +103,82 @@ export function FilterSidebar({ onFilterChange, categories, initialCategories = 
       )}
       aria-label="Catalogue filters"
     >
+      {/* ── Header row ───────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-[12px] font-[700] font-public-sans text-primary uppercase tracking-[0.06em]">
+          Filters
+        </p>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            title="Clear all filters"
+            aria-label="Clear all filters"
+            className="w-6 h-6 rounded flex items-center justify-center text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+          >
+            <X size={14} aria-hidden />
+          </button>
+        )}
+      </div>
+
       {/* ── Category ─────────────────────────────────────────────────────────── */}
       <div className="mb-6">
         <SectionHeading>Category</SectionHeading>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => {
-            const active = selectedCategories.includes(cat)
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => toggleCategory(cat)}
-                className={cn(
-                  'rounded text-[12px] font-[500] font-public-sans px-3 py-1 cursor-pointer border border-border-warm transition-colors',
-                  active
-                    ? 'bg-accent text-white border-accent'
-                    : 'bg-muted-bg text-muted-text hover:border-primary/30'
-                )}
-                aria-pressed={active}
-              >
-                {cat}
-              </button>
+
+        {/* Search */}
+        <div className="relative mb-2">
+          <Search
+            size={12}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none"
+            aria-hidden
+          />
+          <input
+            type="search"
+            placeholder="Search categories…"
+            value={categorySearch}
+            onChange={(e) => setCategorySearch(e.target.value)}
+            className={cn(
+              'w-full h-8 rounded border border-border-warm bg-muted-bg/60',
+              'pl-7 pr-3 text-[12px] font-public-sans text-primary',
+              'placeholder:text-muted-text/60',
+              'outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors'
+            )}
+            aria-label="Search categories"
+          />
+        </div>
+
+        {/* Scrollable list */}
+        <div className="max-h-[180px] overflow-y-auto flex flex-col gap-0.5 pr-1">
+          {categories
+            .filter((cat) =>
+              cat.toLowerCase().includes(categorySearch.toLowerCase())
             )
-          })}
+            .map((cat) => {
+              const active = selectedCategories.includes(cat)
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleCategory(cat)}
+                  aria-pressed={active}
+                  className={cn(
+                    'w-full text-left rounded px-2.5 py-1.5 text-[13px] font-[500] font-public-sans transition-colors',
+                    active
+                      ? 'bg-accent/10 text-accent font-[600]'
+                      : 'text-muted-text hover:bg-muted-bg hover:text-primary'
+                  )}
+                >
+                  {cat}
+                </button>
+              )
+            })}
+          {categories.filter((cat) =>
+            cat.toLowerCase().includes(categorySearch.toLowerCase())
+          ).length === 0 && (
+            <p className="text-[12px] text-muted-text font-public-sans px-2 py-2">
+              No categories found
+            </p>
+          )}
         </div>
       </div>
 
@@ -197,20 +251,6 @@ export function FilterSidebar({ onFilterChange, categories, initialCategories = 
         </p>
       </div>
 
-      {/* ── Clear All ─────────────────────────────────────────────────────────── */}
-      {hasActiveFilters && (
-        <>
-          <div className="border-t border-border-warm mb-4" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearAll}
-            className="w-full text-[13px]"
-          >
-            Clear all filters
-          </Button>
-        </>
-      )}
     </aside>
   )
 }

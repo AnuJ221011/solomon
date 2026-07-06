@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: "images.pexels.com",
         pathname: "/**",
       },
+      {
+        // Allow any HTTPS host — seller product images come from arbitrary domains
+        protocol: "https",
+        hostname: "**",
+        pathname: "/**",
+      },
     ],
   },
 };

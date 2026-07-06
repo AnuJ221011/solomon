@@ -773,7 +773,7 @@ export function NavBar({ transparent = false }: NavBarProps) {
 
   return (
     <>
-      {!transparent && <div className="h-[108px] shrink-0" aria-hidden="true" />}
+      {!transparent && <div className={cn('shrink-0', onSellPage ? 'h-16' : 'h-[108px]')} aria-hidden="true" />}
 
       <header
         className={cn(
@@ -908,17 +908,19 @@ export function NavBar({ transparent = false }: NavBarProps) {
           )}
         </div>
 
-        {/* ── Row 2: 44px — category nav (desktop only) ── */}
-        <div
-          className={cn(
-            'hidden md:block border-t h-11',
-            ghost ? 'border-white/10' : 'border-border-warm/60'
-          )}
-        >
-          <div className="max-w-4xl mx-auto px-4">
-            <CategoryNavRow />
+        {/* ── Row 2: 44px — category nav (desktop only, hidden on /sell) ── */}
+        {!onSellPage && (
+          <div
+            className={cn(
+              'hidden md:block border-t h-11',
+              ghost ? 'border-white/10' : 'border-border-warm/60'
+            )}
+          >
+            <div className="max-w-4xl mx-auto px-4">
+              <CategoryNavRow />
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <MobileNavDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import {
@@ -17,76 +18,115 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 
 function Hero() {
   return (
-    <section className="relative bg-primary overflow-hidden min-h-[640px] flex items-center">
-      {/* Subtle wave texture */}
-      <svg
-        viewBox="0 0 1440 600"
-        className="absolute inset-0 w-full h-full opacity-[0.04]"
-        fill="none"
-        preserveAspectRatio="xMidYMid slice"
-        aria-hidden
-      >
-        {Array.from({ length: 12 }, (_, i) => (
-          <path
-            key={i}
-            d={`M ${-200 + i * 130} 700 C ${-100 + i * 130} 450 ${200 + i * 130} 280 ${380 + i * 130} 160 S ${600 + i * 130} -60 ${780 + i * 130} -200`}
-            stroke="#A68B67"
-            strokeWidth="1.5"
-          />
-        ))}
+    <section className="relative bg-primary overflow-hidden min-h-[760px] flex items-center">
+      {/* Ambient glow blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-32 -left-32 w-[700px] h-[700px] rounded-full bg-accent/[0.07] blur-[140px]" />
+        <div className="absolute bottom-0 right-[20%] w-[500px] h-[500px] rounded-full bg-accent/[0.05] blur-[120px]" />
+      </div>
+
+      {/* Subtle grid overlay */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" aria-hidden>
+        <defs>
+          <pattern id="sell-hero-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+            <path d="M 52 0 L 0 0 0 52" fill="none" stroke="#D4B896" strokeWidth="0.6" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#sell-hero-grid)" />
       </svg>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pt-10 pb-16 lg:pt-12 lg:pb-24 w-full">
-        <div className="max-w-[680px]">
-          {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/20 bg-white/10 mb-8">
-            <Store size={12} className="text-accent" aria-hidden />
-            <span className="font-public-sans text-[11px] font-[600] text-white/80 uppercase tracking-[0.1em]">
-              For Sellers · India's B2B Wholesale Marketplace
-            </span>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pt-0 pb-10 lg:pt-0 lg:pb-16 w-full">
+        <div className="grid lg:grid-cols-[3fr_2fr] gap-12 xl:gap-20 items-center">
+
+          {/* ── Left: Text ── */}
+          <div>
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/15 bg-white/[0.07] backdrop-blur-sm mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse flex-shrink-0" />
+              <Store size={11} className="text-accent" aria-hidden />
+              <span className="font-public-sans text-[10.5px] font-[600] text-white/65 uppercase tracking-[0.12em]">
+                For Sellers · India's B2B Wholesale Marketplace
+              </span>
+            </div>
+
+            <h1 className="font-playfair font-[500] text-white leading-[1.05] tracking-[-0.01em] text-[42px] sm:text-[56px] lg:text-[68px]">
+              Sell your craft<br />
+              <em className="text-accent not-italic">to the world.</em>
+            </h1>
+
+            <p className="font-public-sans text-[15px] sm:text-[16px] leading-[1.75] text-white/55 mt-6 max-w-[520px]">
+              Join 500+ verified Indian brands already reaching boutique retailers
+              across 40+ countries — with zero upfront fees, your own storefront,
+              and commission that drops as you grow.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link
+                href="/apply"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent text-white font-[600] font-public-sans text-[15px] px-8 py-3.5 hover:bg-accent-hover transition-all duration-200 hover:shadow-lg hover:shadow-accent/30 hover:-translate-y-px"
+              >
+                Get started — it's free
+                <ArrowRight size={15} aria-hidden />
+              </Link>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 text-white/70 font-[500] font-public-sans text-[14px] px-6 py-3.5 hover:bg-white/[0.08] hover:border-white/30 transition-all duration-200"
+              >
+                See how it works
+              </a>
+            </div>
+
+            <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-3">
+              {['No listing fees', '0% on share links', 'Paid within 30 days'].map((t) => (
+                <div key={t} className="flex items-center gap-2">
+                  <CheckCircle2 size={13} className="text-accent flex-shrink-0" aria-hidden />
+                  <span className="font-public-sans text-[12.5px] text-white/50">{t}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="font-playfair font-[500] text-white leading-[1.04] tracking-[-0.01em] text-[38px] sm:text-[52px] lg:text-[64px]">
-            Sell your craft<br />
-            <span className="text-accent">to the world.</span>
-          </h1>
+          {/* ── Right: Image ── */}
+          <div className="hidden lg:block">
+            <div className="relative">
+              {/* Decorative offset border frame */}
+              <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/[0.08] to-transparent" />
 
-          <p className="font-public-sans text-[15px] sm:text-[16px] font-[400] leading-[1.7] text-white/65 mt-6 max-w-[500px]">
-            Join 500+ verified Indian brands already reaching boutique retailers
-            across 40+ countries — with zero upfront fees, your own storefront,
-            and commission that drops as you grow.
-          </p>
-
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link
-              href="/apply"
-              className="inline-flex items-center gap-2 rounded bg-accent text-white font-[600] font-public-sans text-[15px] px-7 py-3.5 hover:bg-accent-hover transition-colors"
-            >
-              Get started — it's free
-              <ArrowRight size={15} aria-hidden />
-            </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center gap-2 rounded border border-white/25 text-white/80 font-[500] font-public-sans text-[14px] px-5 py-3.5 hover:bg-white/10 transition-colors"
-            >
-              See how it works
-            </a>
-          </div>
-
-          {/* Trust badges */}
-          <div className="mt-12 flex flex-wrap items-center gap-6">
-            {[
-              'No listing fees',
-              '0% commission on share links',
-              'Paid within 30 days',
-            ].map((t) => (
-              <div key={t} className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-accent flex-shrink-0" aria-hidden />
-                <span className="font-public-sans text-[13px] text-white/60">{t}</span>
+              {/* Image card */}
+              <div className="relative rounded-3xl overflow-hidden aspect-[3/4] border border-white/[0.12] shadow-2xl shadow-black/60">
+                <Image
+                  src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80"
+                  alt="Indian artisan textiles — colourful handcrafted fabrics"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
               </div>
-            ))}
+
+              {/* Floating stat — top left */}
+              <div className="absolute -left-12 top-10 bg-surface rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-border-warm flex items-center gap-3 z-10">
+                <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
+                  <Store size={15} className="text-accent" />
+                </div>
+                <div>
+                  <p className="font-public-sans text-[13px] font-[700] text-primary">500+ Brands</p>
+                  <p className="font-public-sans text-[11px] text-muted-text">Verified sellers</p>
+                </div>
+              </div>
+
+              {/* Floating stat — bottom right */}
+              <div className="absolute -right-12 bottom-16 bg-surface rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-border-warm flex items-center gap-3 z-10">
+                <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
+                  <Globe2 size={15} className="text-accent" />
+                </div>
+                <div>
+                  <p className="font-public-sans text-[13px] font-[700] text-primary">40+ Countries</p>
+                  <p className="font-public-sans text-[11px] text-muted-text">Global reach</p>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
@@ -105,41 +145,26 @@ function StatsBar() {
   const items = [...COUNTRIES, ...COUNTRIES]
 
   return (
-    <section className="bg-surface border-y border-border-warm py-6 lg:py-8 overflow-hidden">
-      {/* Label */}
-      <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.12em] text-center mb-4">
+    <section className="bg-muted-bg border-y border-border-warm py-5 lg:py-7 overflow-hidden">
+      <p className="font-public-sans text-[10px] font-[700] text-accent uppercase tracking-[0.15em] text-center mb-4">
         Reaching buyers in
       </p>
-
-      {/* Scrolling track */}
-
       <div className="relative overflow-hidden">
-        {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-surface to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-surface to-transparent z-10 pointer-events-none" />
-
-        <div
-          className="flex animate-[ticker_35s_linear_infinite]"
-          style={{ width: 'max-content' }}
-        >
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-muted-bg to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-muted-bg to-transparent z-10 pointer-events-none" />
+        <div className="flex animate-[ticker_35s_linear_infinite]" style={{ width: 'max-content' }}>
           {items.map((country, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-5 px-6 font-playfair text-[28px] lg:text-[36px] font-[500] text-primary whitespace-nowrap"
+              className="inline-flex items-center gap-5 px-6 font-playfair text-[26px] lg:text-[33px] font-[500] text-primary whitespace-nowrap"
             >
               {country}
-              <span className="w-1.5 h-1.5 rounded-full bg-accent/50 flex-shrink-0" aria-hidden="true" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent/50 flex-shrink-0" aria-hidden />
             </span>
           ))}
         </div>
       </div>
-
-      <style>{`
-        @keyframes ticker {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-      `}</style>
+      <style>{`@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
     </section>
   )
 }
@@ -191,13 +216,18 @@ const WHY_ITEMS = [
 
 function WhySection() {
   return (
-    <section className="py-20 lg:py-28 bg-bg">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="max-w-[560px] mb-14">
-          <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-            Why Solomon Bharat
-          </p>
-          <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1]">
+    <section className="py-14 lg:py-20 bg-bg relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-accent/[0.04] blur-[120px] translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="max-w-[600px] mb-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-8 h-px bg-accent flex-shrink-0" />
+            <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+              Why Solomon Bharat
+            </p>
+          </div>
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1]">
             Built for Indian artisan brands
           </h2>
           <p className="font-public-sans text-[15px] text-muted-text mt-4 leading-[1.7]">
@@ -206,16 +236,16 @@ function WhySection() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {WHY_ITEMS.map(({ Icon, title, body }) => (
             <div
               key={title}
-              className="bg-surface border border-border-warm rounded-lg p-5 flex flex-col gap-3"
+              className="group bg-surface border border-border-warm rounded-xl p-6 flex flex-col gap-4 hover:shadow-lg hover:shadow-black/6 hover:-translate-y-1 hover:border-accent/25 transition-all duration-300"
             >
-              <div className="w-9 h-9 rounded-full bg-muted-bg border border-border-warm flex items-center justify-center flex-shrink-0">
-                <Icon size={16} className="text-accent" aria-hidden />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 flex items-center justify-center flex-shrink-0 group-hover:from-accent/25 group-hover:to-accent/10 transition-all duration-300">
+                <Icon size={17} className="text-accent" aria-hidden />
               </div>
-              <h3 className="font-public-sans text-[14px] font-[600] text-primary leading-[1.3]">
+              <h3 className="font-public-sans text-[14px] font-[600] text-primary leading-[1.35]">
                 {title}
               </h3>
               <p className="font-public-sans text-[13px] text-muted-text leading-[1.65]">
@@ -256,27 +286,30 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 lg:py-28 bg-surface border-y border-border-warm">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="max-w-[560px] mb-14">
-          <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-            How it works
-          </p>
-          <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1]">
+    <section id="how-it-works" className="py-14 lg:py-20 bg-surface border-y border-border-warm relative overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-[500px] h-[400px] rounded-full bg-accent/[0.03] blur-[100px] -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="max-w-[560px] mb-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-8 h-px bg-accent flex-shrink-0" />
+            <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+              How it works
+            </p>
+          </div>
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1]">
             From application to first sale
           </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {STEPS.map(({ number, title, body }, i) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+          {/* Connector line (desktop only, behind steps) */}
+          <div className="hidden lg:block absolute top-[22px] left-[calc(12.5%+22px)] right-[calc(12.5%+22px)] h-px bg-gradient-to-r from-accent/30 via-accent/20 to-accent/30 pointer-events-none" />
+
+          {STEPS.map(({ number, title, body }) => (
             <div key={number} className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <span className="font-playfair text-[40px] font-[500] text-border-warm leading-none select-none">
-                  {number}
-                </span>
-                {i < STEPS.length - 1 && (
-                  <div className="hidden lg:block flex-1 h-px bg-border-warm mt-1" />
-                )}
+              <div className="relative w-11 h-11 rounded-full bg-bg border-2 border-accent/40 flex items-center justify-center z-10 flex-shrink-0 shadow-sm">
+                <span className="font-playfair text-[14px] font-[600] text-accent">{number}</span>
               </div>
               <h3 className="font-public-sans text-[15px] font-[600] text-primary leading-[1.3]">
                 {title}
@@ -288,10 +321,10 @@ function HowItWorks() {
           ))}
         </div>
 
-        <div className="mt-14 text-center">
+        <div className="mt-10 text-center">
           <Link
             href="/apply"
-            className="inline-flex items-center gap-2 rounded bg-primary text-white font-[600] font-public-sans text-[15px] px-8 py-3.5 hover:bg-[#2a2a2a] transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-white font-[600] font-public-sans text-[15px] px-9 py-4 hover:bg-[#2a2a2a] transition-all hover:shadow-xl hover:shadow-black/12 hover:-translate-y-0.5"
           >
             Start your application
             <ArrowRight size={15} aria-hidden />
@@ -314,35 +347,42 @@ const TIERS = [
 
 function CommissionSection() {
   return (
-    <section className="py-20 lg:py-28 bg-bg">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+    <section className="py-14 lg:py-20 bg-bg relative overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-accent/[0.04] blur-[110px] -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
           {/* Left: copy */}
           <div>
-            <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-              Pricing & commission
-            </p>
-            <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1] mb-5">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="w-8 h-px bg-accent flex-shrink-0" />
+              <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+                Pricing & commission
+              </p>
+            </div>
+            <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1] mb-5">
               Commission that rewards growth
             </h2>
-            <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-6">
+            <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-5">
               There are no listing fees, no monthly subscriptions, and no setup
               costs. We only make money when you make money.
             </p>
-            <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-8">
+            <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-7">
               Marketplace commission starts at 15% and decreases automatically
               as you hit GMV milestones — down to 10% at the Legend tier. And
               any order that comes through your personal <strong className="text-primary font-[600]">Share Link</strong> is always 0% commission.
             </p>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3.5">
               {[
-                { Icon: CheckCircle2, text: 'No listing fees — ever' },
-                { Icon: CheckCircle2, text: 'No monthly subscription' },
-                { Icon: CheckCircle2, text: '0% on all Share Link orders' },
-                { Icon: CheckCircle2, text: 'Commission drops automatically as you grow' },
-              ].map(({ Icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5">
-                  <Icon size={15} className="text-accent flex-shrink-0" aria-hidden />
+                'No listing fees — ever',
+                'No monthly subscription',
+                '0% on all Share Link orders',
+                'Commission drops automatically as you grow',
+              ].map((text) => (
+                <div key={text} className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 size={12} className="text-accent" aria-hidden />
+                  </div>
                   <span className="font-public-sans text-[14px] text-primary">{text}</span>
                 </div>
               ))}
@@ -350,9 +390,9 @@ function CommissionSection() {
           </div>
 
           {/* Right: tier table */}
-          <div className="bg-surface border border-border-warm rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border-warm bg-muted-bg/50">
-              <p className="font-public-sans text-[11px] font-[700] uppercase tracking-[0.08em] text-muted-text">
+          <div className="bg-surface border border-border-warm rounded-2xl overflow-hidden shadow-xl shadow-black/5">
+            <div className="px-6 py-4 border-b border-border-warm bg-gradient-to-r from-accent/8 to-transparent">
+              <p className="font-public-sans text-[11px] font-[700] uppercase tracking-[0.1em] text-muted-text">
                 Achievement Tiers
               </p>
             </div>
@@ -361,22 +401,22 @@ function CommissionSection() {
                 <div
                   key={tier.name}
                   className={cn(
-                    'flex items-center gap-4 px-5 py-4',
-                    i === 0 && 'bg-white'
+                    'flex items-center gap-4 px-6 py-4 transition-colors',
+                    i === 4
+                      ? 'bg-gradient-to-r from-accent/10 to-transparent'
+                      : 'hover:bg-muted-bg/50'
                   )}
                 >
-                  <span className="text-[22px] flex-shrink-0" role="img" aria-label={tier.name}>
+                  <span className="text-[24px] flex-shrink-0" role="img" aria-label={tier.name}>
                     {tier.emoji}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-public-sans text-[14px] font-[600] text-primary">
-                      {tier.name}
-                    </p>
+                    <p className="font-public-sans text-[14px] font-[600] text-primary">{tier.name}</p>
                     <p className="font-public-sans text-[12px] text-muted-text">{tier.range}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className={cn(
-                      'font-playfair text-[20px] font-[500] leading-none',
+                      'font-playfair text-[22px] font-[500] leading-none',
                       tier.commission === '10%' ? 'text-accent' : 'text-primary'
                     )}>
                       {tier.commission}
@@ -386,10 +426,14 @@ function CommissionSection() {
                 </div>
               ))}
             </div>
-            <div className="px-5 py-3.5 bg-muted-bg/50 border-t border-border-warm">
-              <p className="font-public-sans text-[12px] text-muted-text text-center">
-                Share Link orders = <strong className="text-primary font-[600]">0% commission</strong> regardless of tier
-              </p>
+            <div className="px-6 py-4 bg-gradient-to-r from-accent/12 to-accent/5 border-t border-accent/20">
+              <div className="flex items-center gap-2 justify-center">
+                <Share2 size={13} className="text-accent flex-shrink-0" />
+                <p className="font-public-sans text-[12.5px] text-primary font-[500]">
+                  Share Link orders always{' '}
+                  <strong className="text-accent font-[700]">0% commission</strong>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -413,34 +457,41 @@ const PORTAL_FEATURES = [
 
 function PortalSection() {
   return (
-    <section className="py-20 lg:py-28 bg-primary">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="max-w-[560px] mb-14">
-          <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-            Seller portal
-          </p>
-          <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-white leading-[1.1]">
+    <section className="py-14 lg:py-20 bg-primary relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 w-[700px] h-[600px] rounded-full bg-accent/[0.05] blur-[130px] -translate-x-1/2 -translate-y-1/4" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="max-w-[600px] mb-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-8 h-px bg-accent flex-shrink-0" />
+            <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+              Seller portal
+            </p>
+          </div>
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-white leading-[1.1]">
             Everything you need to run your wholesale business
           </h2>
-          <p className="font-public-sans text-[15px] text-white/55 mt-4 leading-[1.7]">
+          <p className="font-public-sans text-[15px] text-white/50 mt-4 leading-[1.7]">
             Your seller portal is a fully-featured business dashboard — not just a
             product upload tool.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PORTAL_FEATURES.map(({ Icon, title, body }) => (
             <div
               key={title}
-              className="rounded-lg border border-white/10 bg-white/5 p-5 flex flex-col gap-3"
+              className="group rounded-xl border border-white/[0.08] bg-white/[0.04] p-5 flex flex-col gap-3.5 hover:bg-white/[0.09] hover:border-accent/30 hover:-translate-y-0.5 transition-all duration-300"
             >
-              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                <Icon size={15} className="text-accent" aria-hidden />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/25 flex items-center justify-center flex-shrink-0 group-hover:from-accent/30 transition-all duration-300">
+                <Icon size={16} className="text-accent" aria-hidden />
               </div>
-              <h3 className="font-public-sans text-[14px] font-[600] text-white leading-[1.3]">
+              <h3 className="font-public-sans text-[14px] font-[600] text-white leading-[1.35]">
                 {title}
               </h3>
-              <p className="font-public-sans text-[13px] text-white/50 leading-[1.65]">
+              <p className="font-public-sans text-[13px] text-white/45 leading-[1.65]">
                 {body}
               </p>
             </div>
@@ -476,32 +527,44 @@ const TESTIMONIALS = [
 
 function Testimonials() {
   return (
-    <section className="py-20 lg:py-28 bg-bg">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="max-w-[480px] mb-14">
-          <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-            Seller stories
-          </p>
-          <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1]">
+    <section className="py-14 lg:py-20 bg-bg relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent/[0.04] blur-[110px] translate-x-1/4 -translate-y-1/4 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="max-w-[480px] mb-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-8 h-px bg-accent flex-shrink-0" />
+            <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+              Seller stories
+            </p>
+          </div>
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1]">
             Brands that are growing with us
           </h2>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-6">
           {TESTIMONIALS.map(({ quote, name, brand, avatar }) => (
-            <div key={name} className="bg-surface border border-border-warm rounded-xl p-6 flex flex-col gap-5">
-              {/* Stars */}
+            <div
+              key={name}
+              className="group relative bg-surface border border-border-warm rounded-2xl p-7 flex flex-col gap-5 overflow-hidden hover:shadow-xl hover:shadow-black/6 hover:-translate-y-1 hover:border-accent/20 transition-all duration-300"
+            >
+              {/* Decorative quote mark */}
+              <span className="absolute top-3 right-5 font-playfair text-[90px] leading-none text-accent/[0.07] select-none pointer-events-none group-hover:text-accent/[0.12] transition-colors duration-300">
+                &ldquo;
+              </span>
+
               <div className="flex gap-0.5">
                 {Array.from({ length: 5 }, (_, i) => (
                   <Star key={i} size={13} fill="#A68B67" stroke="none" aria-hidden />
                 ))}
               </div>
-              <blockquote className="font-public-sans text-[14px] text-muted-text leading-[1.7] flex-1">
+              <blockquote className="font-public-sans text-[14px] text-muted-text leading-[1.75] flex-1 relative z-10">
                 &ldquo;{quote}&rdquo;
               </blockquote>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-muted-bg border border-border-warm flex items-center justify-center flex-shrink-0">
-                  <span className="font-public-sans text-[12px] font-[700] text-muted-text">{avatar}</span>
+              <div className="flex items-center gap-3 pt-4 border-t border-border-warm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/25 flex items-center justify-center flex-shrink-0">
+                  <span className="font-public-sans text-[12px] font-[700] text-accent">{avatar}</span>
                 </div>
                 <div>
                   <p className="font-public-sans text-[13px] font-[600] text-primary">{name}</p>
@@ -527,15 +590,18 @@ const REQUIREMENTS = [
 
 function RequirementsSection() {
   return (
-    <section className="py-20 lg:py-28 bg-surface border-y border-border-warm">
+    <section className="py-14 lg:py-20 bg-surface border-y border-border-warm">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div>
-            <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-              Who can apply
-            </p>
-            <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1] mb-5">
-              We're looking for quality, not scale
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="w-8 h-px bg-accent flex-shrink-0" />
+              <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+                Who can apply
+              </p>
+            </div>
+            <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1] mb-5">
+              We&apos;re looking for quality, not scale
             </h2>
             <p className="font-public-sans text-[15px] text-muted-text leading-[1.7]">
               Solomon Bharat is designed for independent Indian brands with between
@@ -546,12 +612,15 @@ function RequirementsSection() {
 
           <div className="grid grid-cols-2 gap-4">
             {REQUIREMENTS.map(({ Icon, label, detail }) => (
-              <div key={label} className="bg-bg border border-border-warm rounded-lg p-5 flex flex-col gap-3">
-                <div className="w-9 h-9 rounded-full bg-muted-bg border border-border-warm flex items-center justify-center">
-                  <Icon size={15} className="text-accent" aria-hidden />
+              <div
+                key={label}
+                className="group bg-bg border border-border-warm rounded-xl p-5 flex flex-col gap-3 hover:shadow-md hover:shadow-black/5 hover:-translate-y-0.5 hover:border-accent/25 transition-all duration-300"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/12 to-accent/4 border border-accent/18 flex items-center justify-center group-hover:from-accent/22 transition-all duration-300">
+                  <Icon size={16} className="text-accent" aria-hidden />
                 </div>
                 <p className="font-public-sans text-[14px] font-[600] text-primary">{label}</p>
-                <p className="font-public-sans text-[12px] text-muted-text leading-[1.5]">{detail}</p>
+                <p className="font-public-sans text-[12.5px] text-muted-text leading-[1.5]">{detail}</p>
               </div>
             ))}
           </div>
@@ -602,13 +671,15 @@ function FAQ() {
   const [open, setOpen] = useState<number | null>(null)
 
   return (
-    <section className="py-20 lg:py-28 bg-bg">
+    <section className="py-14 lg:py-20 bg-bg">
       <div className="max-w-3xl mx-auto px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <p className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em] mb-3">
-            FAQ
-          </p>
-          <h2 className="font-playfair text-[32px] sm:text-[40px] font-[500] text-primary leading-[1.1]">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <span className="w-10 h-px bg-accent" />
+            <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">FAQ</p>
+            <span className="w-10 h-px bg-accent" />
+          </div>
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1]">
             Common questions
           </h2>
         </div>
@@ -620,22 +691,29 @@ function FAQ() {
                 type="button"
                 onClick={() => setOpen(open === i ? null : i)}
                 aria-expanded={open === i}
-                className="w-full flex items-start justify-between gap-4 py-5 text-left"
+                className="w-full flex items-start justify-between gap-4 py-5 text-left group"
               >
-                <span className="font-public-sans text-[15px] font-[600] text-primary leading-[1.4]">
+                <span className="font-public-sans text-[15px] font-[600] text-primary leading-[1.4] group-hover:text-accent transition-colors duration-200">
                   {q}
                 </span>
-                <ChevronDown
-                  size={17}
-                  className={cn(
-                    'flex-shrink-0 mt-0.5 text-muted-text transition-transform duration-200',
-                    open === i && 'rotate-180'
-                  )}
-                  aria-hidden
-                />
+                <div className={cn(
+                  'w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200',
+                  open === i
+                    ? 'bg-accent border-accent shadow-sm shadow-accent/30'
+                    : 'bg-surface border-border-warm'
+                )}>
+                  <ChevronDown
+                    size={13}
+                    className={cn(
+                      'transition-transform duration-200',
+                      open === i ? 'rotate-180 text-white' : 'text-muted-text'
+                    )}
+                    aria-hidden
+                  />
+                </div>
               </button>
               {open === i && (
-                <p className="font-public-sans text-[14px] text-muted-text leading-[1.7] pb-6 pr-8">
+                <p className="font-public-sans text-[14px] text-muted-text leading-[1.75] pb-6 pr-10">
                   {a}
                 </p>
               )}
@@ -652,37 +730,53 @@ function FAQ() {
 function FinalCTA() {
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
   return (
-    <section className="py-20 lg:py-28 bg-surface border-t border-border-warm">
-      <div className="max-w-3xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border-warm bg-muted-bg mb-8">
-          <Store size={12} className="text-accent" aria-hidden />
-          <span className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em]">
+    <section className="relative py-14 lg:py-20 bg-primary overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 w-[900px] h-[500px] rounded-full bg-accent/[0.09] blur-[150px] -translate-x-1/2 -translate-y-1/2" />
+      </div>
+
+      {/* Grid pattern */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" aria-hidden>
+        <defs>
+          <pattern id="cta-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+            <path d="M 52 0 L 0 0 0 52" fill="none" stroke="#D4B896" strokeWidth="0.6" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#cta-grid)" />
+      </svg>
+
+      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/15 bg-white/[0.07] mb-8">
+          <Store size={11} className="text-accent" aria-hidden />
+          <span className="font-public-sans text-[10.5px] font-[600] text-accent uppercase tracking-[0.12em]">
             Free to join · No contracts
           </span>
         </div>
 
-        <h2 className="font-playfair text-[36px] sm:text-[50px] font-[500] text-primary leading-[1.05] mb-5">
-          Ready to take your brand global?
+        <h2 className="font-playfair text-[38px] sm:text-[56px] font-[500] text-white leading-[1.05] mb-5">
+          Ready to take your<br />
+          <em className="text-accent not-italic">brand global?</em>
         </h2>
-        <p className="font-public-sans text-[15px] sm:text-[16px] text-muted-text leading-[1.7] max-w-[500px] mx-auto mb-10">
+        <p className="font-public-sans text-[15px] sm:text-[16px] text-white/50 leading-[1.75] max-w-[480px] mx-auto mb-10">
           Join hundreds of Indian artisan brands already selling wholesale to
           retailers across 40+ countries. Apply in 10 minutes.
         </p>
 
         <Link
           href="/apply"
-          className="inline-flex items-center gap-2.5 rounded bg-primary text-white font-[600] font-public-sans text-[15px] px-9 py-4 hover:bg-[#2a2a2a] transition-colors"
+          className="inline-flex items-center gap-2.5 rounded-lg bg-accent text-white font-[600] font-public-sans text-[15px] px-10 py-4 hover:bg-accent-hover transition-all duration-200 hover:shadow-2xl hover:shadow-accent/35 hover:-translate-y-0.5"
         >
           Get started — it's free
           <ArrowRight size={16} aria-hidden />
         </Link>
 
-        <p className="mt-6 font-public-sans text-[13px] text-muted-text">
+        <p className="mt-6 font-public-sans text-[13px] text-white/35">
           Already have an account?{' '}
           <button
             type="button"
             onClick={() => openAuthModal('login')}
-            className="text-primary font-[600] underline underline-offset-2 hover:text-accent transition-colors"
+            className="text-white/60 font-[600] underline underline-offset-2 hover:text-accent transition-colors duration-200"
           >
             Log in
           </button>
