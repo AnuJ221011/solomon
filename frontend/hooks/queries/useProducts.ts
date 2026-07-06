@@ -139,6 +139,7 @@ function mapProduct(raw: Record<string, any>): Product {
     })),
     wholesalePrice: Number(raw.wholesalePriceInr ?? raw.wholesalePrice ?? 0),
     moq: raw.moq ?? 1,
+    stepQty: raw.stepQty ?? 1,
     leadTime: LEAD_TIME_LABEL[raw.leadTime] ?? raw.leadTime ?? '1-2 weeks',
     weight: raw.weightGrams ?? raw.weight ?? 0,
     category: categories[0] ?? raw.category ?? '',
