@@ -66,6 +66,7 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
     data: brand,
     isLoading: brandLoading,
     isError: brandError,
+    error,
   } = useBrand(slug)
 
   if (brandLoading) {
@@ -73,14 +74,24 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
   }
 
   if (brandError || !brand) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const is404 = (error as any)?.response?.status === 404
     return (
       <div className="bg-bg min-h-screen flex flex-col">
         <NavBar />
         <main className="flex-1 flex items-center justify-center">
           <EmptyState
-            title="Brand not found"
-            description="This brand may have been removed or the link is incorrect."
-            action={{ label: 'Browse Catalogue', onClick: () => { window.location.href = '/catalogue' } }}
+            title={is404 ? 'Brand not found' : 'Could not load brand'}
+            description={
+              is404
+                ? 'This brand may have been removed or the link is incorrect.'
+                : 'Something went wrong loading this page. Please try again.'
+            }
+            action={
+              is404
+                ? { label: 'Browse Catalogue', onClick: () => { window.location.href = '/catalogue' } }
+                : { label: 'Retry', onClick: () => window.location.reload() }
+            }
           />
         </main>
         <Footer />

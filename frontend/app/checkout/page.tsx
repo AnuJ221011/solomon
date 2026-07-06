@@ -110,9 +110,16 @@ export default function CheckoutPage() {
       openAuthModal('signup')
     }
   }, [hasHydrated, isAuthenticated, router, openAuthModal])
-  const items = useCartStore((s) => s.items)
-  const getTotalValue = useCartStore((s) => s.getTotalValue)
-  const clearCart = useCartStore((s) => s.clearCart)
+  const allItems          = useCartStore((s) => s.items)
+  const checkoutItemIds   = useCartStore((s) => s.checkoutItemIds)
+  const removeItems       = useCartStore((s) => s.removeItems)
+  const clearCart         = useCartStore((s) => s.clearCart)
+  const clearCheckoutItems = useCartStore((s) => s.clearCheckoutItems)
+
+  // If specific items were staged for checkout, use only those; otherwise use all.
+  const items = checkoutItemIds?.length
+    ? allItems.filter((i) => checkoutItemIds.includes(i.productId))
+    : allItems
 
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: user?.name ?? '',
@@ -129,7 +136,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null)
 
-  const total = getTotalValue()
+  const total = items.reduce((s, i) => s + i.wholesalePrice * i.quantity, 0)
 
   function updateShipping(field: keyof ShippingForm, value: string) {
     setShipping((f) => ({ ...f, [field]: value }))
@@ -220,7 +227,13 @@ export default function CheckoutPage() {
         shipping,
         total,
       })
-      clearCart()
+      // Remove only the ordered items; remaining cart items are preserved.
+      if (checkoutItemIds?.length) {
+        removeItems(checkoutItemIds)
+        clearCheckoutItems()
+      } else {
+        clearCart()
+      }
       setConfirmedOrder(data)
     } catch (err: unknown) {
       const message =

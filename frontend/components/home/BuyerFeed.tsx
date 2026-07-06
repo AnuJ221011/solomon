@@ -148,15 +148,16 @@ function IdeasForYou() {
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadedPages = useRef(new Set<number>())
 
-  const { data, isFetching } = useProducts({ page: maxPage, limit: IDEAS_PAGE_SIZE, sort: 'popular' })
+  const { data, isFetching, isError } = useProducts({ page: maxPage, limit: IDEAS_PAGE_SIZE, sort: 'popular' })
 
   useEffect(() => {
+    if (isError) { setHasMore(false); return }
     if (!data || loadedPages.current.has(maxPage)) return
     loadedPages.current.add(maxPage)
     const incoming = (data.products ?? []).map(toTyped)
     setAccumulated((prev) => [...prev, ...incoming])
     if (incoming.length < IDEAS_PAGE_SIZE) setHasMore(false)
-  }, [data, maxPage])
+  }, [data, isError, maxPage])
 
   const loadMore = useCallback(() => {
     if (hasMore && !isFetching) setMaxPage((p) => p + 1)
@@ -197,6 +198,12 @@ function IdeasForYou() {
 
       {/* Intersection sentinel */}
       <div ref={sentinelRef} className="h-4 mt-4" />
+
+      {isError && accumulated.length === 0 && (
+        <p className="text-center text-[13px] font-public-sans text-muted-text py-8">
+          Could not load products. Please refresh the page.
+        </p>
+      )}
 
       {!hasMore && accumulated.length > 0 && (
         <p className="text-center text-[13px] font-public-sans text-muted-text py-8">

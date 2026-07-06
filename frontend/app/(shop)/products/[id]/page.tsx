@@ -85,6 +85,40 @@ function toTypedFromApi(p: ApiProduct): Product {
   }
 }
 
+// ─── Similar products ─────────────────────────────────────────────────────────
+
+function SimilarProducts({ category, currentSlug, currentBrandSlug }: {
+  category: string
+  currentSlug: string
+  currentBrandSlug: string
+}) {
+  const { data } = useProducts({ category, limit: 12 })
+
+  const similar = (data?.products ?? [])
+    .filter((p) => p.slug !== currentSlug && p.brandSlug !== currentBrandSlug)
+    .slice(0, 6)
+
+  if (similar.length === 0) return null
+
+  return (
+    <section className="border-t border-border-warm">
+      <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-10">
+        <div className="flex items-end justify-between mb-6">
+          <h2 className="font-playfair font-[500] text-primary text-[22px] leading-tight">
+            Similar products
+          </h2>
+          <span className="font-public-sans text-[12px] text-muted-text">{category}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {similar.map((p) => (
+            <ProductCard key={p.slug} product={toTypedProduct(p)} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── More from brand ──────────────────────────────────────────────────────────
 
 function MoreFromBrand({ brandSlug, brandName, currentSlug }: { brandSlug: string; brandName: string; currentSlug: string }) {
@@ -330,6 +364,15 @@ function ProductDetailInner({ slug }: { slug: string }) {
           brandName={product.brandName}
           currentSlug={product.slug}
         />
+
+        {/* Similar products */}
+        {product.category && (
+          <SimilarProducts
+            category={product.category}
+            currentSlug={product.slug}
+            currentBrandSlug={product.brandSlug}
+          />
+        )}
       </main>
 
       <Footer />

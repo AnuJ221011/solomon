@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { Search, Menu, X, ChevronDown, LogOut, User as UserIcon, ShoppingCart, Bell, LayoutGrid, Globe, Package, FileText, MessageSquare, Star, Heart, Puzzle, Users, Settings as SettingsIcon, ExternalLink, Gift } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -587,8 +588,16 @@ function UserDropdown() {
 // ─── Search input ─────────────────────────────────────────────────────────────
 
 function SearchInput({ className, ghost }: { className?: string; ghost?: boolean }) {
+  const router = useRouter()
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value.trim()
+    if (q) router.push(`/catalogue?q=${encodeURIComponent(q)}`)
+  }
+
   return (
-    <div className={cn('relative', className)}>
+    <form onSubmit={handleSubmit} role="search" className={cn('relative', className)}>
       <Search
         size={14}
         className={cn(
@@ -599,6 +608,7 @@ function SearchInput({ className, ghost }: { className?: string; ghost?: boolean
       />
       <input
         type="search"
+        name="q"
         placeholder="Search brands and products…"
         className={cn(
           'w-full h-9 rounded border pl-9 pr-4 text-[13px] font-public-sans outline-none transition-colors',
@@ -607,7 +617,7 @@ function SearchInput({ className, ghost }: { className?: string; ghost?: boolean
             : 'bg-muted-bg/60 border-border-warm text-primary placeholder:text-muted-text/60 focus:bg-surface focus:ring-1 focus:ring-accent focus:border-accent'
         )}
       />
-    </div>
+    </form>
   )
 }
 
@@ -622,6 +632,7 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
   const setCurrency = useCurrencyStore((s) => s.setCurrency)
   const { data: availableCurrencies = FALLBACK_CURRENCIES } = useCurrencies()
   const { data: tree = [] } = useCategoryTree()
+  const pathname = usePathname()
 
   function handleAuth(tab: 'login' | 'signup') { onClose(); openAuthModal(tab) }
 
@@ -663,7 +674,7 @@ function MobileNavDrawer({ open, onClose }: { open: boolean; onClose: () => void
           <Link href="/brands" onClick={onClose} className="py-3 text-[15px] font-[500] font-public-sans text-primary hover:text-accent transition-colors border-b border-border-warm/50">
             Brands
           </Link>
-          <Link href="/apply" onClick={onClose} className="py-3 text-[15px] font-[600] font-public-sans text-accent hover:text-accent-hover transition-colors border-b border-border-warm/50">
+          <Link href="/sell" onClick={onClose} className={cn('py-3 text-[15px] font-[600] font-public-sans transition-colors border-b border-border-warm/50', pathname === '/sell' ? 'text-accent underline underline-offset-4' : 'text-accent hover:text-accent-hover')}>
             Sell on Solomon Bharat
           </Link>
 
@@ -755,8 +766,10 @@ export function NavBar({ transparent = false }: NavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const scrolled = useScrolled(24)
+  const pathname = usePathname()
 
   const ghost = transparent && !scrolled
+  const onSellPage = pathname === '/sell'
 
   return (
     <>
@@ -807,12 +820,14 @@ export function NavBar({ transparent = false }: NavBarProps) {
               ) : (
                 <>
                   <Link
-                    href="/apply"
+                    href="/sell"
                     className={cn(
                       'inline-flex items-center h-9 px-3 rounded text-[14px] font-[600] font-public-sans transition-colors',
-                      ghost
-                        ? 'text-white hover:bg-white/10'
-                        : 'text-muted-text hover:text-primary hover:bg-muted-bg'
+                      onSellPage
+                        ? 'text-accent bg-muted-bg'
+                        : ghost
+                          ? 'text-white hover:bg-white/10'
+                          : 'text-muted-text hover:text-primary hover:bg-muted-bg'
                     )}
                   >
                     Sign up to sell

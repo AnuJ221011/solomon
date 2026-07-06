@@ -49,6 +49,7 @@ interface SignupForm {
   businessName: string
   email: string
   password: string
+  phone: string
   countryCode: string
 }
 
@@ -102,6 +103,7 @@ export function AuthModal() {
     businessName: '',
     email: '',
     password: '',
+    phone: '',
     countryCode: '',
   })
 
@@ -133,6 +135,10 @@ export function AuthModal() {
       setError('Password must be at least 8 characters and contain a number.')
       return
     }
+    if (!signupForm.phone.trim() || signupForm.phone.trim().length < 7) {
+      setError('Please enter a valid phone number.')
+      return
+    }
     if (!signupForm.countryCode) {
       setError('Please select your country.')
       return
@@ -144,6 +150,7 @@ export function AuthModal() {
         businessName: signupForm.businessName,
         email: signupForm.email,
         password: signupForm.password,
+        phone: signupForm.phone.trim(),
         countryCode: signupForm.countryCode,
       })
       const { user, accessToken } = response.data.data as AuthResponse
@@ -207,7 +214,7 @@ export function AuthModal() {
     <Dialog open={isAuthModalOpen} onOpenChange={(open) => !open && closeAuthModal()}>
       <DialogContent
         className={cn(
-          'w-full max-w-[800px] max-h-[560px] p-0 overflow-hidden',
+          'w-full max-w-[800px] max-h-[640px] p-0 overflow-hidden',
           'flex flex-row'
         )}
         showClose={false}
@@ -357,6 +364,21 @@ export function AuthModal() {
                     value={signupForm.password}
                     onChange={(e) =>
                       setSignupForm((f) => ({ ...f, password: e.target.value }))
+                    }
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="signup-phone">Phone number</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    autoComplete="tel"
+                    value={signupForm.phone}
+                    onChange={(e) =>
+                      setSignupForm((f) => ({ ...f, phone: e.target.value }))
                     }
                     disabled={loading}
                   />

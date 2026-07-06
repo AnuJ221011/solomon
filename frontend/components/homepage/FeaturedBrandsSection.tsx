@@ -32,13 +32,6 @@ function BrandCard({ brand }: { brand: Brand }) {
           </div>
         )}
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/30 transition-all duration-300 flex items-center justify-center">
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 inline-flex items-center gap-1.5 bg-white text-primary text-[12px] font-[600] font-public-sans px-3 py-1.5 rounded shadow-sm">
-            View Brand <ArrowRight size={11} aria-hidden="true" />
-          </span>
-        </div>
-
         {/* Logo overlap */}
         <div className="absolute bottom-0 left-3 translate-y-1/2 w-9 h-9 rounded border-2 border-white bg-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {logo ? (

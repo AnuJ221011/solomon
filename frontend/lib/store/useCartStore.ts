@@ -9,11 +9,17 @@ interface CartState {
 interface CartActions {
   addItem: (item: CartItem) => void
   removeItem: (productId: string) => void
+  removeItems: (productIds: string[]) => void
   updateQuantity: (productId: string, qty: number) => void
   clearCart: () => void
   getItemsByBrand: () => Record<string, CartItem[]>
   getTotalItems: () => number
   getTotalValue: () => number
+  // Transient — which product IDs are staged for the current checkout session.
+  // null means "all items" (e.g. when coming from the main cart page).
+  checkoutItemIds: string[] | null
+  setCheckoutItems: (ids: string[]) => void
+  clearCheckoutItems: () => void
 }
 
 type CartStore = CartState & CartActions
@@ -23,6 +29,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
   // ─── State ──────────────────────────────────────────────────────────────────
   items: [],
+  checkoutItemIds: null,
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
@@ -52,6 +59,13 @@ export const useCartStore = create<CartStore>()(
     }))
   },
 
+  removeItems: (productIds: string[]) => {
+    const ids = new Set(productIds)
+    set((state) => ({
+      items: state.items.filter((i) => !ids.has(i.productId)),
+    }))
+  },
+
   updateQuantity: (productId: string, qty: number) => {
     set((state) => {
       const item = state.items.find((i) => i.productId === productId)
@@ -71,7 +85,11 @@ export const useCartStore = create<CartStore>()(
     })
   },
 
-  clearCart: () => set({ items: [] }),
+  clearCart: () => set({ items: [], checkoutItemIds: null }),
+
+  setCheckoutItems: (ids: string[]) => set({ checkoutItemIds: ids }),
+
+  clearCheckoutItems: () => set({ checkoutItemIds: null }),
 
   getItemsByBrand: (): Record<string, CartItem[]> => {
     const { items } = get()
@@ -99,6 +117,7 @@ export const useCartStore = create<CartStore>()(
       storage: createJSONStorage(() =>
         typeof window !== 'undefined' ? localStorage : (null as never)
       ),
+      partialize: (state) => ({ items: state.items }),
     }
   )
 )

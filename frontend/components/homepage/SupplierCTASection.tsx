@@ -30,7 +30,7 @@ export function SupplierCTASection() {
                 Start Buying Free
               </Link>
               <Link
-                href="/apply"
+                href="/sell"
                 className="inline-flex items-center justify-center gap-2 rounded border border-white/20 text-white font-[600] font-public-sans text-[14px] px-6 py-3.5 hover:bg-white/10 transition-colors"
               >
                 Apply as Supplier <ArrowRight size={14} aria-hidden="true" />

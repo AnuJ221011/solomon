@@ -78,7 +78,7 @@ export function HeroSection() {
                 <ArrowRight size={14} aria-hidden="true" />
               </Link>
               <Link
-                href="/apply"
+                href="/sell"
                 className="inline-flex items-center gap-2 rounded border border-border-warm bg-white/50 backdrop-blur-sm text-primary font-[600] font-public-sans text-[14px] px-5 py-3 hover:bg-white/80 transition-colors"
               >
                 <Store size={14} aria-hidden="true" />

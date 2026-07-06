@@ -119,7 +119,7 @@ export function Footer() {
           </FooterColumn>
 
           <FooterColumn title="Suppliers">
-            <FooterLink href="/apply">Become a Supplier</FooterLink>
+            <FooterLink href="/sell">Become a Supplier</FooterLink>
             <FooterLink href="/portal">Brand Portal</FooterLink>
             <FooterLink href="/achievements" disabled>Achievement System</FooterLink>
             <FooterLink href="/share-links" disabled>Share Links</FooterLink>

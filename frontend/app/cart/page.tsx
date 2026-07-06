@@ -189,16 +189,13 @@ function BottomBar({
           </button>
           <button
             type="button"
-            onClick={onCheckout}
-            disabled={!canCheckout}
-            className={cn(
-              'px-7 py-2.5 rounded text-[14px] font-[600] font-public-sans transition-colors',
-              canCheckout
-                ? 'bg-primary text-white hover:bg-[#2a2a2a]'
-                : 'bg-muted-bg text-muted-text cursor-not-allowed'
-            )}
+            disabled
+            className="inline-flex items-center gap-2 px-7 py-2.5 rounded text-[14px] font-[600] font-public-sans bg-muted-bg text-muted-text cursor-not-allowed"
           >
             Check out
+            <span className="text-[11px] font-[500] bg-accent/15 text-accent px-1.5 py-0.5 rounded">
+              Coming soon
+            </span>
           </button>
         </div>
       </div>
@@ -282,7 +279,7 @@ export default function CartPage() {
           </button>
 
           <h1 className="font-playfair font-[500] text-primary text-[24px] sm:text-[36px] leading-[1.1] flex-shrink-0">
-            Carts
+            Cart
           </h1>
 
           <div className="relative flex-1 max-w-[420px] hidden sm:block">

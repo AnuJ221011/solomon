@@ -27,7 +27,7 @@ export default function AdminBrandsPage() {
             Approved Brands
           </h1>
           <p className="text-[13px] font-public-sans text-[#9CA3AF] mt-0.5">
-            {brands?.length ?? 0} brands live on the platform
+            {brands?.length ?? 0} {brands?.length === 1 ? 'brand' : 'brands'} live on the platform
           </p>
         </div>
         <div className="relative">

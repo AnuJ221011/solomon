@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Minus, Plus, Bookmark, ShoppingBag } from 'lucide-react'
@@ -81,12 +81,41 @@ function BrandMiniCard({
 
 // ─── Product item row ─────────────────────────────────────────────────────────
 
-function CartItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void }) {
+function CartItemRow({
+  item, selected, onToggle, onRemove,
+}: {
+  item: CartItem
+  selected: boolean
+  onToggle: () => void
+  onRemove: () => void
+}) {
   const fmt = useFormatPrice()
   const updateQuantity = useCartStore((s) => s.updateQuantity)
 
   return (
-    <div className="flex gap-5 py-6 border-b border-border-warm last:border-b-0">
+    <div className={cn(
+      'flex gap-4 py-6 border-b border-border-warm last:border-b-0 transition-opacity',
+      !selected && 'opacity-50'
+    )}>
+      {/* Checkbox */}
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={selected}
+        aria-label={`Select ${item.productName}`}
+        onClick={onToggle}
+        className={cn(
+          'w-5 h-5 mt-[46px] rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+          selected ? 'border-primary bg-primary' : 'border-border-warm hover:border-primary/40'
+        )}
+      >
+        {selected && (
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </button>
+
       {/* Thumbnail */}
       <div className="w-[110px] h-[110px] flex-shrink-0 rounded-xl overflow-hidden bg-muted-bg border border-border-warm">
         {item.image
@@ -176,8 +205,9 @@ export default function BrandCartPage({
     }
   }, [hasHydrated, isAuthenticated, router, openAuthModal])
 
-  const allItems   = useCartStore((s) => s.items)
-  const removeItem = useCartStore((s) => s.removeItem)
+  const allItems         = useCartStore((s) => s.items)
+  const removeItem       = useCartStore((s) => s.removeItem)
+  const setCheckoutItems = useCartStore((s) => s.setCheckoutItems)
 
   // Derive from allItems so the page re-renders on every quantity change
   const items   = allItems.filter((i) => i.brandId === brandId)
@@ -186,6 +216,43 @@ export default function BrandCartPage({
     acc[i.brandId].push(i)
     return acc
   }, {})
+
+  // Per-item selection — all selected by default
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(items.map((i) => i.productId))
+  )
+
+  // Keep selection in sync when items are added/removed
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const current = new Set(items.map((i) => i.productId))
+      const next = new Set([...prev].filter((id) => current.has(id)))
+      // Auto-select any newly added items
+      for (const id of current) {
+        if (!prev.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [items.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function toggleItem(productId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(productId) ? next.delete(productId) : next.add(productId)
+      return next
+    })
+  }
+
+  const allSelected  = items.length > 0 && items.every((i) => selectedIds.has(i.productId))
+  const noneSelected = items.every((i) => !selectedIds.has(i.productId))
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(items.map((i) => i.productId)))
+    }
+  }
 
   useEffect(() => {
     if (isAuthenticated && Object.keys(byBrand).length > 0 && items.length === 0) {
@@ -221,11 +288,12 @@ export default function BrandCartPage({
   const brandSlug    = firstItem?.brandSlug
   const leadTime     = firstItem?.leadTime
 
-  const currentValue = items.reduce((s, i) => s + i.wholesalePrice * i.quantity, 0)
-  const targetValue  = firstItem?.brandMinimumOrderValue ?? 0
-  const met          = currentValue >= targetValue
-  const toGo         = Math.max(targetValue - currentValue, 0)
-  const progress     = targetValue > 0 ? Math.min(currentValue / targetValue, 1) : 1
+  const selectedItems = items.filter((i) => selectedIds.has(i.productId))
+  const currentValue  = selectedItems.reduce((s, i) => s + i.wholesalePrice * i.quantity, 0)
+  const targetValue   = firstItem?.brandMinimumOrderValue ?? 0
+  const met           = currentValue >= targetValue
+  const toGo          = Math.max(targetValue - currentValue, 0)
+  const progress      = targetValue > 0 ? Math.min(currentValue / targetValue, 1) : 1
 
   return (
     <div className="bg-bg min-h-screen flex flex-col">
@@ -328,10 +396,39 @@ export default function BrandCartPage({
 
               {/* Item list */}
               <main className="flex-1 min-w-0">
+                {/* Select-all row */}
+                <div className="flex items-center gap-3 pb-3 mb-1 border-b border-border-warm">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={allSelected}
+                    aria-label="Select all items"
+                    onClick={toggleAll}
+                    className={cn(
+                      'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                      allSelected ? 'border-primary bg-primary' : 'border-border-warm hover:border-primary/40'
+                    )}
+                  >
+                    {allSelected && (
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {!allSelected && !noneSelected && (
+                      <div className="w-2 h-0.5 bg-muted-text rounded-full" aria-hidden="true" />
+                    )}
+                  </button>
+                  <span className="font-public-sans text-[13px] text-muted-text">
+                    {selectedIds.size} of {items.length} item{items.length !== 1 ? 's' : ''} selected for checkout
+                  </span>
+                </div>
+
                 {items.map((item) => (
                   <CartItemRow
                     key={item.productId}
                     item={item}
+                    selected={selectedIds.has(item.productId)}
+                    onToggle={() => toggleItem(item.productId)}
                     onRemove={() => removeItem(item.productId)}
                   />
                 ))}
@@ -387,16 +484,13 @@ export default function BrandCartPage({
 
                   <button
                     type="button"
-                    disabled={!met}
-                    onClick={() => router.push('/checkout')}
-                    className={cn(
-                      'w-full h-11 rounded-lg text-[14px] font-[600] font-public-sans transition-colors',
-                      met
-                        ? 'bg-primary text-white hover:bg-[#2a2a2a]'
-                        : 'bg-muted-bg text-muted-text cursor-not-allowed'
-                    )}
+                    disabled
+                    className="w-full h-11 rounded-lg text-[14px] font-[600] font-public-sans bg-muted-bg text-muted-text cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     Proceed to checkout
+                    <span className="text-[11px] font-[500] bg-accent/15 text-accent px-1.5 py-0.5 rounded">
+                      Coming soon
+                    </span>
                   </button>
                 </div>
               </aside>

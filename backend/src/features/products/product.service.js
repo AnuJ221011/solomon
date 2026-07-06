@@ -2,6 +2,13 @@ import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 import { validateCategories } from '../categories/index.js';
 
+const PRODUCT_INCLUDE = {
+  photos: { orderBy: { position: 'asc' } },
+  priceTiers: { orderBy: { moq: 'asc' } },
+  variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+  brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true, returnsWindowDays: true, brandStory: true, description: true, shippingRates: { select: { zone: true, freeShippingAboveInr: true } } } },
+};
+
 export const createProduct = async (userId, data) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
   if (!brand) throw createError('Brand profile not found', 404);
@@ -12,19 +19,51 @@ export const createProduct = async (userId, data) => {
 
   const slug = `${data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
+  const { priceTiers, ...productData } = data;
+
   return prisma.product.create({
-    data: { ...data, slug, brandProfileId: brand.id },
-    include: { photos: true, variants: true },
+    data: {
+      ...productData,
+      slug,
+      brandProfileId: brand.id,
+      ...(priceTiers?.length && {
+        priceTiers: {
+          create: priceTiers
+            .slice()
+            .sort((a, b) => a.moq - b.moq)
+            .map(({ moq, priceInr }) => ({ moq, priceInr })),
+        },
+      }),
+    },
+    include: PRODUCT_INCLUDE,
   });
 };
 
 export const updateProduct = async (userId, productId, data) => {
   const product = await getOwnedProduct(userId, productId);
   if (data.categories?.length) await validateCategories(data.categories);
+
+  const { priceTiers, ...productData } = data;
+
+  // Replace price tiers atomically when provided
+  if (priceTiers !== undefined) {
+    await prisma.$transaction([
+      prisma.productPriceTier.deleteMany({ where: { productId: product.id } }),
+      ...(priceTiers.length
+        ? [prisma.productPriceTier.createMany({
+            data: priceTiers
+              .slice()
+              .sort((a, b) => a.moq - b.moq)
+              .map(({ moq, priceInr }) => ({ productId: product.id, moq, priceInr })),
+          })]
+        : []),
+    ]);
+  }
+
   return prisma.product.update({
     where: { id: product.id },
-    data,
-    include: { photos: true, variants: true },
+    data: productData,
+    include: PRODUCT_INCLUDE,
   });
 };
 
@@ -34,27 +73,13 @@ export const deleteProduct = async (userId, productId) => {
 };
 
 export const getProductById = async (id) => {
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      photos: { orderBy: { position: 'asc' } },
-      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
-      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true, returnsWindowDays: true, brandStory: true, description: true, shippingRates: { select: { zone: true, freeShippingAboveInr: true } } } },
-    },
-  });
+  const product = await prisma.product.findUnique({ where: { id }, include: PRODUCT_INCLUDE });
   if (!product) throw createError('Product not found', 404);
   return product;
 };
 
 export const getProductBySlug = async (slug) => {
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      photos: { orderBy: { position: 'asc' } },
-      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
-      brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true, returnsWindowDays: true, brandStory: true, description: true, shippingRates: { select: { zone: true, freeShippingAboveInr: true } } } },
-    },
-  });
+  const product = await prisma.product.findUnique({ where: { slug }, include: PRODUCT_INCLUDE });
   if (!product) throw createError('Product not found', 404);
   return product;
 };

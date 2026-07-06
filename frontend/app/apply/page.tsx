@@ -17,6 +17,7 @@ import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 import { useCategoryTree } from '@/hooks/queries/useCategories'
 import type { CategoryL1 } from '@/hooks/queries/useCategories'
+import { useAuthStore } from '@/lib/store/useAuthStore'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -734,6 +735,7 @@ function SuccessContent() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ApplyPage() {
+  const openAuthModal = useAuthStore((s) => s.openAuthModal)
   const [step, setStep] = useState(0)
   const [registrationType, setRegistrationType] = useState<RegistrationType | null>(null)
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
@@ -1064,9 +1066,13 @@ export default function ApplyPage() {
 
           <p className="mt-6 text-[13px] text-[#666] text-center">
             Already have an account?{' '}
-            <Link href="/login" className="text-[#1A1A1A] font-[600] underline underline-offset-2">
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="text-[#1A1A1A] font-[600] underline underline-offset-2"
+            >
               Log in
-            </Link>
+            </button>
           </p>
         </div>
       </SplitShell>
@@ -1565,9 +1571,13 @@ export default function ApplyPage() {
 
         <p className="mt-8 pb-14 text-[13px] text-[#666] text-center">
           Already have an account?{' '}
-          <Link href="/login" className="text-[#1A1A1A] font-[600] underline underline-offset-2">
+          <button
+            type="button"
+            onClick={() => openAuthModal('login')}
+            className="text-[#1A1A1A] font-[600] underline underline-offset-2"
+          >
             Log in
-          </Link>
+          </button>
         </p>
       </div>
     </SplitShell>

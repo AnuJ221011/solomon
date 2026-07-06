@@ -5,6 +5,11 @@ const shippingZoneEnum = z.enum([
   'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD',
 ]);
 
+const priceTierSchema = z.object({
+  moq: z.number().int().positive(),
+  priceInr: z.number().positive(),
+});
+
 export const createProductSchema = z.object({
   name: z.string().min(1).max(80),
   description: z.string().min(1),
@@ -19,6 +24,17 @@ export const createProductSchema = z.object({
   tags: z.array(z.string()).max(10).default([]),
   availability: z.enum(['ACTIVE', 'INACTIVE', 'COMING_SOON']).default('ACTIVE'),
   enabledZones: z.array(shippingZoneEnum).min(1),
+  // Tiered / volume pricing (sorted ascending by moq on create)
+  priceTiers: z.array(priceTierSchema).min(1).optional(),
+  // Product attributes
+  material: z.string().max(200).optional(),
+  dimensions: z.string().max(200).optional(),
+  isHandmade: z.boolean().default(false),
+  placeOfOrigin: z.string().max(200).optional(),
+  isGITagged: z.boolean().default(false),
+  // Craft story
+  howItIsMade: z.string().optional(),
+  artisanName: z.string().max(200).optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();
