@@ -2,7 +2,7 @@ export const ACHIEVEMENT_LEVELS = {
   L1_SPROUT: {
     level: 1,
     name: 'Sprout',
-    commissionRate: 0.15,
+    commissionRate: 0.20,
     criteria: {
       profileComplete: true,
       minActiveListings: 3,
@@ -11,7 +11,7 @@ export const ACHIEVEMENT_LEVELS = {
   L2_RISING: {
     level: 2,
     name: 'Rising',
-    commissionRate: 0.14,
+    commissionRate: 0.15,
     criteria: {
       minConfirmedOrders: 5,
       maxAvgDispatchDays: 5,
@@ -61,4 +61,4 @@ export const LEVEL_ORDER = [
 ];
 
 export const getCommissionRate = (levelKey) =>
-  ACHIEVEMENT_LEVELS[levelKey]?.commissionRate ?? 0.15;
+  ACHIEVEMENT_LEVELS[levelKey]?.commissionRate ?? 0.20;

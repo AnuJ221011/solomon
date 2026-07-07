@@ -16,119 +16,110 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
+const HERO_STATS = [
+  { Icon: BadgeCheck, value: 'Curated', label: 'Handpicked brands'  },
+  { Icon: Globe2,     value: '40+',     label: 'Countries Reached'  },
+  { Icon: Users,      value: '24–48h',  label: 'Review Time'        },
+  { Icon: Package,    value: '0%',      label: 'Share Link Fee'     },
+]
+
 function Hero() {
   return (
-    <section className="relative bg-primary overflow-hidden min-h-[760px] flex items-center">
-      {/* Ambient glow blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-[700px] h-[700px] rounded-full bg-accent/[0.07] blur-[140px]" />
-        <div className="absolute bottom-0 right-[20%] w-[500px] h-[500px] rounded-full bg-accent/[0.05] blur-[120px]" />
-      </div>
+    <section className="relative overflow-hidden min-h-[580px] h-[90vh]">
 
-      {/* Subtle grid overlay */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" aria-hidden>
-        <defs>
-          <pattern id="sell-hero-grid" width="52" height="52" patternUnits="userSpaceOnUse">
-            <path d="M 52 0 L 0 0 0 52" fill="none" stroke="#D4B896" strokeWidth="0.6" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#sell-hero-grid)" />
-      </svg>
+      {/* Full-bleed background image */}
+      <Image
+        src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1783429597/Gemini_Generated_Image_56ug4l56ug4l56ug_hvg3kn.png"
+        alt="Indian artisan crafting handmade products for wholesale"
+        fill
+        sizes="100vw"
+        className="object-cover object-right"
+        priority
+      />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pt-0 pb-10 lg:pt-0 lg:pb-16 w-full">
-        <div className="grid lg:grid-cols-[3fr_2fr] gap-12 xl:gap-20 items-center">
+      {/* Left-side fade — matches homepage exactly */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, rgba(249,247,242,0.95) 0%, rgba(249,247,242,0.82) 50%, rgba(249,247,242,0.30) 72%, rgba(249,247,242,0) 100%)' }}
+        aria-hidden
+      />
 
-          {/* ── Left: Text ── */}
-          <div>
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/15 bg-white/[0.07] backdrop-blur-sm mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse flex-shrink-0" />
-              <Store size={11} className="text-accent" aria-hidden />
-              <span className="font-public-sans text-[10.5px] font-[600] text-white/65 uppercase tracking-[0.12em]">
-                For Sellers · India's B2B Wholesale Marketplace
+      {/* Content — left side */}
+      <div className="relative z-10 flex items-center h-full absolute inset-0">
+        <div className="w-full px-5 sm:px-8 md:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
+          <div className="max-w-[520px]">
+
+            {/* Eyebrow pill — matches homepage style */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border-warm bg-white/60 backdrop-blur-sm mb-7">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+                <path d="M6.5 1L8.2 5.1H12.5L9.2 7.6L10.4 11.8L6.5 9.3L2.6 11.8L3.8 7.6L0.5 5.1H4.8L6.5 1Z" fill="#A68B67"/>
+              </svg>
+              <span className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em]">
+                Sell on Solomon Bharat
               </span>
             </div>
 
-            <h1 className="font-playfair font-[500] text-white leading-[1.05] tracking-[-0.01em] text-[42px] sm:text-[56px] lg:text-[68px]">
+            {/* Headline */}
+            <h1 className="font-playfair font-[600] text-primary leading-[1.05] tracking-[-0.01em] text-[26px] sm:text-[34px] lg:text-[44px]">
               Sell your craft<br />
-              <em className="text-accent not-italic">to the world.</em>
+              <span className="text-accent">to the world.</span><br />
+              Zero upfront fees.
             </h1>
 
-            <p className="font-public-sans text-[15px] sm:text-[16px] leading-[1.75] text-white/55 mt-6 max-w-[520px]">
-              Join 500+ verified Indian brands already reaching boutique retailers
-              across 40+ countries — with zero upfront fees, your own storefront,
-              and commission that drops as you grow.
+            {/* Body */}
+            <p className="font-public-sans text-[14px] sm:text-[15px] font-[400] leading-[1.65] text-muted-text mt-4 sm:mt-6 max-w-[400px]">
+              Join a curated community of Indian artisan brands reaching boutique
+              retailers across 40+ countries — with your own branded storefront.
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-3">
+            {/* CTAs */}
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/apply"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent text-white font-[600] font-public-sans text-[15px] px-8 py-3.5 hover:bg-accent-hover transition-all duration-200 hover:shadow-lg hover:shadow-accent/30 hover:-translate-y-px"
+                className="inline-flex items-center gap-2 rounded bg-primary text-white font-[600] font-public-sans text-[14px] px-6 py-3 hover:bg-[#2a2a2a] transition-colors"
               >
-                Get started — it's free
-                <ArrowRight size={15} aria-hidden />
+                Apply now — it&apos;s free
+                <ArrowRight size={14} aria-hidden />
               </Link>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 text-white/70 font-[500] font-public-sans text-[14px] px-6 py-3.5 hover:bg-white/[0.08] hover:border-white/30 transition-all duration-200"
+                className="inline-flex items-center gap-2 rounded border border-border-warm bg-white/50 backdrop-blur-sm text-primary font-[600] font-public-sans text-[14px] px-5 py-3 hover:bg-white/80 transition-colors"
               >
-                See how it works
+                How it works
               </a>
             </div>
 
-            <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-3">
-              {['No listing fees', '0% on share links', 'Paid within 30 days'].map((t) => (
-                <div key={t} className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-accent flex-shrink-0" aria-hidden />
-                  <span className="font-public-sans text-[12.5px] text-white/50">{t}</span>
+            {/* Stats row */}
+            <div className="mt-8 sm:mt-10 grid grid-cols-2 sm:flex sm:flex-wrap gap-x-5 gap-y-3 sm:gap-x-6 sm:gap-y-4">
+              {HERO_STATS.map(({ Icon, value, label }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/70 border border-border-warm flex items-center justify-center flex-shrink-0">
+                    <Icon size={13} className="text-accent" aria-hidden />
+                  </div>
+                  <div>
+                    <p className="font-public-sans text-[13px] sm:text-[14px] font-[600] text-primary leading-tight">{value}</p>
+                    <p className="font-public-sans text-[10px] sm:text-[11px] text-muted-text leading-tight">{label}</p>
+                  </div>
                 </div>
               ))}
             </div>
+
           </div>
-
-          {/* ── Right: Image ── */}
-          <div className="hidden lg:block">
-            <div className="relative">
-              {/* Decorative offset border frame */}
-              <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/[0.08] to-transparent" />
-
-              {/* Image card */}
-              <div className="relative rounded-3xl overflow-hidden aspect-[3/4] border border-white/[0.12] shadow-2xl shadow-black/60">
-                <Image
-                  src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80"
-                  alt="Indian artisan textiles — colourful handcrafted fabrics"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-              </div>
-
-              {/* Floating stat — top left */}
-              <div className="absolute -left-12 top-10 bg-surface rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-border-warm flex items-center gap-3 z-10">
-                <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
-                  <Store size={15} className="text-accent" />
-                </div>
-                <div>
-                  <p className="font-public-sans text-[13px] font-[700] text-primary">500+ Brands</p>
-                  <p className="font-public-sans text-[11px] text-muted-text">Verified sellers</p>
-                </div>
-              </div>
-
-              {/* Floating stat — bottom right */}
-              <div className="absolute -right-12 bottom-16 bg-surface rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-border-warm flex items-center gap-3 z-10">
-                <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
-                  <Globe2 size={15} className="text-accent" />
-                </div>
-                <div>
-                  <p className="font-public-sans text-[13px] font-[700] text-primary">40+ Countries</p>
-                  <p className="font-public-sans text-[11px] text-muted-text">Global reach</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
+
+      {/* Floating trust card — matches homepage floating card */}
+      <div className="hidden sm:flex absolute top-8 left-[52%] lg:left-[50%] bg-white border border-border-warm rounded-lg px-4 py-3 shadow-[0_4px_24px_rgba(26,26,26,0.10)] items-center gap-3 z-10">
+        <div className="w-9 h-9 rounded-full bg-accent/10 border border-border-warm flex items-center justify-center flex-shrink-0">
+          <Store size={15} className="text-accent" aria-hidden />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-public-sans text-[13px] font-[600] text-primary leading-tight">Free to join</p>
+          <p className="font-public-sans text-[11px] text-muted-text">No listing fees, ever</p>
+        </div>
+        <CheckCircle2 size={17} className="text-accent flex-shrink-0 ml-2" aria-hidden />
+      </div>
+
     </section>
   )
 }
@@ -180,7 +171,7 @@ const WHY_ITEMS = [
   {
     Icon: Percent,
     title: 'Commission that decreases as you grow',
-    body: 'Start at 15% and unlock lower rates — down to 10% — as you hit sales milestones through our Achievement tiers. Share link orders are always 0%.',
+    body: 'Start at 20% and unlock lower rates — down to 10% — as you hit sales milestones through our Achievement tiers. Share link orders are always 0%.',
   },
   {
     Icon: Shield,
@@ -338,11 +329,11 @@ function HowItWorks() {
 // ─── Commission tiers ─────────────────────────────────────────────────────────
 
 const TIERS = [
-  { name: 'Sprout', emoji: '🌱', commission: '15%', description: 'New sellers getting started', range: '₹0 – ₹2L GMV' },
-  { name: 'Rising', emoji: '📈', commission: '14%', description: 'Building momentum', range: '₹2L – ₹5L GMV' },
-  { name: 'Trusted', emoji: '⭐', commission: '14%', description: 'Consistent performers', range: '₹5L – ₹15L GMV' },
-  { name: 'Elite', emoji: '💎', commission: '12%', description: 'Top-tier sellers', range: '₹15L – ₹50L GMV' },
-  { name: 'Legend', emoji: '🏆', commission: '10%', description: 'Platform ambassadors', range: '₹50L+ GMV' },
+  { name: 'Sprout',  commission: '20%', description: 'New sellers getting started', range: '₹0 – ₹2L GMV'    },
+  { name: 'Rising',  commission: '15%', description: 'Building momentum',            range: '₹2L – ₹5L GMV'   },
+  { name: 'Trusted', commission: '14%', description: 'Consistent performers',        range: '₹5L – ₹15L GMV'  },
+  { name: 'Elite',   commission: '12%', description: 'Top-tier sellers',             range: '₹15L – ₹50L GMV' },
+  { name: 'Legend',  commission: '10%', description: 'Platform ambassadors',         range: '₹50L+ GMV'        },
 ]
 
 function CommissionSection() {
@@ -368,7 +359,7 @@ function CommissionSection() {
               costs. We only make money when you make money.
             </p>
             <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-7">
-              Marketplace commission starts at 15% and decreases automatically
+              Marketplace commission starts at 20% and decreases automatically
               as you hit GMV milestones — down to 10% at the Legend tier. And
               any order that comes through your personal <strong className="text-primary font-[600]">Share Link</strong> is always 0% commission.
             </p>
@@ -457,12 +448,8 @@ const PORTAL_FEATURES = [
 
 function PortalSection() {
   return (
-    <section className="py-14 lg:py-20 bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 w-[700px] h-[600px] rounded-full bg-accent/[0.05] blur-[130px] -translate-x-1/2 -translate-y-1/4" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+    <section className="py-14 lg:py-20 bg-surface border-y border-border-warm">
+      <div className="max-w-7xl mx-auto px-6 lg:px-16">
         <div className="max-w-[600px] mb-10">
           <div className="inline-flex items-center gap-2 mb-4">
             <span className="w-8 h-px bg-accent flex-shrink-0" />
@@ -470,10 +457,10 @@ function PortalSection() {
               Seller portal
             </p>
           </div>
-          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-white leading-[1.1]">
+          <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1]">
             Everything you need to run your wholesale business
           </h2>
-          <p className="font-public-sans text-[15px] text-white/50 mt-4 leading-[1.7]">
+          <p className="font-public-sans text-[15px] text-muted-text mt-4 leading-[1.7]">
             Your seller portal is a fully-featured business dashboard — not just a
             product upload tool.
           </p>
@@ -483,15 +470,15 @@ function PortalSection() {
           {PORTAL_FEATURES.map(({ Icon, title, body }) => (
             <div
               key={title}
-              className="group rounded-xl border border-white/[0.08] bg-white/[0.04] p-5 flex flex-col gap-3.5 hover:bg-white/[0.09] hover:border-accent/30 hover:-translate-y-0.5 transition-all duration-300"
+              className="group rounded-xl border border-border-warm bg-bg p-5 flex flex-col gap-3.5 hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/25 flex items-center justify-center flex-shrink-0 group-hover:from-accent/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-xl bg-muted-bg border border-border-warm flex items-center justify-center flex-shrink-0">
                 <Icon size={16} className="text-accent" aria-hidden />
               </div>
-              <h3 className="font-public-sans text-[14px] font-[600] text-white leading-[1.35]">
+              <h3 className="font-public-sans text-[14px] font-[600] text-primary leading-[1.35]">
                 {title}
               </h3>
-              <p className="font-public-sans text-[13px] text-white/45 leading-[1.65]">
+              <p className="font-public-sans text-[13px] text-muted-text leading-[1.65]">
                 {body}
               </p>
             </div>
@@ -639,7 +626,7 @@ const FAQS = [
   },
   {
     q: 'Are there any fees to join?',
-    a: 'No. There are no listing fees, no monthly subscriptions, and no setup costs. We earn a commission only when you make a sale — starting at 15% and decreasing as you grow.',
+    a: 'No. There are no listing fees, no monthly subscriptions, and no setup costs. We earn a commission only when you make a sale — starting at 20% and decreasing as you grow.',
   },
   {
     q: 'What is a Share Link and why does it matter?',
@@ -730,53 +717,39 @@ function FAQ() {
 function FinalCTA() {
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
   return (
-    <section className="relative py-14 lg:py-20 bg-primary overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 w-[900px] h-[500px] rounded-full bg-accent/[0.09] blur-[150px] -translate-x-1/2 -translate-y-1/2" />
-      </div>
+    <section className="py-14 lg:py-20 bg-bg border-t border-border-warm">
+      <div className="max-w-3xl mx-auto px-6 text-center">
 
-      {/* Grid pattern */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" aria-hidden>
-        <defs>
-          <pattern id="cta-grid" width="52" height="52" patternUnits="userSpaceOnUse">
-            <path d="M 52 0 L 0 0 0 52" fill="none" stroke="#D4B896" strokeWidth="0.6" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#cta-grid)" />
-      </svg>
-
-      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/15 bg-white/[0.07] mb-8">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border-warm bg-white/60 mb-8">
           <Store size={11} className="text-accent" aria-hidden />
-          <span className="font-public-sans text-[10.5px] font-[600] text-accent uppercase tracking-[0.12em]">
+          <span className="font-public-sans text-[11px] font-[600] text-accent uppercase tracking-[0.1em]">
             Free to join · No contracts
           </span>
         </div>
 
-        <h2 className="font-playfair text-[38px] sm:text-[56px] font-[500] text-white leading-[1.05] mb-5">
+        <h2 className="font-playfair text-[38px] sm:text-[50px] font-[600] text-primary leading-[1.05] mb-5">
           Ready to take your<br />
-          <em className="text-accent not-italic">brand global?</em>
+          <span className="text-accent">brand global?</span>
         </h2>
-        <p className="font-public-sans text-[15px] sm:text-[16px] text-white/50 leading-[1.75] max-w-[480px] mx-auto mb-10">
-          Join hundreds of Indian artisan brands already selling wholesale to
+        <p className="font-public-sans text-[15px] text-muted-text leading-[1.75] max-w-[480px] mx-auto mb-10">
+          Join a curated community of Indian artisan brands selling wholesale to
           retailers across 40+ countries. Apply in 10 minutes.
         </p>
 
         <Link
           href="/apply"
-          className="inline-flex items-center gap-2.5 rounded-lg bg-accent text-white font-[600] font-public-sans text-[15px] px-10 py-4 hover:bg-accent-hover transition-all duration-200 hover:shadow-2xl hover:shadow-accent/35 hover:-translate-y-0.5"
+          className="inline-flex items-center gap-2 rounded bg-primary text-white font-[600] font-public-sans text-[14px] px-8 py-3.5 hover:bg-[#2a2a2a] transition-colors"
         >
-          Get started — it's free
-          <ArrowRight size={16} aria-hidden />
+          Apply now — it&apos;s free
+          <ArrowRight size={14} aria-hidden />
         </Link>
 
-        <p className="mt-6 font-public-sans text-[13px] text-white/35">
+        <p className="mt-6 font-public-sans text-[13px] text-muted-text">
           Already have an account?{' '}
           <button
             type="button"
             onClick={() => openAuthModal('login')}
-            className="text-white/60 font-[600] underline underline-offset-2 hover:text-accent transition-colors duration-200"
+            className="text-primary font-[600] underline underline-offset-2 hover:text-accent transition-colors"
           >
             Log in
           </button>

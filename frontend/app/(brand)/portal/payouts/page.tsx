@@ -70,8 +70,8 @@ interface PayoutRow {
 }
 
 function derivePayoutRow(order: Order): PayoutRow {
-  // Estimate commission at 8% if achievement level unknown — show "N/A" label handled in column
-  const commissionRate = 0.08
+  // Estimate commission at 20% (Sprout tier default) if achievement level unknown
+  const commissionRate = 0.20
   const net = Math.round(order.amount * (1 - commissionRate))
   // DELIVERED orders are treated as PAID
   const status: PayoutRow['status'] =
@@ -464,10 +464,10 @@ export default function PayoutsPage() {
       label: 'Commission',
       render: (val: unknown) => {
         const gross = Number(val)
-        const commission = Math.round(gross * 0.08)
+        const commission = Math.round(gross * 0.20)
         return (
           <div>
-            <span className="text-[13px] font-public-sans text-muted-text">8%</span>
+            <span className="text-[13px] font-public-sans text-muted-text">20%</span>
             <span className="text-[13px] font-public-sans text-muted-text ml-1.5">
               (₹{commission.toLocaleString('en-IN')})
             </span>
