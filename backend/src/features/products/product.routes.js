@@ -94,7 +94,7 @@ router.post('/import-shopify', authenticate, authorize('BRAND'), async (req, res
 });
 
 // AI content polishing — clean up name, description, tags using Gemini
-router.post('/ai/polish', authenticate, authorize('BRAND'), async (req, res) => {
+router.post('/ai/polish', authenticate, async (req, res) => {
   const { field, value } = req.body;
   if (!field || !value?.trim()) return sendSuccess(res, { cleaned: value ?? '' });
 
@@ -156,7 +156,7 @@ ${value}`,
   };
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
   const result = await model.generateContent(PROMPTS[field]);
   const cleaned = result.response.text().trim();
 

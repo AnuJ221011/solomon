@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
+import { toast } from 'sonner'
 import { useCategoryTree } from '@/hooks/queries/useCategories'
 import type { CategoryL1 } from '@/hooks/queries/useCategories'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -255,7 +256,7 @@ function TopBar({ showPhase, currentPhase }: { showPhase?: boolean; currentPhase
         <a href="#" className="hidden sm:block text-[13px] text-[#555] hover:text-[#1A1A1A] transition-colors">
           Get help
         </a>
-        <Link href="/" className="text-[13px] text-[#555] hover:text-[#1A1A1A] transition-colors">
+        <Link href="/sell" className="text-[13px] text-[#555] hover:text-[#1A1A1A] transition-colors">
           Save &amp; exit
         </Link>
       </div>
@@ -925,7 +926,9 @@ export default function ApplyPage() {
         sessionStorage.removeItem(STORAGE_KEY)
         setSubmittedEmail(form.email)
       } catch (err) {
-        setError(getApiError(err))
+        const msg = getApiError(err)
+        toast.error(msg)
+        setError(msg)
       } finally {
         setLoading(false)
       }

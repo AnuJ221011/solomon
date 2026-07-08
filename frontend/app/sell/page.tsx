@@ -329,11 +329,11 @@ function HowItWorks() {
 // ─── Commission tiers ─────────────────────────────────────────────────────────
 
 const TIERS = [
-  { name: 'Sprout',  commission: '20%', description: 'New sellers getting started', range: '₹0 – ₹2L GMV'    },
-  { name: 'Rising',  commission: '15%', description: 'Building momentum',            range: '₹2L – ₹5L GMV'   },
-  { name: 'Trusted', commission: '14%', description: 'Consistent performers',        range: '₹5L – ₹15L GMV'  },
-  { name: 'Elite',   commission: '12%', description: 'Top-tier sellers',             range: '₹15L – ₹50L GMV' },
-  { name: 'Legend',  commission: '10%', description: 'Platform ambassadors',         range: '₹50L+ GMV'        },
+  { name: 'Sprout',  Icon: Zap,        commission: '20%', description: 'New sellers getting started', range: '₹0 – ₹2L GMV'    },
+  { name: 'Rising',  Icon: TrendingUp, commission: '15%', description: 'Building momentum',            range: '₹2L – ₹5L GMV'   },
+  { name: 'Trusted', Icon: Star,       commission: '14%', description: 'Consistent performers',        range: '₹5L – ₹15L GMV'  },
+  { name: 'Elite',   Icon: Award,      commission: '12%', description: 'Top-tier sellers',             range: '₹15L – ₹50L GMV' },
+  { name: 'Legend',  Icon: BadgeCheck, commission: '10%', description: 'Platform ambassadors',         range: '₹50L+ GMV'        },
 ]
 
 function CommissionSection() {
@@ -388,7 +388,7 @@ function CommissionSection() {
               </p>
             </div>
             <div className="divide-y divide-border-warm">
-              {TIERS.map((tier, i) => (
+              {TIERS.map(({ Icon, ...tier }, i) => (
                 <div
                   key={tier.name}
                   className={cn(
@@ -398,9 +398,9 @@ function CommissionSection() {
                       : 'hover:bg-muted-bg/50'
                   )}
                 >
-                  <span className="text-[24px] flex-shrink-0" role="img" aria-label={tier.name}>
-                    {tier.emoji}
-                  </span>
+                  <div className="w-9 h-9 rounded-lg bg-muted-bg border border-border-warm flex items-center justify-center flex-shrink-0">
+                    <Icon size={15} className="text-accent" aria-hidden />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-public-sans text-[14px] font-[600] text-primary">{tier.name}</p>
                     <p className="font-public-sans text-[12px] text-muted-text">{tier.range}</p>
