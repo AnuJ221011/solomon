@@ -26,7 +26,7 @@ cloudinary.config({
 function uploadDoc(buffer, folder) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'auto' },
+      { folder, resource_type: 'auto', type: 'upload', access_mode: 'public' },
       (err, result) => (err ? reject(err) : resolve(result.secure_url)),
     );
     stream.end(buffer);

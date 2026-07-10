@@ -1,16 +1,56 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { v2 as cloudinary } from 'cloudinary';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
 import * as adminService from './admin.service.js';
 import { sendWeeklyDigests } from '../scheduler/digest.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
+import { createError } from '../../shared/utils/createError.js';
+import prisma from '../../config/db.js';
+import { env } from '../../config/env.js';
 
 const router = Router();
 
 // All admin routes require authentication and ADMIN role
 router.use(authenticate, authorize('ADMIN'));
+
+// ── Document viewer — generates a short-lived signed Cloudinary URL ─────────
+const DOC_FIELDS = ['aadharUrl', 'panUrl', 'gstCertUrl', 'incorporateCertUrl', 'msmeCertUrl', 'isoCertUrl', 'iecCertUrl'];
+
+router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIELDS) })), async (req, res) => {
+  const brand = await prisma.brandProfile.findUnique({
+    where: { id: req.params.id },
+    select: { [req.query.field]: true },
+  });
+  const storedUrl = brand?.[req.query.field];
+  if (!storedUrl) throw createError('Document not found', 404);
+
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  });
+
+  // Extract public_id from the stored Cloudinary URL
+  const uploadIdx = storedUrl.indexOf('/upload/');
+  let publicId = storedUrl.slice(uploadIdx + 8).replace(/^v\d+\//, '');
+  const resourceType = storedUrl.includes('/raw/upload/') ? 'raw' : 'image';
+  if (resourceType === 'image') publicId = publicId.replace(/\.[^.]+$/, '');
+
+  const ext = storedUrl.split('.').pop();
+  const signedUrl = cloudinary.url(publicId, {
+    resource_type: resourceType,
+    ...(resourceType === 'image' && { format: ext }),
+    sign_url: true,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    type: 'upload',
+    secure: true,
+  });
+
+  sendSuccess(res, { url: signedUrl });
+});
 
 // ── Platform stats ─────────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
