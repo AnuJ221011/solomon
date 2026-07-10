@@ -49,6 +49,7 @@ router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIE
     secure: true,
   });
 
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   sendSuccess(res, { url: signedUrl });
 });
 

@@ -108,7 +108,7 @@ function DocumentViewerModal({
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    api.get(`/admin/brands/${brandId}/doc-url`, { params: { field } })
+    api.get(`/admin/brands/${brandId}/doc-url`, { params: { field }, headers: { 'Cache-Control': 'no-cache' } })
       .then((res) => setSignedUrl(res.data.data.url))
       .catch(() => setError(true))
   }, [brandId, field])
