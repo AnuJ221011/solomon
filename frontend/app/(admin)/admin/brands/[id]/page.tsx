@@ -105,16 +105,20 @@ function DocumentViewerModal({
   brandId, label, field, onClose,
 }: { brandId: string; label: string; field: string; onClose: () => void }) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
+  const [ext, setExt] = useState<string>('pdf')
   const [error, setError] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     api.get(`/admin/brands/${brandId}/doc-url`, { params: { field }, headers: { 'Cache-Control': 'no-cache' } })
-      .then((res) => setSignedUrl(res.data.data.url))
+      .then((res) => {
+        setSignedUrl(res.data.data.url)
+        setExt(res.data.data.ext ?? 'pdf')
+      })
       .catch(() => setError(true))
   }, [brandId, field])
 
-  const isPdf = signedUrl ? (signedUrl.includes('.pdf') || signedUrl.includes('/raw/upload/')) : false
+  const isPdf = ext === 'pdf'
 
   async function handleDownload(e: React.MouseEvent) {
     e.stopPropagation()
@@ -126,7 +130,6 @@ function DocumentViewerModal({
       const objectUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = objectUrl
-      const ext = signedUrl.split('?')[0].split('.').pop() ?? 'pdf'
       a.download = `${label.replace(/\s+/g, '_')}.${ext}`
       document.body.appendChild(a)
       a.click()

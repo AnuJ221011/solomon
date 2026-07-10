@@ -17,6 +17,10 @@ const router = Router();
 router.use(authenticate, authorize('ADMIN'));
 
 // ── Document viewer — generates a short-lived signed Cloudinary URL ─────────
+// Uses the Admin API download endpoint (private_download_url), not a CDN
+// sign_url — this account restricts direct PDF/ZIP delivery, and a plain
+// sign_url does not bypass that restriction ("deny or ACL failure"); only
+// the Admin-API-authenticated download link does.
 const DOC_FIELDS = ['aadharUrl', 'panUrl', 'gstCertUrl', 'incorporateCertUrl', 'msmeCertUrl', 'isoCertUrl', 'iecCertUrl'];
 
 router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIELDS) })), async (req, res) => {
@@ -40,16 +44,14 @@ router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIE
   if (resourceType === 'image') publicId = publicId.replace(/\.[^.]+$/, '');
 
   const ext = storedUrl.split('.').pop();
-  const signedUrl = cloudinary.url(publicId, {
+  const signedUrl = cloudinary.utils.private_download_url(publicId, ext, {
     resource_type: resourceType,
-    ...(resourceType === 'image' && { format: ext }),
-    sign_url: true,
     type: 'upload',
-    secure: true,
+    attachment: false,
   });
 
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  sendSuccess(res, { url: signedUrl });
+  sendSuccess(res, { url: signedUrl, ext });
 });
 
 // ── Platform stats ─────────────────────────────────────────────────────────
