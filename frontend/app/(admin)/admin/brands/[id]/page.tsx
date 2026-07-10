@@ -253,7 +253,7 @@ function RejectModal({
 export default function AdminBrandDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { data: brand, isLoading } = useAdminBrand(params.id)
+  const { data: brand, isLoading, isError } = useAdminBrand(params.id)
   const approveBrand = useApproveBrand()
   const overrideLevel = useOverrideAchievementLevel()
   const suspendUser = useSuspendUser()
@@ -305,7 +305,12 @@ export default function AdminBrandDetailPage() {
         </button>
         <div className="bg-white border border-[#E5E1D8] rounded-xl py-20 flex flex-col items-center gap-3">
           <Building2 size={32} className="text-[#E5E1D8]" />
-          <p className="text-[15px] font-[600] font-public-sans text-[#1A1A1A]">Brand not found</p>
+          <p className="text-[15px] font-[600] font-public-sans text-[#1A1A1A]">
+            {isError ? 'Failed to load brand — check that the backend is running' : 'Brand not found'}
+          </p>
+          {isError && (
+            <p className="text-[12px] font-public-sans text-[#9CA3AF]">ID: {params.id}</p>
+          )}
         </div>
       </div>
     )
