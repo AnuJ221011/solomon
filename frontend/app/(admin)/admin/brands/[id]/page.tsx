@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -29,6 +29,7 @@ import {
   useReactivateUser,
 } from '@/hooks/queries/useAdmin'
 import { cn } from '@/lib/utils'
+import api from '@/lib/api'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -100,8 +101,20 @@ function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function DocumentViewerModal({ label, url, onClose }: { label: string; url: string; onClose: () => void }) {
-  const isPdf = url.includes('.pdf') || url.includes('/raw/upload/')
+function DocumentViewerModal({
+  brandId, label, field, onClose,
+}: { brandId: string; label: string; field: string; onClose: () => void }) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    api.get(`/admin/brands/${brandId}/doc-url`, { params: { field } })
+      .then((res) => setSignedUrl(res.data.data.url))
+      .catch(() => setError(true))
+  }, [brandId, field])
+
+  const isPdf = signedUrl ? (signedUrl.includes('.pdf') || signedUrl.includes('/raw/upload/')) : false
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-[2px]" onClick={onClose}>
       <div
@@ -115,15 +128,17 @@ function DocumentViewerModal({ label, url, onClose }: { label: string; url: stri
             <span className="text-[14px] font-[600] font-public-sans text-[#1A1A1A]">{label}</span>
           </div>
           <div className="flex items-center gap-2">
-            <a
-              href={url}
-              download
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors"
-            >
-              <Download size={13} />
-              Download
-            </a>
+            {signedUrl && (
+              <a
+                href={signedUrl}
+                download
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors"
+              >
+                <Download size={13} />
+                Download
+              </a>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -136,15 +151,19 @@ function DocumentViewerModal({ label, url, onClose }: { label: string; url: stri
 
         {/* Viewer */}
         <div className="flex-1 overflow-auto bg-[#F5F0E8] flex items-center justify-center p-4">
-          {isPdf ? (
+          {error ? (
+            <p className="text-[13px] font-public-sans text-[#9CA3AF]">Failed to load document.</p>
+          ) : !signedUrl ? (
+            <p className="text-[13px] font-public-sans text-[#9CA3AF]">Loading…</p>
+          ) : isPdf ? (
             <iframe
-              src={url}
+              src={signedUrl}
               className="w-full h-full min-h-[600px] rounded-lg border border-[#E5E1D8] bg-white"
               title={label}
             />
           ) : (
             <img
-              src={url}
+              src={signedUrl}
               alt={label}
               className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
             />
@@ -155,12 +174,12 @@ function DocumentViewerModal({ label, url, onClose }: { label: string; url: stri
   )
 }
 
-function DocumentLink({ label, url, onOpen }: { label: string; url?: string | null; onOpen: (doc: { label: string; url: string }) => void }) {
+function DocumentLink({ label, field, url, onOpen }: { label: string; field: string; url?: string | null; onOpen: (doc: { label: string; field: string }) => void }) {
   if (!url) return null
   return (
     <button
       type="button"
-      onClick={() => onOpen({ label, url })}
+      onClick={() => onOpen({ label, field })}
       className="flex items-center gap-2.5 px-4 py-3 bg-[#FAFAF9] border border-[#E5E1D8] rounded-lg hover:border-[#A68B67] hover:bg-[#F9F7F2] transition-all group w-full text-left"
     >
       <FileText size={15} className="text-[#9CA3AF] group-hover:text-[#A68B67] shrink-0" />
@@ -240,7 +259,7 @@ export default function AdminBrandDetailPage() {
   const suspendUser = useSuspendUser()
   const reactivateUser = useReactivateUser()
   const [showReject, setShowReject] = useState(false)
-  const [docViewer, setDocViewer] = useState<{ label: string; url: string } | null>(null)
+  const [docViewer, setDocViewer] = useState<{ label: string; field: string } | null>(null)
 
   const isPending   = brand?.status === 'PENDING'
   const isApproved  = brand?.status === 'APPROVED'
@@ -582,13 +601,13 @@ export default function AdminBrandDetailPage() {
             </h3>
           </div>
           <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <DocumentLink label="Aadhar Card" url={brand.aadharUrl} onOpen={setDocViewer} />
-            <DocumentLink label="PAN Card" url={brand.panUrl} onOpen={setDocViewer} />
-            <DocumentLink label="GST Certificate" url={brand.gstCertUrl} onOpen={setDocViewer} />
-            <DocumentLink label="Incorporation Certificate" url={brand.incorporateCertUrl} onOpen={setDocViewer} />
-            <DocumentLink label="MSME Certificate" url={brand.msmeCertUrl} onOpen={setDocViewer} />
-            <DocumentLink label="ISO Certificate" url={brand.isoCertUrl} onOpen={setDocViewer} />
-            <DocumentLink label="IEC Certificate" url={brand.iecCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="Aadhar Card" field="aadharUrl" url={brand.aadharUrl} onOpen={setDocViewer} />
+            <DocumentLink label="PAN Card" field="panUrl" url={brand.panUrl} onOpen={setDocViewer} />
+            <DocumentLink label="GST Certificate" field="gstCertUrl" url={brand.gstCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="Incorporation Certificate" field="incorporateCertUrl" url={brand.incorporateCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="MSME Certificate" field="msmeCertUrl" url={brand.msmeCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="ISO Certificate" field="isoCertUrl" url={brand.isoCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="IEC Certificate" field="iecCertUrl" url={brand.iecCertUrl} onOpen={setDocViewer} />
           </div>
         </div>
       )}
@@ -605,8 +624,9 @@ export default function AdminBrandDetailPage() {
       {/* Document viewer modal */}
       {docViewer && (
         <DocumentViewerModal
+          brandId={brand.id}
           label={docViewer.label}
-          url={docViewer.url}
+          field={docViewer.field}
           onClose={() => setDocViewer(null)}
         />
       )}
