@@ -44,7 +44,6 @@ router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIE
     resource_type: resourceType,
     ...(resourceType === 'image' && { format: ext }),
     sign_url: true,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
     type: 'upload',
     secure: true,
   });
