@@ -106,6 +106,7 @@ function DocumentViewerModal({
 }: { brandId: string; label: string; field: string; onClose: () => void }) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [error, setError] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     api.get(`/admin/brands/${brandId}/doc-url`, { params: { field }, headers: { 'Cache-Control': 'no-cache' } })
@@ -114,6 +115,30 @@ function DocumentViewerModal({
   }, [brandId, field])
 
   const isPdf = signedUrl ? (signedUrl.includes('.pdf') || signedUrl.includes('/raw/upload/')) : false
+
+  async function handleDownload(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!signedUrl || downloading) return
+    setDownloading(true)
+    try {
+      const res = await fetch(signedUrl)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      const ext = signedUrl.split('?')[0].split('.').pop() ?? 'pdf'
+      a.download = `${label.replace(/\s+/g, '_')}.${ext}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      // fallback: open in new tab
+      window.open(signedUrl, '_blank')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-[2px]" onClick={onClose}>
@@ -129,15 +154,15 @@ function DocumentViewerModal({
           </div>
           <div className="flex items-center gap-2">
             {signedUrl && (
-              <a
-                href={signedUrl}
-                download
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors"
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors disabled:opacity-50"
               >
                 <Download size={13} />
-                Download
-              </a>
+                {downloading ? 'Downloading…' : 'Download'}
+              </button>
             )}
             <button
               type="button"
