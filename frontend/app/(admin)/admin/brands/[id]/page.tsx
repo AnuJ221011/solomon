@@ -17,6 +17,8 @@ import {
   FileText,
   AlertTriangle,
   RotateCcw,
+  Download,
+  X,
 } from 'lucide-react'
 import {
   useAdminBrand,
@@ -98,21 +100,75 @@ function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function DocumentLink({ label, url }: { label: string; url?: string | null }) {
+function DocumentViewerModal({ label, url, onClose }: { label: string; url: string; onClose: () => void }) {
+  const isPdf = url.includes('.pdf') || url.includes('/raw/upload/')
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-[2px]" onClick={onClose}>
+      <div
+        className="relative flex flex-col bg-white w-full h-full max-w-4xl max-h-[92vh] mx-auto my-auto rounded-xl overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E5E1D8] shrink-0">
+          <div className="flex items-center gap-2.5">
+            <FileText size={15} className="text-[#A68B67]" />
+            <span className="text-[14px] font-[600] font-public-sans text-[#1A1A1A]">{label}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={url}
+              download
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors"
+            >
+              <Download size={13} />
+              Download
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E5E1D8] text-[#9CA3AF] hover:bg-[#F5F0E8] hover:text-[#1A1A1A] transition-colors"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Viewer */}
+        <div className="flex-1 overflow-auto bg-[#F5F0E8] flex items-center justify-center p-4">
+          {isPdf ? (
+            <iframe
+              src={url}
+              className="w-full h-full min-h-[600px] rounded-lg border border-[#E5E1D8] bg-white"
+              title={label}
+            />
+          ) : (
+            <img
+              src={url}
+              alt={label}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocumentLink({ label, url, onOpen }: { label: string; url?: string | null; onOpen: (doc: { label: string; url: string }) => void }) {
   if (!url) return null
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2.5 px-4 py-3 bg-[#FAFAF9] border border-[#E5E1D8] rounded-lg hover:border-[#A68B67] hover:bg-[#F9F7F2] transition-all group"
+    <button
+      type="button"
+      onClick={() => onOpen({ label, url })}
+      className="flex items-center gap-2.5 px-4 py-3 bg-[#FAFAF9] border border-[#E5E1D8] rounded-lg hover:border-[#A68B67] hover:bg-[#F9F7F2] transition-all group w-full text-left"
     >
       <FileText size={15} className="text-[#9CA3AF] group-hover:text-[#A68B67] shrink-0" />
       <span className="text-[13px] font-[500] font-public-sans text-[#444748] group-hover:text-[#1A1A1A] flex-1">
         {label}
       </span>
       <ExternalLink size={12} className="text-[#9CA3AF] group-hover:text-[#A68B67]" />
-    </a>
+    </button>
   )
 }
 
@@ -184,6 +240,7 @@ export default function AdminBrandDetailPage() {
   const suspendUser = useSuspendUser()
   const reactivateUser = useReactivateUser()
   const [showReject, setShowReject] = useState(false)
+  const [docViewer, setDocViewer] = useState<{ label: string; url: string } | null>(null)
 
   const isPending   = brand?.status === 'PENDING'
   const isApproved  = brand?.status === 'APPROVED'
@@ -525,13 +582,13 @@ export default function AdminBrandDetailPage() {
             </h3>
           </div>
           <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <DocumentLink label="Aadhar Card" url={brand.aadharUrl} />
-            <DocumentLink label="PAN Card" url={brand.panUrl} />
-            <DocumentLink label="GST Certificate" url={brand.gstCertUrl} />
-            <DocumentLink label="Incorporation Certificate" url={brand.incorporateCertUrl} />
-            <DocumentLink label="MSME Certificate" url={brand.msmeCertUrl} />
-            <DocumentLink label="ISO Certificate" url={brand.isoCertUrl} />
-            <DocumentLink label="IEC Certificate" url={brand.iecCertUrl} />
+            <DocumentLink label="Aadhar Card" url={brand.aadharUrl} onOpen={setDocViewer} />
+            <DocumentLink label="PAN Card" url={brand.panUrl} onOpen={setDocViewer} />
+            <DocumentLink label="GST Certificate" url={brand.gstCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="Incorporation Certificate" url={brand.incorporateCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="MSME Certificate" url={brand.msmeCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="ISO Certificate" url={brand.isoCertUrl} onOpen={setDocViewer} />
+            <DocumentLink label="IEC Certificate" url={brand.iecCertUrl} onOpen={setDocViewer} />
           </div>
         </div>
       )}
@@ -542,6 +599,15 @@ export default function AdminBrandDetailPage() {
           brandId={brand.id}
           brandName={brand.brandName}
           onClose={() => setShowReject(false)}
+        />
+      )}
+
+      {/* Document viewer modal */}
+      {docViewer && (
+        <DocumentViewerModal
+          label={docViewer.label}
+          url={docViewer.url}
+          onClose={() => setDocViewer(null)}
         />
       )}
     </div>
