@@ -854,6 +854,11 @@ model ShopifyStore {
   brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
   shopDomain     String       @unique
   accessToken    String
+  // Custom app's webhook signing secret (shown in the Shopify app's API
+  // credentials page) — used to verify X-Shopify-Hmac-Sha256. Optional so
+  // existing connections keep working; webhooks from a store with no secret
+  // set are accepted unverified, same as before this field existed.
+  webhookSecret  String?
   isActive       Boolean      @default(true)
   lastSyncAt     DateTime?
   createdAt      DateTime     @default(now())
