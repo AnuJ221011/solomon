@@ -1,15 +1,19 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
 import * as adminService from './admin.service.js';
+import * as variantService from '../products/variant.service.js';
 import { sendWeeklyDigests } from '../scheduler/digest.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { createError } from '../../shared/utils/createError.js';
+import { cloudinaryFolders } from '../../shared/constants/cloudinary.js';
 import prisma from '../../config/db.js';
 import { env } from '../../config/env.js';
+import { updateProductSchema } from '../products/product.validator.js';
 
 const router = Router();
 
@@ -209,6 +213,183 @@ const productsQuerySchema = z.object({
 router.get('/products', validateQuery(productsQuerySchema), async (req, res) => {
   const result = await adminService.listProducts(req.query);
   sendSuccess(res, result);
+});
+
+router.get('/products/:id', async (req, res) => {
+  const product = await adminService.getProductById(req.params.id);
+  sendSuccess(res, product);
+});
+
+router.patch('/products/:id', validate(updateProductSchema), async (req, res) => {
+  const product = await adminService.updateProductById(req.params.id, req.body);
+  sendSuccess(res, product, `"${product.name}" updated successfully.`);
+});
+
+// ── Product photos/videos (admin — bypasses the brand-ownership check that
+//    /photos/product/:productId enforces, since admins can manage any listing) ──
+const MAX_MEDIA_PER_PRODUCT = 20;
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024;   // 8 MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+
+const mediaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_VIDEO_SIZE },
+  fileFilter: (req, file, cb) => {
+    const isImage = file.mimetype.startsWith('image/');
+    const isVideo = file.mimetype.startsWith('video/');
+    if (!isImage && !isVideo) return cb(new Error('Only image and video files are allowed'));
+    if (isImage && file.size > MAX_IMAGE_SIZE) return cb(new Error('Image files must be under 8 MB'));
+    cb(null, true);
+  },
+});
+
+const safeMediaUpload = (req, res, next) => {
+  mediaUpload.array('photos', MAX_MEDIA_PER_PRODUCT)(req, res, (err) =>
+    err ? next(createError(`Upload error: ${err.message}`, 400)) : next()
+  );
+};
+
+function uploadMediaToCloudinary(buffer, folder, isVideo) {
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  });
+  return new Promise((resolve, reject) => {
+    const opts = isVideo
+      ? { folder, resource_type: 'video' }
+      : { folder, resource_type: 'image', transformation: [{ width: 1200, height: 1200, crop: 'limit' }, { quality: 'auto' }] };
+    cloudinary.uploader.upload_stream(opts, (err, result) => (err ? reject(err) : resolve(result))).end(buffer);
+  });
+}
+
+router.post('/products/:id/photos', safeMediaUpload, async (req, res) => {
+  const product = await prisma.product.findUnique({ where: { id: req.params.id }, include: { photos: true } });
+  if (!product) throw createError('Product not found', 404);
+
+  const files = req.files;
+  if (!files || files.length === 0) throw createError('No files uploaded', 400);
+
+  const remaining = MAX_MEDIA_PER_PRODUCT - product.photos.length;
+  if (files.length > remaining) {
+    throw createError(`Can only upload ${remaining} more file(s) — max ${MAX_MEDIA_PER_PRODUCT} per product`, 400);
+  }
+
+  const uploaded = await Promise.all(
+    files.map((file) => {
+      const isVideo = file.mimetype.startsWith('video/');
+      return uploadMediaToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo)
+        .then((result) => ({ result, isVideo }));
+    })
+  );
+
+  const existingMax = product.photos.reduce((max, p) => Math.max(max, p.position), -1);
+  const media = await prisma.$transaction(
+    uploaded.map(({ result, isVideo }, i) =>
+      prisma.productPhoto.create({
+        data: {
+          productId: product.id,
+          url: result.secure_url,
+          publicId: result.public_id,
+          position: existingMax + 1 + i,
+          mediaType: isVideo ? 'video' : 'image',
+        },
+      })
+    )
+  );
+
+  sendSuccess(res, media, `${media.length} file${media.length !== 1 ? 's' : ''} uploaded successfully.`, 201);
+});
+
+router.patch('/products/:id/photos/reorder', async (req, res) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) throw createError('order must be an array', 400);
+
+  const photoIds = order.map(({ id }) => id);
+  const ownedCount = await prisma.productPhoto.count({
+    where: { id: { in: photoIds }, productId: req.params.id },
+  });
+  if (ownedCount !== photoIds.length) {
+    throw createError('One or more photos do not belong to this product', 403);
+  }
+
+  await prisma.$transaction(
+    order.map(({ id, position }) => prisma.productPhoto.update({ where: { id }, data: { position } }))
+  );
+  sendSuccess(res, null, 'Media order saved successfully.');
+});
+
+router.delete('/products/:id/photos/:photoId', async (req, res) => {
+  const photo = await prisma.productPhoto.findFirst({ where: { id: req.params.photoId, productId: req.params.id } });
+  if (!photo) throw createError('Media file not found', 404);
+
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  });
+  await cloudinary.uploader.destroy(photo.publicId, {
+    resource_type: photo.mediaType === 'video' ? 'video' : 'image',
+  }).catch(() => {});
+  await prisma.productPhoto.delete({ where: { id: photo.id } });
+  sendSuccess(res, null, 'File removed from product gallery.');
+});
+
+// ── Product variants (admin — bypasses the brand-ownership check) ──────────
+const variantAttributeSchema = z.object({
+  name: z.string().min(1).max(50),
+  value: z.string().min(1).max(100),
+});
+
+const createVariantSchema = z.object({
+  sku: z.string().min(1).max(100),
+  priceInr: z.number().positive(),
+  stock: z.number().int().min(0).default(0),
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']).default('ACTIVE'),
+  attributes: z.array(variantAttributeSchema).min(1),
+});
+
+const bulkVariantSchema = z.object({
+  variants: z.array(createVariantSchema).min(1).max(100),
+});
+
+const updateVariantSchema = createVariantSchema.partial();
+
+const reconcileVariantSchema = z.object({
+  updates: z.array(z.object({
+    id: z.string().min(1),
+    priceInr: z.number().positive(),
+    stock: z.number().int().min(0).default(0),
+    attributes: z.array(variantAttributeSchema).min(1).optional(),
+  })).default([]),
+  creates: z.array(createVariantSchema).default([]),
+  deleteIds: z.array(z.string().min(1)).default([]),
+});
+
+router.put('/products/:id/variants/reconcile', validate(reconcileVariantSchema), async (req, res) => {
+  const variants = await variantService.adminReconcileVariants(req.params.id, req.body);
+  sendSuccess(res, variants, 'Variants updated successfully.');
+});
+
+router.post('/products/:id/variants', validate(createVariantSchema), async (req, res) => {
+  const variant = await variantService.adminCreateVariant(req.params.id, req.body);
+  sendSuccess(res, variant, 'Variant added to this product.', 201);
+});
+
+router.post('/products/:id/variants/bulk', validate(bulkVariantSchema), async (req, res) => {
+  const variants = await variantService.adminCreateVariantsBulk(req.params.id, req.body.variants);
+  sendSuccess(res, variants, `${variants.length} variants created`, 201);
+});
+
+router.patch('/products/:id/variants/:variantId', validate(updateVariantSchema), async (req, res) => {
+  const variant = await variantService.adminUpdateVariant(req.params.id, req.params.variantId, req.body);
+  sendSuccess(res, variant, 'Variant updated successfully.');
+});
+
+router.delete('/products/:id/variants/:variantId', async (req, res) => {
+  await variantService.adminDeleteVariant(req.params.id, req.params.variantId);
+  sendSuccess(res, null, 'Variant removed from product.');
 });
 
 // ── Returns ────────────────────────────────────────────────────────────────

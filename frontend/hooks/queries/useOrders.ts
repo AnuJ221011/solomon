@@ -25,6 +25,9 @@ export interface OrderItem {
   unitPrice: number
   totalPrice: number
   image?: string
+  // Whether the buyer has already left a review for this product on this
+  // order — server truth, since a review can only ever be submitted once.
+  reviewed: boolean
 }
 
 export interface Order {
@@ -62,7 +65,7 @@ export interface UpdateOrderStatusInput {
 // These functions map raw API responses to the stable Order / OrderItem interfaces.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeItem(raw: any): OrderItem {
+function normalizeItem(raw: any, reviewedProductIds: Set<string>): OrderItem {
   return {
     id: raw.id,
     productId: raw.productId,
@@ -72,11 +75,14 @@ function normalizeItem(raw: any): OrderItem {
     unitPrice: raw.unitPriceInr ?? raw.unitPrice ?? 0,
     totalPrice: raw.totalInr ?? raw.totalPrice ?? raw.quantity * (raw.unitPriceInr ?? raw.unitPrice ?? 0),
     image: raw.product?.imageUrl ?? raw.imageUrl ?? raw.image ?? undefined,
+    reviewed: reviewedProductIds.has(raw.productId),
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeOrder(raw: any): Order {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviewedProductIds = new Set<string>((raw.reviews ?? []).map((r: any) => r.productId))
   return {
     id: raw.id,
     orderNumber: raw.orderNumber,
@@ -91,7 +97,7 @@ function normalizeOrder(raw: any): Order {
     createdAt: raw.createdAt,
     dispatchedAt: raw.dispatchedAt ?? undefined,
     trackingNumber: raw.trackingNumber ?? undefined,
-    items: raw.items ? raw.items.map(normalizeItem) : undefined,
+    items: raw.items ? raw.items.map((item: unknown) => normalizeItem(item, reviewedProductIds)) : undefined,
   }
 }
 

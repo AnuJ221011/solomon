@@ -3,7 +3,6 @@
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { HeroSection } from '@/components/homepage/HeroSection'
-import { TrustStrip } from '@/components/homepage/TrustStrip'
 import { CategorySection } from '@/components/homepage/CategorySection'
 import { TrendingProductsSection } from '@/components/homepage/TrendingProductsSection'
 import { RetailerHighlightSection } from '@/components/homepage/RetailerHighlightSection'

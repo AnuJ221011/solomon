@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Minus, Plus, Package, RotateCcw, CalendarDays, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -169,6 +169,7 @@ export function ProductInfo({ product }: { product: Product }) {
     returnsWindowDays,
     brandStory,
     brandDescription,
+    priceTiers = [],
   } = product
 
   const [quantity, setQuantity] = useState(moq)
@@ -200,7 +201,19 @@ export function ProductInfo({ product }: { product: Product }) {
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
 
   const basePrice = displayPrice ?? wholesalePrice
-  const activePrice = selectedVariant ? selectedVariant.priceInr : basePrice
+  // Tiers are stored/returned in INR — scale by the same ratio used for the
+  // base price so they render correctly in the buyer's display currency too.
+  const fxRatio = displayPrice && wholesalePrice ? displayPrice / wholesalePrice : 1
+  const sortedTiers = useMemo(
+    () => [...priceTiers].sort((a, b) => a.moq - b.moq),
+    [priceTiers]
+  )
+  const tieredBasePrice = useMemo(() => {
+    if (sortedTiers.length === 0) return basePrice
+    const applicable = [...sortedTiers].reverse().find((t) => quantity >= t.moq)
+    return applicable ? applicable.priceInr * fxRatio : basePrice
+  }, [sortedTiers, quantity, fxRatio, basePrice])
+  const activePrice = selectedVariant ? selectedVariant.priceInr : tieredBasePrice
   const priceCurrency = currency ?? 'INR'
   const showINREquiv = priceCurrency !== 'INR'
   const suggestedRetail = activePrice * 2
@@ -222,11 +235,20 @@ export function ProductInfo({ product }: { product: Product }) {
         brandSlug,
         image: images?.[0] ?? '',
         quantity,
-        wholesalePrice,
+        // The selected variant's price when one is chosen — never the base
+        // product price, which can be wrong for any priced variant.
+        wholesalePrice: activePrice,
         moq,
+        stepQty,
         leadTime,
         achievementLevel: product.achievementLevel,
         brandMinimumOrderValue: product.brandMinimumOrderValue,
+        freeShippingAboveInr,
+        variantId: selectedVariant?.id,
+        variantSku: selectedVariant?.sku,
+        variantLabel: selectedVariant?.attributes.length
+          ? selectedVariant.attributes.map((a) => `${a.name}: ${a.value}`).join(' / ')
+          : undefined,
       })
       toast.success(`${name} added to cart`, {
         description: `Qty: ${quantity} · ${brandName}`,
@@ -237,13 +259,12 @@ export function ProductInfo({ product }: { product: Product }) {
     }, 'add_to_cart')
   }
 
-  function handleRequestSamples() {
-    requireAuth(() => {
-      alert('Sample request feature coming soon!')
-    }, 'request_samples')
-  }
-
-  const freeShipThreshold = freeShippingAboveInr ?? FREE_SHIP[priceCurrency] ?? 15000
+  // freeShippingAboveInr is always INR — scale it by the same fxRatio used
+  // for tier prices so it renders correctly in the buyer's display currency
+  // instead of showing the raw INR number under a different currency symbol.
+  const freeShipThreshold = freeShippingAboveInr != null
+    ? freeShippingAboveInr * fxRatio
+    : (FREE_SHIP[priceCurrency] ?? 15000)
   const deliveryRange = getDeliveryRange(leadTime)
   const shipFromCountry = (() => {
     try {
@@ -294,6 +315,31 @@ export function ProductInfo({ product }: { product: Product }) {
           </div>
         )}
       </div>
+
+      {/* Volume pricing — only meaningful for the base product; a selected
+          variant has its own flat price */}
+      {isAuthenticated && sortedTiers.length > 0 && !selectedVariant && (
+        <div className="mb-5 rounded border border-border-warm overflow-hidden">
+          <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] px-3 py-2 border-b border-border-warm bg-muted-bg/40">
+            Volume pricing
+          </p>
+          <table className="w-full text-[13px] font-public-sans">
+            <tbody className="divide-y divide-border-warm">
+              {sortedTiers.map((tier) => {
+                const isActive = tier.priceInr * fxRatio === activePrice
+                return (
+                  <tr key={tier.moq} className={isActive ? 'bg-accent/5' : undefined}>
+                    <td className="px-3 py-2 text-muted-text">{tier.moq}+ units</td>
+                    <td className="px-3 py-2 text-right text-primary font-[500]">
+                      {formatCurrency(tier.priceInr * fxRatio, priceCurrency)} / unit
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Variant selector */}
       {axes.length > 0 && (
@@ -421,7 +467,10 @@ export function ProductInfo({ product }: { product: Product }) {
         </Button>
       </div>
 
-      {/* 8. Shipping & policies */}
+      {/* 8. Shipping & policies — commented out until brands can configure
+          shipping rates (onboarding doesn't collect them yet, so every
+          brand shows the same misleading defaults). Re-enable once shipping
+          rate setup exists and this can show real per-brand data.
       <div className="mt-5 pt-5 border-t border-border-warm">
         <p className="font-public-sans text-[14px] font-[600] text-primary mb-3.5">
           Shipping &amp; policies
@@ -464,6 +513,7 @@ export function ProductInfo({ product }: { product: Product }) {
           )}
         </div>
       </div>
+      */}
 
       <div className="border-t border-border-warm mt-6 mb-6" />
 

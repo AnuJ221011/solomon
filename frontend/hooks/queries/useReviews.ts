@@ -31,8 +31,9 @@ export function useSubmitReview() {
   const queryClient = useQueryClient()
   return useMutation<Review, Error, SubmitReviewInput>({
     mutationFn: (body) => api.post('/reviews', body).then((r) => r.data.data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['order', variables.orderId] })
       toast.success('Review submitted')
     },
     onError: (err) => toast.error(getApiError(err)),

@@ -7,12 +7,33 @@ import {
   ArrowRight, Globe2, Shield, Zap, BarChart3, Star,
   ChevronDown, Store, Award, Users, Package, CheckCircle2,
   TrendingUp, Clock, Percent, MessageSquare, Smartphone,
-  BadgeCheck, IndianRupee, Layers, Share2,
+  BadgeCheck, IndianRupee, Layers, Share2, PartyPopper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { useAuthStore } from '@/lib/store/useAuthStore'
+
+// ─── Birthday offer (temporary launch promo) ─────────────────────────────────
+// 0% commission across every tier, marketed as a limited-time launch offer.
+// Flip to false once the promo ends to restore standard tier pricing
+// everywhere it's referenced below (banner, commission section, FAQ) —
+// should be kept in sync with COMMISSION_FREE_MODE on the backend.
+const BIRTHDAY_OFFER_ACTIVE = true
+
+function BirthdayOfferBanner() {
+  return (
+    <div className="bg-primary text-white">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 py-2.5 flex items-center justify-center gap-2.5 text-center flex-wrap">
+        <PartyPopper size={15} className="text-accent flex-shrink-0" aria-hidden />
+        <p className="font-public-sans text-[13px] font-[500] leading-snug">
+          <strong className="font-[700]">Birthday Offer</strong> — 0% commission on every order, every tier —{' '}
+          <span className="text-accent font-[600]">for a limited time only</span>
+        </p>
+      </div>
+    </div>
+  )
+}
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
@@ -170,8 +191,10 @@ const WHY_ITEMS = [
   },
   {
     Icon: Percent,
-    title: 'Commission that decreases as you grow',
-    body: 'Start at 20% and unlock lower rates — down to 10% — as you hit sales milestones through our Achievement tiers. Share link orders are always 0%.',
+    title: BIRTHDAY_OFFER_ACTIVE ? 'Birthday Offer — 0% commission, every tier' : 'Commission that decreases as you grow',
+    body: BIRTHDAY_OFFER_ACTIVE
+      ? "To celebrate our launch, every order pays 0% commission for a limited time — no matter your tier. Standard rates (20% down to 10% as you grow) resume once the offer ends."
+      : 'Start at 20% and unlock lower rates — down to 10% — as you hit sales milestones through our Achievement tiers. Share link orders are always 0%.',
   },
   {
     Icon: Shield,
@@ -352,24 +375,42 @@ function CommissionSection() {
               </p>
             </div>
             <h2 className="font-playfair text-[34px] sm:text-[44px] font-[500] text-primary leading-[1.1] mb-5">
-              Commission that rewards growth
+              {BIRTHDAY_OFFER_ACTIVE ? 'Our Birthday Offer: 0% commission' : 'Commission that rewards growth'}
             </h2>
             <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-5">
               There are no listing fees, no monthly subscriptions, and no setup
               costs. We only make money when you make money.
             </p>
-            <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-7">
-              Marketplace commission starts at 20% and decreases automatically
-              as you hit GMV milestones — down to 10% at the Legend tier. And
-              any order that comes through your personal <strong className="text-primary font-[600]">Share Link</strong> is always 0% commission.
-            </p>
+            {BIRTHDAY_OFFER_ACTIVE ? (
+              <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-7">
+                For a limited time, every order — on every Achievement tier — earns{' '}
+                <strong className="text-primary font-[600]">0% commission</strong>. Standard
+                rates (starting at 20%, dropping to 10% as you grow) resume once the
+                Birthday Offer ends — locking in now means you keep 100% of every sale
+                you make during the offer.
+              </p>
+            ) : (
+              <p className="font-public-sans text-[15px] text-muted-text leading-[1.7] mb-7">
+                Marketplace commission starts at 20% and decreases automatically
+                as you hit GMV milestones — down to 10% at the Legend tier. And
+                any order that comes through your personal <strong className="text-primary font-[600]">Share Link</strong> is always 0% commission.
+              </p>
+            )}
             <div className="flex flex-col gap-3.5">
-              {[
-                'No listing fees — ever',
-                'No monthly subscription',
-                '0% on all Share Link orders',
-                'Commission drops automatically as you grow',
-              ].map((text) => (
+              {(BIRTHDAY_OFFER_ACTIVE
+                ? [
+                    '0% commission on every order, right now',
+                    'No listing fees — ever',
+                    'No monthly subscription',
+                    'Limited-time Birthday Offer — lock in your tier before it ends',
+                  ]
+                : [
+                    'No listing fees — ever',
+                    'No monthly subscription',
+                    '0% on all Share Link orders',
+                    'Commission drops automatically as you grow',
+                  ]
+              ).map((text) => (
                 <div key={text} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 size={12} className="text-accent" aria-hidden />
@@ -406,12 +447,23 @@ function CommissionSection() {
                     <p className="font-public-sans text-[12px] text-muted-text">{tier.range}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className={cn(
-                      'font-playfair text-[22px] font-[500] leading-none',
-                      tier.commission === '10%' ? 'text-accent' : 'text-primary'
-                    )}>
-                      {tier.commission}
-                    </p>
+                    {BIRTHDAY_OFFER_ACTIVE ? (
+                      <>
+                        <p className="font-public-sans text-[12px] text-muted-text/70 line-through leading-none">
+                          {tier.commission}
+                        </p>
+                        <p className="font-playfair text-[22px] font-[500] leading-none text-accent mt-0.5">
+                          0%
+                        </p>
+                      </>
+                    ) : (
+                      <p className={cn(
+                        'font-playfair text-[22px] font-[500] leading-none',
+                        tier.commission === '10%' ? 'text-accent' : 'text-primary'
+                      )}>
+                        {tier.commission}
+                      </p>
+                    )}
                     <p className="font-public-sans text-[11px] text-muted-text mt-0.5">commission</p>
                   </div>
                 </div>
@@ -419,11 +471,24 @@ function CommissionSection() {
             </div>
             <div className="px-6 py-4 bg-gradient-to-r from-accent/12 to-accent/5 border-t border-accent/20">
               <div className="flex items-center gap-2 justify-center">
-                <Share2 size={13} className="text-accent flex-shrink-0" />
-                <p className="font-public-sans text-[12.5px] text-primary font-[500]">
-                  Share Link orders always{' '}
-                  <strong className="text-accent font-[700]">0% commission</strong>
-                </p>
+                {BIRTHDAY_OFFER_ACTIVE ? (
+                  <>
+                    <PartyPopper size={13} className="text-accent flex-shrink-0" />
+                    <p className="font-public-sans text-[12.5px] text-primary font-[500]">
+                      Birthday Offer:{' '}
+                      <strong className="text-accent font-[700]">0% on every tier</strong>
+                      {' '}— limited time
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={13} className="text-accent flex-shrink-0" />
+                    <p className="font-public-sans text-[12.5px] text-primary font-[500]">
+                      Share Link orders always{' '}
+                      <strong className="text-accent font-[700]">0% commission</strong>
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -626,7 +691,9 @@ const FAQS = [
   },
   {
     q: 'Are there any fees to join?',
-    a: 'No. There are no listing fees, no monthly subscriptions, and no setup costs. We earn a commission only when you make a sale — starting at 20% and decreasing as you grow.',
+    a: BIRTHDAY_OFFER_ACTIVE
+      ? "No. There are no listing fees, no monthly subscriptions, and no setup costs. As part of our Birthday Offer, commission is 0% on every order right now, regardless of tier — for a limited time. Standard rates (starting at 20%, decreasing to 10% as you grow) resume once the offer ends."
+      : 'No. There are no listing fees, no monthly subscriptions, and no setup costs. We earn a commission only when you make a sale — starting at 20% and decreasing as you grow.',
   },
   {
     q: 'What is a Share Link and why does it matter?',
@@ -765,6 +832,7 @@ export default function SellPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
       <NavBar />
+      {BIRTHDAY_OFFER_ACTIVE && <BirthdayOfferBanner />}
 
       <main className="flex-1">
         <Hero />

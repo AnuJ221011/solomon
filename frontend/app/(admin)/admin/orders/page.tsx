@@ -87,6 +87,7 @@ export default function AdminOrdersPage() {
   const orders = data?.orders ?? []
   const total = data?.total ?? 0
   const totalPages = data?.totalPages ?? 1
+  const limit = data?.limit ?? 20
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -197,7 +198,7 @@ export default function AdminOrdersPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total.toLocaleString()}
+                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total.toLocaleString()}
                 </p>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}

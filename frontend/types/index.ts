@@ -67,6 +67,10 @@ export interface Product {
   countryOfOrigin?: string
   freeShippingAboveInr?: number | null
   returnsWindowDays?: number | null
+  // Quantity price breaks — buying at or above a tier's MOQ charges that
+  // tier's per-unit price instead of the base wholesalePrice. Only applies
+  // when no variant is selected (variants carry their own flat price).
+  priceTiers?: { moq: number; priceInr: number }[]
 }
 
 // ─── Brands ───────────────────────────────────────────────────────────────────
@@ -109,11 +113,25 @@ export interface CartItem {
   brandSlug: string
   image: string
   quantity: number
+  // Unit price actually charged — the selected variant's price when one is
+  // chosen, otherwise the product's base price. Never the base price alone.
   wholesalePrice: number
   moq: number
+  // Case-pack quantity increment — quantity must be moq + a multiple of this.
+  // Defaults to 1 (no case-pack restriction) when absent.
+  stepQty?: number
   leadTime?: string
   achievementLevel?: number
   brandMinimumOrderValue?: number
+  // Brand's configured free-shipping threshold, in INR. Null/undefined means
+  // the brand hasn't set one — callers should fall back to a sane default
+  // rather than assume free shipping is unavailable.
+  freeShippingAboveInr?: number | null
+  // Set when the buyer added a specific variant (size/color/etc.) rather than
+  // the base product — carries through to the order so the right SKU ships.
+  variantId?: string
+  variantSku?: string
+  variantLabel?: string
 }
 
 // ─── Share Links ──────────────────────────────────────────────────────────────

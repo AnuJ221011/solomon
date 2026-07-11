@@ -236,11 +236,21 @@ export default function AdminUsersPage() {
 
   const users = data?.users ?? []
   const total = data?.total ?? 0
-  const totalPages = Math.ceil(total / 20)
+  const limit = data?.limit ?? 20
+  const totalPages = data?.totalPages ?? Math.ceil(total / limit)
 
   async function handleExport() {
     setExporting(true)
     try { await downloadUsersCsv() } finally { setExporting(false) }
+  }
+
+  const hasActiveFilters = !!search || !!role || !!status
+
+  function clearFilters() {
+    setSearch('')
+    setRole('')
+    setStatus('')
+    setPage(1)
   }
 
   const isBrandView = viewUser?.role === 'BRAND'
@@ -305,6 +315,17 @@ export default function AdminUsersPage() {
           <option value="ACTIVE">Active</option>
           <option value="SUSPENDED">Suspended</option>
         </select>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1 h-9 px-3 rounded text-[13px] font-[600] font-public-sans text-muted-text hover:text-primary transition-colors"
+          >
+            <X size={12} aria-hidden="true" />
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -354,10 +375,10 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Pagination */}
-            {total > 20 && (
+            {total > limit && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total.toLocaleString()}
+                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total.toLocaleString()}
                 </p>
                 <div className="flex gap-2">
                   <button

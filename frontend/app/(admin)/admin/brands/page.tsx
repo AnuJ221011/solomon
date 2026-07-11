@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Star, Package, ExternalLink, Search, ArrowUpRight } from 'lucide-react'
+import { Building2, Star, Package, ExternalLink, Search } from 'lucide-react'
 import { useAdminApprovedBrands } from '@/hooks/queries/useAdmin'
 
 export default function AdminBrandsPage() {

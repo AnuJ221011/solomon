@@ -1,3 +1,5 @@
+import { env } from '../../config/env.js';
+
 export const ACHIEVEMENT_LEVELS = {
   L1_SPROUT: {
     level: 1,
@@ -60,5 +62,7 @@ export const LEVEL_ORDER = [
   'L5_LEGEND',
 ];
 
-export const getCommissionRate = (levelKey) =>
-  ACHIEVEMENT_LEVELS[levelKey]?.commissionRate ?? 0.20;
+export const getCommissionRate = (levelKey) => {
+  if (env.COMMISSION_FREE_MODE) return 0;
+  return ACHIEVEMENT_LEVELS[levelKey]?.commissionRate ?? 0.20;
+};

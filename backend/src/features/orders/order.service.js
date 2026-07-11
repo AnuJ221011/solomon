@@ -3,7 +3,7 @@ import { createError } from '../../shared/utils/createError.js';
 import { getCachedRates } from '../../shared/utils/currency.js';
 import { calculateShipping } from '../shipping/shipping.service.js';
 import { getCommissionRate } from '../../shared/constants/achievements.js';
-import { SHARE_LINK_ATTRIBUTION_DAYS, EXPRESS_PAYOUT_FEE } from '../../shared/constants/roles.js';
+import { SHARE_LINK_ATTRIBUTION_DAYS, EXPRESS_PAYOUT_FEE } from '../../shared/constants/pricing.js';
 import { logger } from '../../shared/utils/logger.js';
 import {
   sendOrderConfirmationBuyer,
@@ -41,10 +41,24 @@ const resolveCommissionRate = async (buyerUserId, brandProfileId) => {
 };
 
 /**
+ * Resolves the per-unit price the buyer actually pays: a selected variant's
+ * own price always wins; otherwise the product's flat price unless it has
+ * quantity price tiers, in which case the highest-MOQ tier the quantity
+ * qualifies for applies. Never trusts a client-supplied price.
+ */
+export const resolveUnitPriceInr = (product, variant, quantity) => {
+  if (variant) return Number(variant.priceInr);
+  const tiers = product.priceTiers ?? [];
+  if (!tiers.length) return Number(product.wholesalePriceInr);
+  const applicable = [...tiers].sort((a, b) => b.moq - a.moq).find((t) => quantity >= t.moq);
+  return applicable ? Number(applicable.priceInr) : Number(product.wholesalePriceInr);
+};
+
+/**
  * Converts the buyer's cart into one Order per brand.
  * Called after PayPal payment capture.
  */
-export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypalOrderId, walletCreditsToApplyInr }) => {
+export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypalOrderId, paypalCaptureId, walletCreditsToApplyInr }) => {
   const cart = await prisma.cart.findUnique({
     where: { userId: buyerUserId },
     include: {
@@ -53,6 +67,7 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
           product: {
             include: {
               brandProfile: { select: { id: true, achievementLevel: true, payoutSpeed: true } },
+              priceTiers: true,
             },
           },
           variant: { include: { attributes: true } },
@@ -85,9 +100,9 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
 
   await prisma.$transaction(async (tx) => {
     for (const [brandProfileId, { brand, items }] of Object.entries(byBrand)) {
-      // Use variant price when available, fall back to product price
+      // Use variant price when available, else the tier price for this quantity
       const subtotalInr = items.reduce((sum, item) => {
-        const unitPrice = item.variant ? Number(item.variant.priceInr) : Number(item.product.wholesalePriceInr);
+        const unitPrice = resolveUnitPriceInr(item.product, item.variant, item.quantity);
         return sum + unitPrice * item.quantity;
       }, 0);
       const totalWeightGrams = items.reduce((sum, item) => sum + item.product.weightGrams * item.quantity, 0);
@@ -122,13 +137,14 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
           isOpeningOrder,
           isManualOrder: false,
           paypalOrderId,
+          // Set atomically with order creation (same transaction) instead of a
+          // separate post-hoc update, so a crash between the two steps can't
+          // leave a fully-paid order stuck at the default PENDING status.
+          ...(paypalCaptureId && { paypalCaptureId, status: 'CONFIRMED' }),
           shareLinkId,
           items: {
             create: items.map((item) => {
-              // Use variant price when a variant is selected, fall back to product price
-              const unitPrice = item.variant
-                ? Number(item.variant.priceInr)
-                : Number(item.product.wholesalePriceInr);
+              const unitPrice = resolveUnitPriceInr(item.product, item.variant, item.quantity);
 
               // Build a human-readable label snapshot (e.g. "Color: Red / Size: L")
               const variantLabel = item.variant?.attributes?.length
@@ -187,14 +203,31 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
         });
 
         if (item.variantId) {
-          const newStock = Math.max(0, (item.variant?.stock ?? 0) - item.quantity);
-          await tx.productVariant.update({
-            where: { id: item.variantId },
-            data: {
-              stock: newStock,
-              status: newStock === 0 ? 'OUT_OF_STOCK' : 'ACTIVE',
-            },
+          // Atomic, guarded decrement — the WHERE clause is checked against the
+          // row's current value at write time (not the stale value read into
+          // `cart` before this transaction opened), so concurrent checkouts on
+          // the same variant can't both succeed past available stock.
+          const decremented = await tx.productVariant.updateMany({
+            where: { id: item.variantId, stock: { gte: item.quantity } },
+            data: { stock: { decrement: item.quantity } },
           });
+          if (decremented.count === 0) {
+            throw createError(
+              `"${item.product.name}" no longer has enough stock for the quantity in your cart.`,
+              409
+            );
+          }
+
+          const updatedVariant = await tx.productVariant.findUnique({
+            where: { id: item.variantId },
+            select: { stock: true },
+          });
+          if (updatedVariant.stock === 0) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { status: 'OUT_OF_STOCK' },
+            });
+          }
         }
       }
 
@@ -508,6 +541,7 @@ export const getOrderById = async (userId, orderId, role) => {
       buyer: { select: { name: true, email: true, buyerProfile: { select: { businessName: true, countryCode: true } } } },
       brand: { select: { brandName: true, slug: true, logoUrl: true } },
       returns: true,
+      reviews: { select: { productId: true } },
     },
   });
 

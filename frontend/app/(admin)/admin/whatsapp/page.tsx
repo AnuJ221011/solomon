@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils'
 // ─── Status styles ────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: 'bg-[#F5F0E8] text-[#A68B67]',
+  PENDING: 'bg-muted-bg text-accent',
   RUNNING: 'bg-amber-50 text-amber-700',
-  DONE:    'bg-[#6B7E6B]/10 text-[#6B7E6B]',
+  DONE:    'bg-success/10 text-success',
 }
 
 const RECIPIENT_GROUPS = [
@@ -65,18 +65,18 @@ function ContactPicker({
   const allSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.phone))
 
   return (
-    <div className="border border-[#E5E1D8] rounded-md overflow-hidden">
+    <div className="border border-border-warm rounded-md overflow-hidden">
       {/* Search bar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E5E1D8] bg-[#FCFAFA]">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border-warm bg-surface">
         <Search size={13} className="text-[#9CA3AF] shrink-0" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`Search ${type}…`}
-          className="flex-1 text-[13px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] bg-transparent focus:outline-none"
+          className="flex-1 text-[13px] font-public-sans text-primary placeholder:text-[#9CA3AF] bg-transparent focus:outline-none"
         />
         {selected.size > 0 && (
-          <span className="text-[11px] font-[600] font-public-sans text-[#A68B67] bg-[#F5F0E8] px-1.5 py-0.5 rounded tabular-nums">
+          <span className="text-[11px] font-[600] font-public-sans text-accent bg-muted-bg px-1.5 py-0.5 rounded tabular-nums">
             {selected.size} selected
           </span>
         )}
@@ -87,15 +87,15 @@ function ContactPicker({
         <button
           type="button"
           onClick={toggleAll}
-          className="w-full flex items-center gap-2.5 px-3 py-2 border-b border-[#F5F0E8] hover:bg-[#FCFAFA] text-left"
+          className="w-full flex items-center gap-2.5 px-3 py-2 border-b border-muted-bg hover:bg-surface text-left"
         >
           <span className={cn(
             'w-4 h-4 rounded border flex items-center justify-center shrink-0',
-            allSelected ? 'bg-[#1A1A1A] border-[#1A1A1A]' : 'border-[#D0C8BE]'
+            allSelected ? 'bg-primary border-primary' : 'border-[#D0C8BE]'
           )}>
             {allSelected && <Check size={10} className="text-white" strokeWidth={3} />}
           </span>
-          <span className="text-[12px] font-[600] font-public-sans text-[#444748]">
+          <span className="text-[12px] font-[600] font-public-sans text-muted-text">
             {allSelected ? 'Deselect all' : `Select all (${filtered.length})`}
           </span>
         </button>
@@ -118,18 +118,18 @@ function ContactPicker({
                 type="button"
                 onClick={() => toggle(c)}
                 className={cn(
-                  'w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-[#F9F7F2] text-left transition-colors last:border-0',
-                  checked ? 'bg-[#F5F0E8]' : 'hover:bg-[#FCFAFA]'
+                  'w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-bg text-left transition-colors last:border-0',
+                  checked ? 'bg-muted-bg' : 'hover:bg-surface'
                 )}
               >
                 <span className={cn(
                   'w-4 h-4 rounded border flex items-center justify-center shrink-0',
-                  checked ? 'bg-[#1A1A1A] border-[#1A1A1A]' : 'border-[#D0C8BE]'
+                  checked ? 'bg-primary border-primary' : 'border-[#D0C8BE]'
                 )}>
                   {checked && <Check size={10} className="text-white" strokeWidth={3} />}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-public-sans font-[500] text-[#1A1A1A] truncate">{c.name}</p>
+                  <p className="text-[13px] font-public-sans font-[500] text-primary truncate">{c.name}</p>
                   <p className="text-[11.5px] font-mono text-[#9CA3AF]">{c.phone}</p>
                 </div>
               </button>
@@ -193,9 +193,9 @@ function CreateModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto py-8">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 my-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E1D8]">
-          <h2 className="font-playfair text-[17px] font-[600] text-[#1A1A1A]">New Broadcast</h2>
-          <button type="button" onClick={onClose} className="text-[#9CA3AF] hover:text-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-warm">
+          <h2 className="font-playfair text-[17px] font-[600] text-primary">New Broadcast</h2>
+          <button type="button" onClick={onClose} className="text-[#9CA3AF] hover:text-primary">
             <X size={18} />
           </button>
         </div>
@@ -203,7 +203,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
 
           <div>
-            <label className="block text-[12px] font-[600] font-public-sans text-[#444748] mb-1.5 uppercase tracking-wide">
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text mb-1.5 uppercase tracking-wide">
               Campaign name
             </label>
             <input
@@ -211,12 +211,12 @@ function CreateModal({ onClose }: { onClose: () => void }) {
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
               placeholder="e.g. Summer Collection Launch"
-              className="w-full border border-[#E5E1D8] rounded-md px-3 py-2 text-[13.5px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67]"
+              className="w-full border border-border-warm rounded-md px-3 py-2 text-[13.5px] font-public-sans text-primary placeholder:text-[#9CA3AF] focus:outline-none focus:border-accent"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-[600] font-public-sans text-[#444748] mb-1.5 uppercase tracking-wide">
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text mb-1.5 uppercase tracking-wide">
               Template name <span className="text-[#9CA3AF] normal-case font-[400]">(from Meta)</span>
             </label>
             <input
@@ -224,7 +224,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
               value={form.templateName}
               onChange={(e) => set('templateName', e.target.value)}
               placeholder="e.g. new_collection_launch"
-              className="w-full border border-[#E5E1D8] rounded-md px-3 py-2 text-[13.5px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67] font-mono"
+              className="w-full border border-border-warm rounded-md px-3 py-2 text-[13.5px] font-public-sans text-primary placeholder:text-[#9CA3AF] focus:outline-none focus:border-accent font-mono"
             />
             <p className="mt-1 text-[11.5px] font-public-sans text-[#9CA3AF]">
               Must be an approved template in your Meta WhatsApp Manager.
@@ -232,25 +232,25 @@ function CreateModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-[12px] font-[600] font-public-sans text-[#444748] mb-1.5 uppercase tracking-wide">
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text mb-1.5 uppercase tracking-wide">
               Language code
             </label>
             <input
               value={form.languageCode}
               onChange={(e) => set('languageCode', e.target.value)}
               placeholder="en"
-              className="w-full border border-[#E5E1D8] rounded-md px-3 py-2 text-[13.5px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67]"
+              className="w-full border border-border-warm rounded-md px-3 py-2 text-[13.5px] font-public-sans text-primary placeholder:text-[#9CA3AF] focus:outline-none focus:border-accent"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-[600] font-public-sans text-[#444748] mb-1.5 uppercase tracking-wide">
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text mb-1.5 uppercase tracking-wide">
               Recipients
             </label>
             <select
               value={form.recipientGroup}
               onChange={(e) => set('recipientGroup', e.target.value)}
-              className="w-full border border-[#E5E1D8] rounded-md px-3 py-2 text-[13.5px] font-public-sans text-[#1A1A1A] focus:outline-none focus:border-[#A68B67] bg-white"
+              className="w-full border border-border-warm rounded-md px-3 py-2 text-[13.5px] font-public-sans text-primary focus:outline-none focus:border-accent bg-white"
             >
               {RECIPIENT_GROUPS.map((g) => (
                 <option key={g.value} value={g.value}>{g.label}</option>
@@ -268,7 +268,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
 
           {form.recipientGroup === 'CUSTOM' && (
             <div>
-              <label className="block text-[12px] font-[600] font-public-sans text-[#444748] mb-1.5 uppercase tracking-wide">
+              <label className="block text-[12px] font-[600] font-public-sans text-muted-text mb-1.5 uppercase tracking-wide">
                 Phone numbers
               </label>
               <textarea
@@ -277,7 +277,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
                 value={form.customPhones}
                 onChange={(e) => set('customPhones', e.target.value)}
                 placeholder={"919876543210\n918765432109\n..."}
-                className="w-full border border-[#E5E1D8] rounded-md px-3 py-2 text-[13px] font-mono text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67] resize-none"
+                className="w-full border border-border-warm rounded-md px-3 py-2 text-[13px] font-mono text-primary placeholder:text-[#9CA3AF] focus:outline-none focus:border-accent resize-none"
               />
               <p className="mt-1 text-[11.5px] font-public-sans text-[#9CA3AF]">
                 One number per line or comma-separated. Digits only, no + or spaces.
@@ -289,14 +289,14 @@ function CreateModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-[#E5E1D8] rounded-md text-[13.5px] font-public-sans font-[500] text-[#444748] hover:bg-[#F9F7F2] transition-colors"
+              className="flex-1 py-2 border border-border-warm rounded-md text-[13.5px] font-public-sans font-[500] text-muted-text hover:bg-bg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitDisabled}
-              className="flex-1 py-2 bg-[#1A1A1A] rounded-md text-[13.5px] font-public-sans font-[500] text-white hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2 bg-primary rounded-md text-[13.5px] font-public-sans font-[500] text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {create.isPending
                 ? 'Starting…'
@@ -318,7 +318,7 @@ function ProgressBar({ sent, total }: { sent: number; total: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 bg-[#F0EBE3] rounded-full overflow-hidden">
-        <div className="h-full bg-[#A68B67] rounded-full transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[11px] font-public-sans text-[#9CA3AF] tabular-nums w-8 text-right">{pct}%</span>
     </div>
@@ -336,11 +336,11 @@ export default function WhatsappBroadcastsPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-7">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[#F5F0E8] flex items-center justify-center">
-            <MessageSquare size={17} className="text-[#A68B67]" />
+          <div className="w-9 h-9 rounded-lg bg-muted-bg flex items-center justify-center">
+            <MessageSquare size={17} className="text-accent" />
           </div>
           <div>
-            <h1 className="font-playfair text-[22px] font-[600] text-[#1A1A1A] leading-tight">
+            <h1 className="font-playfair text-[22px] font-[600] text-primary leading-tight">
               WhatsApp Broadcasts
             </h1>
             <p className="text-[13px] font-public-sans text-[#9CA3AF] mt-0.5">
@@ -352,7 +352,7 @@ export default function WhatsappBroadcastsPage() {
           <button
             type="button"
             onClick={() => refetch()}
-            className="p-2 rounded-md text-[#9CA3AF] hover:text-[#444748] hover:bg-[#F5F0E8] transition-colors"
+            className="p-2 rounded-md text-[#9CA3AF] hover:text-muted-text hover:bg-muted-bg transition-colors"
             title="Refresh"
           >
             <RefreshCw size={14} />
@@ -360,7 +360,7 @@ export default function WhatsappBroadcastsPage() {
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-[#1A1A1A] text-white px-4 py-2 rounded-md text-[13.5px] font-public-sans font-[500] hover:bg-[#333] transition-colors"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-[13.5px] font-public-sans font-[500] hover:bg-primary/90 transition-colors"
           >
             <Plus size={14} />
             New Broadcast
@@ -369,11 +369,11 @@ export default function WhatsappBroadcastsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#E5E1D8] rounded-lg overflow-hidden">
+      <div className="bg-white border border-border-warm rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E5E1D8] bg-[#FCFAFA]">
+              <tr className="border-b border-border-warm bg-surface">
                 {['Campaign', 'Template', 'Recipients', 'Progress', 'Status', 'Date', ''].map((h) => (
                   <th key={h} className="px-5 py-3 text-[11px] font-[700] font-public-sans text-[#9CA3AF] uppercase tracking-[0.07em] whitespace-nowrap">
                     {h}
@@ -384,7 +384,7 @@ export default function WhatsappBroadcastsPage() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-[#F5F0E8]">
+                  <tr key={i} className="border-b border-muted-bg">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-5 py-3.5">
                         <div className="h-3.5 bg-[#F0EBE3] rounded animate-pulse w-24" />
@@ -404,17 +404,17 @@ export default function WhatsappBroadcastsPage() {
                 </tr>
               ) : (
                 broadcasts.map((b) => (
-                  <tr key={b.id} className="border-b border-[#F5F0E8] hover:bg-[#FCFAFA] transition-colors">
+                  <tr key={b.id} className="border-b border-muted-bg hover:bg-surface transition-colors">
                     <td className="px-5 py-3.5">
-                      <p className="text-[13.5px] font-[500] font-public-sans text-[#1A1A1A]">{b.name}</p>
+                      <p className="text-[13.5px] font-[500] font-public-sans text-primary">{b.name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <code className="text-[12px] bg-[#F5F0E8] text-[#A68B67] px-2 py-0.5 rounded">
+                      <code className="text-[12px] bg-muted-bg text-accent px-2 py-0.5 rounded">
                         {b.templateName}
                       </code>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="text-[13px] font-public-sans text-[#444748] tabular-nums">
+                      <span className="text-[13px] font-public-sans text-muted-text tabular-nums">
                         {b.totalCount.toLocaleString()}
                       </span>
                     </td>
@@ -440,7 +440,7 @@ export default function WhatsappBroadcastsPage() {
                     <td className="px-5 py-3.5">
                       <Link
                         href={`/admin/whatsapp/${b.id}`}
-                        className="flex items-center gap-1 text-[12.5px] font-public-sans text-[#A68B67] hover:text-[#8B6F4E] transition-colors"
+                        className="flex items-center gap-1 text-[12.5px] font-public-sans text-accent hover:text-[#8B6F4E] transition-colors"
                       >
                         Details <ChevronRight size={13} />
                       </Link>

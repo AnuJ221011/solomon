@@ -7,6 +7,7 @@ import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { env } from '../../config/env.js';
 import prisma from '../../config/db.js';
+import { cloudinaryFolders } from '../../shared/constants/cloudinary.js';
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -83,7 +84,7 @@ router.post(
     const uploaded = await Promise.all(
       files.map((file) => {
         const isVideo = file.mimetype.startsWith('video/');
-        return uploadToCloudinary(file.buffer, `Solomon-Bharat2/products/${product.id}`, isVideo)
+        return uploadToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo)
           .then((result) => ({ result, isVideo }));
       })
     );
@@ -113,8 +114,26 @@ router.patch('/product/:productId/reorder', authenticate, authorize('BRAND'), as
   const { order } = req.body; // array of { id, position }
   if (!Array.isArray(order)) throw createError('order must be an array', 400);
 
+  const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+  if (!brand) throw createError('Brand profile not found', 404);
+
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.productId, brandProfileId: brand.id },
+  });
+  if (!product) throw createError('Product not found', 404);
+
+  const photoIds = order.map(({ id }) => id);
+  const ownedCount = await prisma.productPhoto.count({
+    where: { id: { in: photoIds }, productId: product.id },
+  });
+  if (ownedCount !== photoIds.length) {
+    throw createError('One or more photos do not belong to this product', 403);
+  }
+
   await prisma.$transaction(
-    order.map(({ id, position }) => prisma.productPhoto.update({ where: { id }, data: { position } }))
+    order.map(({ id, position }) =>
+      prisma.productPhoto.update({ where: { id }, data: { position } })
+    )
   );
   sendSuccess(res, null, 'Media order saved successfully.');
 });
@@ -124,7 +143,14 @@ router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRA
   const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
   if (!brand) throw createError('Brand profile not found', 404);
 
-  const photo = await prisma.productPhoto.findUnique({ where: { id: req.params.photoId } });
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.productId, brandProfileId: brand.id },
+  });
+  if (!product) throw createError('Product not found', 404);
+
+  const photo = await prisma.productPhoto.findFirst({
+    where: { id: req.params.photoId, productId: product.id },
+  });
   if (!photo) throw createError('Media file not found', 404);
 
   await cloudinary.uploader.destroy(photo.publicId, {
@@ -137,7 +163,7 @@ router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRA
 // Upload brand logo
 router.post('/brand/logo', authenticate, authorize('BRAND'), safeUpload(upload.single('logo')), async (req, res) => {
   if (!req.file) throw createError('No file uploaded', 400);
-  const result = await uploadToCloudinary(req.file.buffer, 'Solomon-Bharat2/logos', false);
+  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.logos, false);
   await prisma.brandProfile.update({
     where: { userId: req.user.id },
     data: { logoUrl: result.secure_url },
@@ -148,7 +174,7 @@ router.post('/brand/logo', authenticate, authorize('BRAND'), safeUpload(upload.s
 // Upload brand banner
 router.post('/brand/banner', authenticate, authorize('BRAND'), safeUpload(upload.single('banner')), async (req, res) => {
   if (!req.file) throw createError('No file uploaded', 400);
-  const result = await uploadToCloudinary(req.file.buffer, 'Solomon-Bharat2/banners', false);
+  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.banners, false);
   await prisma.brandProfile.update({
     where: { userId: req.user.id },
     data: { bannerUrl: result.secure_url },

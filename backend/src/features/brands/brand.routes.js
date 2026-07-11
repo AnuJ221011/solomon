@@ -18,6 +18,7 @@ router.patch('/me/profile', authenticate, authorize('BRAND'), validate(updateBra
 router.get('/me/dashboard', authenticate, authorize('BRAND'), ctrl.getDashboardStats);
 router.get('/me/bank-account', authenticate, authorize('BRAND'), ctrl.getMyBankAccount);
 router.post('/me/bank-account', authenticate, authorize('BRAND'), validate(bankAccountSchema), ctrl.upsertMyBankAccount);
+router.get('/me/payouts', authenticate, authorize('BRAND'), ctrl.getMyPayouts);
 
 // Payout CSV export for brand
 router.get('/me/payouts/export', authenticate, authorize('BRAND'), async (req, res) => {

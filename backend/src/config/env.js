@@ -16,6 +16,14 @@ export const env = {
 
   REDIS_URL: optional('REDIS_URL', 'redis://localhost:6379'),
 
+  BCRYPT_SALT_ROUNDS: parseInt(optional('BCRYPT_SALT_ROUNDS', '12'), 10),
+
+  // Launch promotion — when true, every order is charged 0% commission
+  // regardless of the brand's achievement tier. Flip back to false (or
+  // unset) once the promo period ends; no other change is needed anywhere
+  // else, since getCommissionRate() is the single place this is enforced.
+  COMMISSION_FREE_MODE: optional('COMMISSION_FREE_MODE', 'false') === 'true',
+
   JWT_ACCESS_SECRET: required('JWT_ACCESS_SECRET'),
   JWT_REFRESH_SECRET: required('JWT_REFRESH_SECRET'),
   JWT_ACCESS_EXPIRES_IN: optional('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -36,6 +44,9 @@ export const env = {
 
   IPAPI_KEY: optional('IPAPI_KEY', ''),
 
+  // Gemini — AI product-copy polishing and CSV-import category matching
+  GEMINI_API_KEY: optional('GEMINI_API_KEY', ''),
+
   // Payment provider — to be replaced with chosen provider
   PAYPAL_CLIENT_ID: optional('PAYPAL_CLIENT_ID', ''),
   PAYPAL_CLIENT_SECRET: optional('PAYPAL_CLIENT_SECRET', ''),
@@ -45,6 +56,9 @@ export const env = {
   // Shiprocket (real-time shipping quotes)
   SHIPROCKET_EMAIL: optional('SHIPROCKET_EMAIL', ''),
   SHIPROCKET_PASSWORD: optional('SHIPROCKET_PASSWORD', ''),
+
+  // Shopify Admin API version — bump when Shopify deprecates the current one
+  SHOPIFY_API_VERSION: optional('SHOPIFY_API_VERSION', '2024-01'),
 
   CLIENT_URL: optional('CLIENT_URL', 'http://localhost:3000'),
 

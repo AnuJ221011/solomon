@@ -59,6 +59,7 @@ export interface Product {
   returnsWindowDays: number | null
   brandStory: string | null
   brandDescription: string | null
+  priceTiers: { moq: number; priceInr: number }[]
 }
 
 export interface ProductsParams {
@@ -76,6 +77,8 @@ export interface ProductsParams {
   priceMax?: number
   /** Brand minimum order value ceiling — only brands with MOV ≤ this value */
   brandMaxMin?: number
+  /** Shipping zone — only products whose brand ships to this zone */
+  zone?: string
 }
 
 function translateSort(sort?: string): { sortBy: string; sortOrder: string } {
@@ -172,6 +175,8 @@ function mapProduct(raw: Record<string, any>): Product {
       const rate = rates.find((r) => r.freeShippingAboveInr != null)
       return rate ? Number(rate.freeShippingAboveInr) : null
     })(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    priceTiers: (raw.priceTiers ?? []).map((t: any) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })),
   }
 }
 

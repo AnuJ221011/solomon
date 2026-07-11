@@ -29,6 +29,17 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 const PAGE_SIZE = 20
 
+// Maps the sidebar's simplified "ships to" regions onto the backend's actual
+// ShippingZone enum (UK/EU both fall under the EUROPE zone, etc.)
+const SHIPS_TO_ZONE: Record<string, string> = {
+  india: 'DOMESTIC',
+  us: 'NORTH_AMERICA',
+  uk: 'EUROPE',
+  eu: 'EUROPE',
+  uae: 'MIDDLE_EAST',
+  sea: 'SOUTHEAST_ASIA',
+}
+
 // --- Map API product to @/types Product --------------------------------------
 
 function toTypedProduct(p: ApiProduct): Product {
@@ -148,6 +159,9 @@ function CatalogueContent() {
     category: activeCategory,
     search: debouncedQuery || undefined,
     sort: sort === 'featured' ? undefined : sort,
+    zone: filters.shipsTo !== 'all' ? SHIPS_TO_ZONE[filters.shipsTo] : undefined,
+    priceMin: filters.priceMin !== '' ? Number(filters.priceMin) : undefined,
+    priceMax: filters.priceMax !== '' ? Number(filters.priceMax) : undefined,
   })
 
   const rawProducts = productsData?.products ?? []

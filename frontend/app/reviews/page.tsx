@@ -125,7 +125,7 @@ function OrderReviewCard({ order }: { order: Order }) {
   const { data: fullOrder, isLoading } = useOrder(expanded ? order.id : null)
 
   const items = fullOrder?.items ?? []
-  const unreviewedItems = items.filter((item) => !reviewedIds.has(item.productId))
+  const unreviewedItems = items.filter((item) => !item.reviewed && !reviewedIds.has(item.productId))
   const allReviewed = !isLoading && items.length > 0 && unreviewedItems.length === 0
 
   function markReviewed(productId: string) {

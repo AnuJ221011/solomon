@@ -1,9 +1,10 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 import { logger } from '../../shared/utils/logger.js';
+import { env } from '../../config/env.js';
 
 const shopifyFetch = async (shopDomain, accessToken, path, method = 'GET', body) => {
-  const url = `https://${shopDomain}/admin/api/2024-01${path}`;
+  const url = `https://${shopDomain}/admin/api/${env.SHOPIFY_API_VERSION}${path}`;
   const res = await fetch(url, {
     method,
     headers: {
@@ -22,7 +23,7 @@ const shopifyFetch = async (shopDomain, accessToken, path, method = 'GET', body)
 
 // ── Store connection ──────────────────────────────────────────────────────
 
-export const connectStore = async (userId, { shopDomain, accessToken }) => {
+export const connectStore = async (userId, { shopDomain, accessToken, webhookSecret }) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
   if (!brand) throw createError('Brand profile not found', 404);
 
@@ -32,8 +33,8 @@ export const connectStore = async (userId, { shopDomain, accessToken }) => {
 
   return prisma.shopifyStore.upsert({
     where: { brandProfileId: brand.id },
-    create: { brandProfileId: brand.id, shopDomain, accessToken },
-    update: { shopDomain, accessToken, isActive: true },
+    create: { brandProfileId: brand.id, shopDomain, accessToken, webhookSecret },
+    update: { shopDomain, accessToken, webhookSecret, isActive: true },
   });
 };
 
@@ -51,8 +52,8 @@ export const getStore = async (userId) => {
   if (!brand) return null;
   const store = await prisma.shopifyStore.findUnique({ where: { brandProfileId: brand.id } });
   if (!store) return null;
-  // Never return the access token to the client
-  const { accessToken: _token, ...safeStore } = store;
+  // Never return secrets to the client
+  const { accessToken: _token, webhookSecret: _secret, ...safeStore } = store;
   return safeStore;
 };
 

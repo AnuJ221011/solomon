@@ -35,3 +35,8 @@ export const upsertMyBankAccount = async (req, res) => {
   const account = await brandService.upsertMyBankAccount(req.user.id, req.body);
   sendSuccess(res, account, 'Bank account saved successfully.');
 };
+
+export const getMyPayouts = async (req, res) => {
+  const result = await brandService.getMyPayouts(req.user.id);
+  sendSuccess(res, result);
+};

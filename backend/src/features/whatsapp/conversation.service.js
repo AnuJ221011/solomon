@@ -4,6 +4,7 @@ import { env } from '../../config/env.js';
 import { logger } from '../../shared/utils/logger.js';
 import { sendText, downloadMediaBuffer } from './whatsapp.service.js';
 import { createProduct } from '../products/product.service.js';
+import { cloudinaryFolders } from '../../shared/constants/cloudinary.js';
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -260,7 +261,7 @@ export async function handleInboundMessage(from, message) {
           const buffer = await downloadMediaBuffer(mediaId);
           let photoData;
           if (buffer) {
-            photoData = await uploadBuffer(buffer, 'Solomon-Bharat2/products');
+            photoData = await uploadBuffer(buffer, cloudinaryFolders.products);
           } else {
             // Mock mode
             photoData = { url: `https://picsum.photos/seed/${Date.now()}/800/800`, publicId: `mock-${Date.now()}` };

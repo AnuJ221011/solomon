@@ -62,6 +62,7 @@ export interface BrandsParams {
   page?: number
   limit?: number
   search?: string
+  category?: string
 }
 
 export interface BrandsResult {

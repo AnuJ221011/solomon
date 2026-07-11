@@ -19,6 +19,58 @@ export const upsertMyBankAccount = async (userId, data) => {
   });
 };
 
+// Real payout data (the actual per-order Payout rows created at order time
+// with the brand's true achievement-tier commission), not a client-side
+// estimate off raw order totals.
+export const getMyPayouts = async (userId) => {
+  const brand = await prisma.brandProfile.findUnique({ where: { userId } });
+  if (!brand) throw createError('Brand profile not found', 404);
+
+  const payouts = await prisma.payout.findMany({
+    where: { brandProfileId: brand.id },
+    include: {
+      order: {
+        select: { id: true, createdAt: true, subtotalInr: true, commissionRate: true, buyer: { select: { name: true } } },
+      },
+    },
+    orderBy: [{ isPaid: 'asc' }, { scheduledAt: 'asc' }],
+  });
+
+  const now = new Date();
+  const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const rows = payouts.map((p) => ({
+    id: p.id,
+    orderId: p.orderId,
+    orderNumber: p.orderId.slice(-8).toUpperCase(),
+    buyerName: p.order.buyer.name,
+    date: p.order.createdAt.toISOString().slice(0, 10),
+    grossInr: Number(p.grossInr),
+    commissionRate: Number(p.order.commissionRate),
+    commissionInr: Number(p.commissionInr),
+    processingFeeInr: Number(p.processingFeeInr),
+    netInr: Number(p.netInr),
+    payoutSpeed: p.payoutSpeed,
+    isPaid: p.isPaid,
+    scheduledAt: p.scheduledAt,
+    paidAt: p.paidAt,
+  }));
+
+  const pending = rows.filter((r) => !r.isPaid);
+  const paidThisMonth = rows.filter((r) => r.isPaid && r.paidAt && r.paidAt.toISOString().startsWith(thisMonthKey));
+  const paid = rows.filter((r) => r.isPaid);
+
+  return {
+    rows,
+    summary: {
+      pendingTotalInr: pending.reduce((s, r) => s + r.netInr, 0),
+      pendingCount: pending.length,
+      paidThisMonthInr: paidThisMonth.reduce((s, r) => s + r.netInr, 0),
+      totalPaidInr: paid.reduce((s, r) => s + r.netInr, 0),
+    },
+  };
+};
+
 export const getBrandBySlug = async (slug) => {
   const brand = await prisma.brandProfile.findUnique({
     where: { slug },

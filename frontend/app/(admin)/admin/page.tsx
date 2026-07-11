@@ -13,7 +13,6 @@ import {
   useAdminLowStock,
   useAdminCategoryStats,
   useSendDigest,
-  type AdminStats,
 } from '@/hooks/queries/useAdmin'
 import { cn } from '@/lib/utils'
 
@@ -99,7 +98,7 @@ function RevenueChart() {
         <div className="relative">
           {/* Bars */}
           <div className="flex items-end gap-[2px] h-[140px]">
-            {data.map((bucket, i) => (
+            {data.map((bucket) => (
               <div key={bucket.date} className="flex-1 flex flex-col items-center gap-1 group relative" title={`${formatDate(bucket.date)}: ${formatINR(bucket.revenue)}`}>
                 <div
                   className="w-full bg-accent/30 group-hover:bg-accent rounded-t transition-colors"

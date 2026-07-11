@@ -1,7 +1,29 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
-import { OPENING_ORDER_RETURN_DAYS } from '../../shared/constants/roles.js';
+import { OPENING_ORDER_RETURN_DAYS } from '../../shared/constants/pricing.js';
 import { sendReturnRequestedEmail, sendReturnStatusEmail } from '../../shared/utils/email.js';
+
+// ── Return state machine ──────────────────────────────────────────────────────
+// REQUESTED → APPROVED → LABEL_ISSUED → RECEIVED → REFUNDED
+//           ↘ REJECTED              ↘ REJECTED
+// REJECTED and REFUNDED are terminal — shared by every code path that can
+// change a return's status, so there's exactly one place transitions are
+// allowed or denied (no bypassing via a second, unguarded endpoint).
+const VALID_RETURN_TRANSITIONS = {
+  REQUESTED: ['APPROVED', 'REJECTED'],
+  APPROVED: ['LABEL_ISSUED', 'REJECTED'],
+  LABEL_ISSUED: ['RECEIVED'],
+  RECEIVED: ['REFUNDED'],
+  REJECTED: [],
+  REFUNDED: [],
+};
+
+export function assertValidReturnTransition(currentStatus, nextStatus) {
+  const allowed = VALID_RETURN_TRANSITIONS[currentStatus] ?? [];
+  if (!allowed.includes(nextStatus)) {
+    throw createError(`Cannot move a return from ${currentStatus} to ${nextStatus}.`, 409);
+  }
+}
 
 export const requestReturn = async (buyerUserId, orderId, { reason, photoUrls }) => {
   const order = await prisma.order.findUnique({
@@ -50,6 +72,7 @@ export const updateReturnStatus = async (adminUserId, returnId, { status, adminN
     },
   });
   if (!ret) throw createError('Return not found', 404);
+  assertValidReturnTransition(ret.status, status);
 
   const updated = await prisma.return.update({
     where: { id: returnId },

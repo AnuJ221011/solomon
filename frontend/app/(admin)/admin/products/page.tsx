@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Package, Search, AlertTriangle } from 'lucide-react'
-import { useAdminProducts, type AdminProduct } from '@/hooks/queries/useAdmin'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Package, Search, AlertTriangle, X } from 'lucide-react'
+import { useAdminProducts, useAdminApprovedBrands, type AdminProduct } from '@/hooks/queries/useAdmin'
 import { cn } from '@/lib/utils'
 
 // ─── Availability badge ───────────────────────────────────────────────────────
@@ -33,9 +34,12 @@ function StockCell({ total, outOfStock }: { total: number; outOfStock: boolean }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function ProductRow({ product }: { product: AdminProduct }) {
+function ProductRow({ product, onOpen }: { product: AdminProduct; onOpen: (id: string) => void }) {
   return (
-    <tr className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors">
+    <tr
+      onClick={() => onOpen(product.id)}
+      className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors cursor-pointer"
+    >
       <td className="py-3 px-4">
         <div className="flex items-center gap-3">
           {product.photoUrl
@@ -76,25 +80,61 @@ const AVAIL_FILTERS = [
 ]
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminProductsContent />
+    </Suspense>
+  )
+}
+
+function AdminProductsContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [search, setSearch] = useState('')
   const [availability, setAvailability] = useState('')
+  const [brandId, setBrandId] = useState(() => searchParams.get('brandId') ?? '')
   const [page, setPage] = useState(1)
 
   const { data, isLoading } = useAdminProducts({
     page,
     search: search || undefined,
     availability: availability || undefined,
+    brandId: brandId || undefined,
   })
+  const { data: brands } = useAdminApprovedBrands()
 
   const products = data?.products ?? []
   const total = data?.total ?? 0
+  const limit = data?.limit ?? 20
+  const filteredBrandName = brandId ? brands?.find((b) => b.id === brandId)?.brandName : undefined
+
+  function handleBrandChange(value: string) {
+    setBrandId(value)
+    setPage(1)
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) params.set('brandId', value); else params.delete('brandId')
+    router.replace(`/admin/products${params.toString() ? `?${params.toString()}` : ''}`)
+  }
+
+  const hasActiveFilters = !!search || !!brandId || !!availability
+
+  function clearFilters() {
+    setSearch('')
+    setBrandId('')
+    setAvailability('')
+    setPage(1)
+    router.replace('/admin/products')
+  }
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-[28px] leading-[1.3] font-[500] font-playfair text-primary">Products</h1>
         <p className="text-[14px] font-public-sans text-muted-text mt-1">
-          All products across every brand — {total.toLocaleString()} total
+          {filteredBrandName
+            ? <>Showing products for <span className="font-[600] text-primary">{filteredBrandName}</span> — {total.toLocaleString()} total</>
+            : <>All products across every brand — {total.toLocaleString()} total</>}
         </p>
       </div>
 
@@ -110,6 +150,16 @@ export default function AdminProductsPage() {
             className="w-full h-9 pl-9 pr-4 rounded border border-border-warm bg-surface text-[13px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
           />
         </div>
+        <select
+          value={brandId}
+          onChange={(e) => handleBrandChange(e.target.value)}
+          className="h-9 px-3 rounded border border-border-warm bg-surface text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors max-w-[220px]"
+        >
+          <option value="">All brands</option>
+          {(brands ?? []).map((b) => (
+            <option key={b.id} value={b.id}>{b.brandName}</option>
+          ))}
+        </select>
         <div className="flex gap-1">
           {AVAIL_FILTERS.map(({ value, label }) => (
             <button
@@ -127,6 +177,16 @@ export default function AdminProductsPage() {
             </button>
           ))}
         </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1 h-9 px-3 rounded text-[12px] font-[600] font-public-sans text-muted-text hover:text-primary transition-colors"
+          >
+            <X size={12} aria-hidden="true" />
+            Clear filters
+          </button>
+        )}
       </div>
 
       <div className="bg-surface border border-border-warm rounded overflow-hidden">
@@ -178,20 +238,22 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p) => <ProductRow key={p.id} product={p} />)}
+                  {products.map((p) => (
+                    <ProductRow key={p.id} product={p} onOpen={(id) => router.push(`/admin/products/${id}`)} />
+                  ))}
                 </tbody>
               </table>
             </div>
 
-            {total > 20 && (
+            {total > limit && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total.toLocaleString()}
+                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total.toLocaleString()}
                 </p>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
                     className="h-8 px-3 rounded border border-border-warm text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg disabled:opacity-40 transition-colors">Prev</button>
-                  <button type="button" onClick={() => setPage((p) => p + 1)} disabled={page * 20 >= total}
+                  <button type="button" onClick={() => setPage((p) => p + 1)} disabled={page * limit >= total}
                     className="h-8 px-3 rounded border border-border-warm text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg disabled:opacity-40 transition-colors">Next</button>
                 </div>
               </div>

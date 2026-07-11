@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { CheckCircle, Circle, Download, AlertTriangle, RotateCcw } from 'lucide-react'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -279,9 +280,11 @@ function OrderDetailSheet({
 
               <div className="space-y-3 pt-2">
                 <div className="flex gap-3">
-                  <Button variant="ghost" size="sm" className="gap-1.5" disabled title="Coming soon">
-                    <Download size={13} aria-hidden="true" />
-                    Invoice
+                  <Button variant="ghost" size="sm" className="gap-1.5" asChild>
+                    <Link href={`/invoices?order=${order.id}`}>
+                      <Download size={13} aria-hidden="true" />
+                      Invoice
+                    </Link>
                   </Button>
                   {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
                     <Button variant="destructive" size="sm">
@@ -438,9 +441,11 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" className="gap-1" disabled title="Coming soon">
-                          <Download size={12} aria-hidden="true" />
-                          Download
+                        <Button variant="ghost" size="sm" className="gap-1" asChild>
+                          <Link href={`/invoices?order=${order.id}`}>
+                            <Download size={12} aria-hidden="true" />
+                            Download
+                          </Link>
                         </Button>
                       </td>
                     </tr>

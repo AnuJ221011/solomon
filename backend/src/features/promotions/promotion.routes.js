@@ -9,16 +9,25 @@ import { sendSuccess } from '../../shared/utils/response.js';
 
 const router = Router();
 
-const createSchema = z.object({
+const promotionShape = z.object({
   name: z.string().min(1).max(100),
   discountPercent: z.number().int().min(1).max(90),
   scope: z.enum(['CATALOG', 'COLLECTION']),
   collectionId: z.string().optional(),
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().optional(),
-}).refine((d) => d.scope !== 'COLLECTION' || d.collectionId, {
+});
+
+const createSchema = promotionShape.refine((d) => d.scope !== 'COLLECTION' || d.collectionId, {
   message: 'collectionId required when scope is COLLECTION',
 });
+
+const updateSchema = promotionShape
+  .partial()
+  .extend({ isActive: z.boolean().optional() })
+  .refine((d) => d.scope !== 'COLLECTION' || d.collectionId, {
+    message: 'collectionId required when scope is COLLECTION',
+  });
 
 const getBrandId = async (userId) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
@@ -45,11 +54,19 @@ router.post('/', validate(createSchema), async (req, res) => {
   sendSuccess(res, promo, 'Promotion created and scheduled.', 201);
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', validate(updateSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const promo = await prisma.promotion.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!promo) throw createError('Promotion not found', 404);
-  const updated = await prisma.promotion.update({ where: { id: promo.id }, data: { ...req.body, isActive: req.body.isActive } });
+  const { startsAt, endsAt, ...rest } = req.body;
+  const updated = await prisma.promotion.update({
+    where: { id: promo.id },
+    data: {
+      ...rest,
+      ...(startsAt && { startsAt: new Date(startsAt) }),
+      ...(endsAt && { endsAt: new Date(endsAt) }),
+    },
+  });
   sendSuccess(res, updated, 'Promotion updated successfully.');
 });
 

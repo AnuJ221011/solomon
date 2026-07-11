@@ -9,7 +9,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-primary text-white hover:bg-[#333333]',
+          'bg-primary text-white hover:bg-primary/90',
         ghost:
           'border border-border-warm bg-transparent text-primary hover:bg-muted-bg',
         accent:
@@ -33,17 +33,42 @@ export const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  // When true, renders the single child element (e.g. a next/link `<Link>`)
+  // with the button's classes/props merged onto it, instead of wrapping it in
+  // a real <button> — avoids an <a> nested inside a <button>, which is
+  // invalid HTML and breaks keyboard/screen-reader navigation.
   asChild?: boolean
 }
 
+function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
+  return (node: T) => {
+    for (const ref of refs) {
+      if (!ref) continue
+      if (typeof ref === 'function') ref(node)
+      else (ref as React.MutableRefObject<T | null>).current = node
+    }
+  }
+}
+
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild: _asChild, ...props }, ref) => {
+  ({ className, variant, size, asChild, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size }), className)
+
+    if (asChild) {
+      const child = React.Children.only(children) as React.ReactElement<{ className?: string }> & {
+        ref?: React.Ref<HTMLButtonElement>
+      }
+      return React.cloneElement(child, {
+        ...props,
+        className: cn(classes, child.props.className),
+        ref: composeRefs(ref, child.ref),
+      } as Partial<unknown>)
+    }
+
     return (
-      <button
-        ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
-        {...props}
-      />
+      <button ref={ref} className={classes} {...props}>
+        {children}
+      </button>
     )
   }
 )

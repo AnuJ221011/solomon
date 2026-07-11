@@ -8,10 +8,42 @@ import { DataTable } from '@/components/shared/DataTable'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useMyBrandDashboard } from '@/hooks/queries/useBrands'
-import { useBrandOrders, Order } from '@/hooks/queries/useOrders'
 import { getApiError } from '@/lib/getApiError'
 import api from '@/lib/api'
+
+// ─── Real payout data ──────────────────────────────────────────────────────────
+// Sourced from the Payout rows created at order time (true achievement-tier
+// commission, real isPaid status) — not derived client-side from raw orders.
+
+interface PayoutRow {
+  id: string
+  orderNumber: string
+  buyerName: string
+  date: string
+  grossInr: number
+  commissionRate: number
+  commissionInr: number
+  netInr: number
+  payoutSpeed: 'NET_30' | 'EXPRESS'
+  isPaid: boolean
+}
+
+interface PayoutsResponse {
+  rows: PayoutRow[]
+  summary: {
+    pendingTotalInr: number
+    pendingCount: number
+    paidThisMonthInr: number
+    totalPaidInr: number
+  }
+}
+
+function useMyPayouts() {
+  return useQuery<PayoutsResponse>({
+    queryKey: ['my-payouts'],
+    queryFn: () => api.get('/brands/me/payouts').then((r) => r.data.data),
+  })
+}
 
 // ─── Payout speed option ──────────────────────────────────────────────────────
 
@@ -55,36 +87,6 @@ function SpeedOption({ icon, title, subtitle, selected, onSelect }: SpeedOptionP
       </div>
     </button>
   )
-}
-
-// ─── Derive payout row from order ─────────────────────────────────────────────
-
-interface PayoutRow {
-  id: string
-  orderNumber: string
-  date: string
-  gross: number
-  net: number
-  status: 'PENDING' | 'PROCESSING' | 'PAID'
-  buyerName: string
-}
-
-function derivePayoutRow(order: Order): PayoutRow {
-  // Estimate commission at 20% (Sprout tier default) if achievement level unknown
-  const commissionRate = 0.20
-  const net = Math.round(order.amount * (1 - commissionRate))
-  // DELIVERED orders are treated as PAID
-  const status: PayoutRow['status'] =
-    order.status === 'DELIVERED' ? 'PAID' : 'PENDING'
-  return {
-    id: order.id,
-    orderNumber: order.orderNumber,
-    date: order.createdAt.slice(0, 10),
-    gross: order.amount,
-    net,
-    status,
-    buyerName: order.buyerName,
-  }
 }
 
 // ─── Summary card skeleton ────────────────────────────────────────────────────
@@ -203,7 +205,6 @@ function BankAccountSection() {
   }
 
   const isSaved = !!saved?.accountNumber
-  const showForm = editing || !isSaved
 
   return (
     <div className="bg-surface border border-border-warm rounded mb-8">
@@ -392,39 +393,11 @@ function BankAccountSection() {
 export default function PayoutsPage() {
   const [speedMode, setSpeedMode] = useState<'standard' | 'express'>('standard')
 
-  const { data: dashboard, isLoading: dashLoading } = useMyBrandDashboard()
-  // Fetch all delivered orders (limit=100) as proxy for payout rows
-  const { data: deliveredData, isLoading: ordersLoading } = useBrandOrders({
-    status: 'DELIVERED',
-    limit: 100,
-  })
-  // Also fetch pending orders for the pending payout card
-  const { data: pendingData } = useBrandOrders({ status: 'PENDING', limit: 100 })
-
-  const isLoading = dashLoading || ordersLoading
-
-  const deliveredOrders = deliveredData?.orders ?? []
-  const pendingOrders = pendingData?.orders ?? []
-
-  const payoutRows: PayoutRow[] = deliveredOrders.map(derivePayoutRow)
-
-  // Summary values — prefer dashboard stats if available, fallback to derived
-  const pendingTotal = pendingOrders.reduce(
-    (sum, o) => sum + Math.round(o.amount * 0.92),
-    0
-  )
+  const { data, isLoading } = useMyPayouts()
+  const payoutRows = data?.rows ?? []
+  const summary = data?.summary
 
   const now = new Date()
-  const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const paidThisMonth = deliveredOrders
-    .filter((o) => o.createdAt.startsWith(thisMonthKey))
-    .reduce((sum, o) => sum + Math.round(o.amount * 0.92), 0)
-
-  const totalPaid = deliveredOrders.reduce(
-    (sum, o) => sum + Math.round(o.amount * 0.92),
-    0
-  )
-
   const thisMonthLabel = now.toLocaleString('en-IN', { month: 'long', year: 'numeric' })
 
   const columns = [
@@ -452,7 +425,7 @@ export default function PayoutsPage() {
       ),
     },
     {
-      key: 'gross',
+      key: 'grossInr',
       label: 'Gross',
       sortable: true,
       render: (val: unknown) => (
@@ -460,14 +433,14 @@ export default function PayoutsPage() {
       ),
     },
     {
-      key: 'gross',
+      key: 'commissionInr',
       label: 'Commission',
-      render: (val: unknown) => {
-        const gross = Number(val)
-        const commission = Math.round(gross * 0.20)
+      render: (val: unknown, row: Record<string, unknown>) => {
+        const commission = Number(val)
+        const rate = Number(row.commissionRate) * 100
         return (
           <div>
-            <span className="text-[13px] font-public-sans text-muted-text">20%</span>
+            <span className="text-[13px] font-public-sans text-muted-text">{rate.toFixed(0)}%</span>
             <span className="text-[13px] font-public-sans text-muted-text ml-1.5">
               (₹{commission.toLocaleString('en-IN')})
             </span>
@@ -476,7 +449,7 @@ export default function PayoutsPage() {
       },
     },
     {
-      key: 'net',
+      key: 'netInr',
       label: 'Net',
       sortable: true,
       render: (val: unknown) => (
@@ -486,21 +459,13 @@ export default function PayoutsPage() {
       ),
     },
     {
-      key: 'status',
+      key: 'isPaid',
       label: 'Status',
-      render: (val: unknown) => {
-        const status = String(val) as PayoutRow['status']
-        const variants: Record<string, 'warning' | 'accent' | 'success'> = {
-          PENDING: 'warning',
-          PROCESSING: 'accent',
-          PAID: 'success',
-        }
-        return (
-          <Badge variant={variants[status]}>
-            {status ? status.charAt(0) + status.slice(1).toLowerCase() : '—'}
-          </Badge>
-        )
-      },
+      render: (val: unknown) => (
+        <Badge variant={val ? 'success' : 'warning'}>
+          {val ? 'Paid' : 'Pending'}
+        </Badge>
+      ),
     },
   ]
 
@@ -559,19 +524,19 @@ export default function PayoutsPage() {
           <>
             <StatCard
               label="Pending Payout"
-              value={`₹${pendingTotal.toLocaleString('en-IN')}`}
-              sub={`${pendingOrders.length} orders`}
+              value={`₹${(summary?.pendingTotalInr ?? 0).toLocaleString('en-IN')}`}
+              sub={`${summary?.pendingCount ?? 0} orders`}
               subColor="text-warning"
             />
             <StatCard
               label="This Month Paid"
-              value={`₹${paidThisMonth.toLocaleString('en-IN')}`}
+              value={`₹${(summary?.paidThisMonthInr ?? 0).toLocaleString('en-IN')}`}
               sub={thisMonthLabel}
               subColor="text-success"
             />
             <StatCard
               label="Total Paid (All time)"
-              value={`₹${totalPaid.toLocaleString('en-IN')}`}
+              value={`₹${(summary?.totalPaidInr ?? 0).toLocaleString('en-IN')}`}
               sub="Since onboarding"
             />
           </>

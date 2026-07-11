@@ -13,6 +13,9 @@ import { Footer } from '@/components/shared/Footer'
 import { useFormatPrice } from '@/components/ui/Price'
 import type { CartItem } from '@/types'
 
+// Fallback INR threshold when a brand hasn't configured one.
+const DEFAULT_FREE_SHIP_INR = 15000
+
 // ─── Brand cart card ──────────────────────────────────────────────────────────
 
 function BrandCartCard({
@@ -28,6 +31,7 @@ function BrandCartCard({
   const router = useRouter()
   const brandName = items[0]?.brandName ?? ''
   const brandSlug = items[0]?.brandSlug
+  const freeShipThresholdInr = items[0]?.freeShippingAboveInr ?? DEFAULT_FREE_SHIP_INR
 
   const currentValue = items.reduce((s, i) => s + i.wholesalePrice * i.quantity, 0)
   const targetValue  = minimumOrderValue
@@ -73,7 +77,7 @@ function BrandCartCard({
               </div>
               <div>
                 <p className="font-public-sans text-[15px] font-[600] text-primary leading-tight">{brandName}</p>
-                <p className="font-public-sans text-[12px] text-muted-text">Free shipping on orders over ₹15,000</p>
+                <p className="font-public-sans text-[12px] text-muted-text">Free shipping on orders over {fmt(freeShipThresholdInr)}</p>
               </div>
             </div>
             <p className="font-playfair text-[17px] font-[600] text-primary tabular-nums ml-4 flex-shrink-0">
@@ -141,19 +145,16 @@ function BrandCartCard({
 function BottomBar({
   selectedIds,
   brandSummaries,
-  onCheckout,
   onDelete,
 }: {
   selectedIds: Set<string>
   brandSummaries: { brandId: string; subtotal: number; met: boolean }[]
-  onCheckout: () => void
   onDelete: () => void
 }) {
   const fmt = useFormatPrice()
   const selected     = brandSummaries.filter((b) => selectedIds.has(b.brandId))
   const underMin     = selected.filter((b) => !b.met).length
   const itemTotal    = selected.reduce((s, b) => s + b.subtotal, 0)
-  const canCheckout  = selected.length > 0 && underMin === 0
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur border-t border-border-warm">
@@ -256,7 +257,7 @@ export default function CartPage() {
 
   function handleDelete() {
     Array.from(selectedIds).forEach((id) => {
-      byBrand[id]?.forEach((item) => removeItem(item.productId))
+      byBrand[id]?.forEach((item) => removeItem(item.productId, item.variantId))
     })
   }
 
@@ -330,7 +331,6 @@ export default function CartPage() {
           <BottomBar
             selectedIds={selectedIds}
             brandSummaries={brandSummaries}
-            onCheckout={() => router.push('/checkout')}
             onDelete={handleDelete}
           />
           <Footer />

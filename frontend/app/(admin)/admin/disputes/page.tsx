@@ -109,6 +109,7 @@ export default function AdminDisputesPage() {
 
   const disputes = data?.disputes ?? []
   const total = data?.total ?? 0
+  const limit = data?.limit ?? 20
 
   return (
     <div>
@@ -199,10 +200,10 @@ export default function AdminDisputesPage() {
               </table>
             </div>
 
-            {total > 20 && (
+            {total > limit && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border-warm">
                 <p className="text-[12px] font-public-sans text-muted-text">
-                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total}
+                  Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -216,7 +217,7 @@ export default function AdminDisputesPage() {
                   <button
                     type="button"
                     onClick={() => setPage((p) => p + 1)}
-                    disabled={page * 20 >= total}
+                    disabled={page * limit >= total}
                     className="h-8 px-3 rounded border border-border-warm text-[12px] font-[500] font-public-sans text-muted-text hover:text-primary hover:bg-muted-bg disabled:opacity-40 transition-colors"
                   >
                     Next

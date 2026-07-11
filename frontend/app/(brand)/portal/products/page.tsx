@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Plus, Upload, Search } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Plus, Upload, Search, X } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useMyProducts } from '@/hooks/queries/useProducts'
@@ -58,6 +59,7 @@ function SkeletonRows() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
+  const router = useRouter()
   const { data: products = [], isLoading, error } = useMyProducts()
 
   const [search, setSearch] = useState('')
@@ -73,6 +75,14 @@ export default function ProductsPage() {
     const matchStatus = statusFilter === 'All' || p.availability === statusFilter
     return matchSearch && matchCat && matchStatus
   })
+
+  const hasActiveFilters = search !== '' || categoryFilter !== 'All' || statusFilter !== 'All'
+
+  function clearFilters() {
+    setSearch('')
+    setCategoryFilter('All')
+    setStatusFilter('All')
+  }
 
   return (
     <div>
@@ -124,7 +134,7 @@ export default function ProductsPage() {
           className="h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
         >
           {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{c === 'All' ? 'All Category' : c}</option>
           ))}
         </select>
 
@@ -141,6 +151,17 @@ export default function ProductsPage() {
           <option value="INACTIVE">Inactive</option>
           <option value="COMING_SOON">Coming Soon</option>
         </select>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1 h-9 px-3 rounded text-[13px] font-[600] font-public-sans text-muted-text hover:text-primary transition-colors"
+          >
+            <X size={12} aria-hidden="true" />
+            Clear filters
+          </button>
+        )}
 
         {!isLoading && (
           <p className="text-[13px] font-public-sans text-muted-text ml-auto">
@@ -183,7 +204,7 @@ export default function ProductsPage() {
           <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-border-warm">
-                {['', 'Product Name', 'Category', 'Price (INR)', 'MOQ', 'Variants', 'Lead Time', 'Status', 'Actions'].map((col) => (
+                {['', 'Product Name', 'Category', 'Price (INR)', 'MOQ', 'Variants', 'Lead Time', 'Status'].map((col) => (
                   <th
                     key={col}
                     className="px-4 py-3 text-left text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.04em]"
@@ -200,7 +221,8 @@ export default function ProductsPage() {
                 return (
                   <tr
                     key={product.id}
-                    className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors"
+                    onClick={() => router.push(`/portal/products/${product.slug}`)}
+                    className="border-b border-border-warm last:border-0 hover:bg-muted-bg/30 transition-colors cursor-pointer"
                   >
                     {/* Image */}
                     <td className="px-4 py-3">
@@ -268,19 +290,6 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       <AvailabilityBadge status={product.availability} />
                     </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/portal/products/${product.slug}/edit`}
-                          className="text-[12px] font-[600] font-public-sans text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
-                        >
-                          Edit
-                        </Link>
-                        <ToggleAvailabilityButton product={product} />
-                      </div>
-                    </td>
                   </tr>
                 )
               })}
@@ -290,46 +299,5 @@ export default function ProductsPage() {
         </div>
       )}
     </div>
-  )
-}
-
-// ─── Toggle availability button ───────────────────────────────────────────────
-// Isolated so it can call the update mutation independently per row.
-
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { toast } from 'sonner'
-import { getApiError } from '@/lib/getApiError'
-
-function ToggleAvailabilityButton({ product }: { product: Product }) {
-  const queryClient = useQueryClient()
-
-  const toggle = useMutation({
-    mutationFn: () =>
-      api.patch(`/products/${product.id}`, {
-        availability: product.availability === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] })
-    },
-    onError: (err) => toast.error(getApiError(err)),
-  })
-
-  const isActive = product.availability === 'ACTIVE'
-
-  return (
-    <button
-      type="button"
-      onClick={() => toggle.mutate()}
-      disabled={toggle.isPending}
-      className={cn(
-        'text-[12px] font-[600] font-public-sans transition-colors',
-        toggle.isPending
-          ? 'text-muted-text opacity-50 cursor-not-allowed'
-          : 'text-muted-text hover:text-primary',
-      )}
-    >
-      {isActive ? 'Deactivate' : 'Activate'}
-    </button>
   )
 }

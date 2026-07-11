@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { getBrandProgress } from './achievement.service.js';
-import { ACHIEVEMENT_LEVELS } from '../../shared/constants/achievements.js';
+import { ACHIEVEMENT_LEVELS, getCommissionRate } from '../../shared/constants/achievements.js';
 import prisma from '../../config/db.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { createError } from '../../shared/utils/createError.js';
@@ -37,7 +37,7 @@ router.get('/social-card', authenticate, authorize('BRAND'), async (req, res) =>
     level: brand.achievementLevel,
     levelName: levelConfig.name,
     levelNumber: levelConfig.level,
-    commissionRate: `${levelConfig.commissionRate * 100}%`,
+    commissionRate: `${getCommissionRate(brand.achievementLevel) * 100}%`,
     stats: {
       confirmedOrders: brand.confirmedOrderCount,
       avgRating: brand.avgRating,

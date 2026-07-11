@@ -215,6 +215,221 @@ export const deleteVariant = async (userId, productId, variantId) => {
   await prisma.productVariant.delete({ where: { id: variantId } });
 };
 
+/**
+ * Applies a full Size/Color variant diff (updates + creates + deletes) as a
+ * single atomic transaction, so a mid-way failure (e.g. one bad SKU) can't
+ * leave the product with a half-applied variant set spread across separate
+ * create/update/delete requests. Shared by the brand and admin routes, which
+ * differ only in how they authorize access to the product.
+ */
+const applyVariantReconciliation = async (productId, { updates = [], creates = [], deleteIds = [] }) => {
+  const existingVariants = await prisma.productVariant.findMany({
+    where: { productId },
+    select: { id: true },
+  });
+  const existingIds = new Set(existingVariants.map((v) => v.id));
+
+  for (const u of updates) {
+    if (!existingIds.has(u.id)) throw createError(`Variant ${u.id} does not belong to this product`, 404);
+  }
+  for (const id of deleteIds) {
+    if (!existingIds.has(id)) throw createError(`Variant ${id} does not belong to this product`, 404);
+  }
+
+  // SKU uniqueness: new SKUs must not collide with each other, with any
+  // existing SKU outside this product, or with a variant on this product
+  // that isn't being deleted in the same request.
+  const newSkus = creates.map((c) => c.sku);
+  if (new Set(newSkus).size !== newSkus.length) {
+    throw createError('Duplicate SKUs in the submitted variants', 422);
+  }
+  if (newSkus.length > 0) {
+    const conflicts = await prisma.productVariant.findMany({
+      where: { sku: { in: newSkus }, id: { notIn: deleteIds } },
+      select: { sku: true },
+    });
+    if (conflicts.length > 0) {
+      throw createError(`SKUs already in use: ${conflicts.map((c) => c.sku).join(', ')}`, 409);
+    }
+  }
+
+  // Guard: don't delete variants referenced by a confirmed/dispatched order
+  if (deleteIds.length > 0) {
+    const blocking = await prisma.orderItem.findFirst({
+      where: {
+        variantId: { in: deleteIds },
+        order: { status: { in: ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'] } },
+      },
+    });
+    if (blocking) {
+      throw createError(
+        'Cannot delete a variant that is referenced in a confirmed or dispatched order. Set it to INACTIVE instead.',
+        409
+      );
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (const id of deleteIds) {
+      await tx.productVariant.delete({ where: { id } });
+    }
+
+    for (const u of updates) {
+      await tx.productVariant.update({
+        where: { id: u.id },
+        data: { priceInr: u.priceInr, stock: u.stock },
+      });
+      if (u.attributes) {
+        await tx.variantAttribute.deleteMany({ where: { variantId: u.id } });
+        await tx.variantAttribute.createMany({
+          data: u.attributes.map((a) => ({ variantId: u.id, name: a.name, value: a.value })),
+        });
+      }
+    }
+
+    for (const c of creates) {
+      await tx.productVariant.create({
+        data: {
+          productId,
+          sku: c.sku,
+          priceInr: c.priceInr,
+          stock: c.stock ?? 0,
+          status: c.status ?? 'ACTIVE',
+          attributes: { create: (c.attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+        },
+      });
+    }
+  });
+
+  return prisma.productVariant.findMany({
+    where: { productId },
+    include: { attributes: { orderBy: { name: 'asc' } } },
+    orderBy: { createdAt: 'asc' },
+  });
+};
+
+export const reconcileVariants = async (userId, productId, diff) => {
+  await getOwnedProduct(userId, productId);
+  return applyVariantReconciliation(productId, diff);
+};
+
+// ── Admin variants (no brand-ownership check — admin can edit any product) ────
+
+const getProductOrThrow = async (productId) => {
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product) throw createError('Product not found', 404);
+  return product;
+};
+
+export const adminCreateVariant = async (productId, { sku, priceInr, stock, imageUrl, status, attributes }) => {
+  await getProductOrThrow(productId);
+
+  const existing = await prisma.productVariant.findUnique({ where: { sku } });
+  if (existing) throw createError(`SKU "${sku}" is already in use`, 409);
+
+  return prisma.productVariant.create({
+    data: {
+      productId,
+      sku,
+      priceInr,
+      stock: stock ?? 0,
+      imageUrl: imageUrl ?? null,
+      status: status ?? 'ACTIVE',
+      attributes: { create: (attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+    },
+    include: { attributes: true },
+  });
+};
+
+export const adminCreateVariantsBulk = async (productId, variants) => {
+  await getProductOrThrow(productId);
+
+  const skus = variants.map((v) => v.sku);
+  const uniqueSkus = new Set(skus);
+  if (uniqueSkus.size !== skus.length) {
+    throw createError('Duplicate SKUs in the submitted variants', 422);
+  }
+
+  const existingSkus = await prisma.productVariant.findMany({
+    where: { sku: { in: skus } },
+    select: { sku: true },
+  });
+  if (existingSkus.length > 0) {
+    throw createError(`SKUs already in use: ${existingSkus.map((s) => s.sku).join(', ')}`, 409);
+  }
+
+  return prisma.$transaction(
+    variants.map((v) =>
+      prisma.productVariant.create({
+        data: {
+          productId,
+          sku: v.sku,
+          priceInr: v.priceInr,
+          stock: v.stock ?? 0,
+          imageUrl: v.imageUrl ?? null,
+          status: v.status ?? 'ACTIVE',
+          attributes: { create: (v.attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+        },
+        include: { attributes: true },
+      })
+    )
+  );
+};
+
+export const adminUpdateVariant = async (productId, variantId, updates) => {
+  await getProductOrThrow(productId);
+
+  const variant = await prisma.productVariant.findFirst({ where: { id: variantId, productId } });
+  if (!variant) throw createError('Variant not found', 404);
+
+  if (updates.sku && updates.sku !== variant.sku) {
+    const conflict = await prisma.productVariant.findUnique({ where: { sku: updates.sku } });
+    if (conflict) throw createError(`SKU "${updates.sku}" is already in use`, 409);
+  }
+
+  const { attributes, ...scalarUpdates } = updates;
+
+  return prisma.$transaction(async (tx) => {
+    await tx.productVariant.update({ where: { id: variantId }, data: scalarUpdates });
+
+    if (attributes) {
+      await tx.variantAttribute.deleteMany({ where: { variantId } });
+      await tx.variantAttribute.createMany({
+        data: attributes.map((a) => ({ variantId, name: a.name, value: a.value })),
+      });
+    }
+
+    return tx.productVariant.findUnique({ where: { id: variantId }, include: { attributes: true } });
+  });
+};
+
+export const adminDeleteVariant = async (productId, variantId) => {
+  await getProductOrThrow(productId);
+
+  const variant = await prisma.productVariant.findFirst({ where: { id: variantId, productId } });
+  if (!variant) throw createError('Variant not found', 404);
+
+  const completedOrderItem = await prisma.orderItem.findFirst({
+    where: {
+      variantId,
+      order: { status: { in: ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'] } },
+    },
+  });
+  if (completedOrderItem) {
+    throw createError(
+      'Cannot delete a variant that is referenced in a confirmed or dispatched order. Set it to INACTIVE instead.',
+      409
+    );
+  }
+
+  await prisma.productVariant.delete({ where: { id: variantId } });
+};
+
+export const adminReconcileVariants = async (productId, diff) => {
+  await getProductOrThrow(productId);
+  return applyVariantReconciliation(productId, diff);
+};
+
 // ── Internal helpers used by order/cart services ──────────────────────────────
 
 /**

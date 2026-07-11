@@ -72,7 +72,11 @@ router.post('/paypal/webhook', async (req, res) => {
       body: req.body,
     });
 
-    if (verification?.verification_status !== 'SUCCESS' && process.env.NODE_ENV === 'production') {
+    // verifyWebhookSignature returns the literal `true` only when
+    // PAYPAL_WEBHOOK_ID isn't configured (explicit dev-only bypass) — any
+    // other value must be an actual "SUCCESS" verification result, checked
+    // in every environment where a webhook ID is set, not just production.
+    if (verification !== true && verification?.verification_status !== 'SUCCESS') {
       return sendError(res, 'Webhook signature verification failed', 400);
     }
 

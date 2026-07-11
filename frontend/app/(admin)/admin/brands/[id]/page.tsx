@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowLeft,
   ExternalLink,
@@ -11,9 +12,7 @@ import {
   MapPin,
   Globe,
   CalendarDays,
-  Package,
   Star,
-  ShoppingCart,
   FileText,
   AlertTriangle,
   RotateCcw,
@@ -36,8 +35,8 @@ import api from '@/lib/api'
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   PENDING:   { label: 'Pending Review', className: 'text-[#B25E00] bg-[#FFF4E6] border-[#FFD8A8]' },
   APPROVED:  { label: 'Approved',       className: 'text-[#1E5F1E] bg-[#F0FAF0] border-[#B2DDB2]' },
-  REJECTED:  { label: 'Rejected',       className: 'text-[#BA1A1A] bg-[#FFF0F0] border-[#FFB3B3]' },
-  SUSPENDED: { label: 'Suspended',      className: 'text-[#444748] bg-[#F5F0E8] border-[#E5E1D8]' },
+  REJECTED:  { label: 'Rejected',       className: 'text-error bg-[#FFF0F0] border-[#FFB3B3]' },
+  SUSPENDED: { label: 'Suspended',      className: 'text-muted-text bg-muted-bg border-border-warm' },
 }
 
 const ACHIEVEMENT_LEVELS = [
@@ -69,9 +68,9 @@ const LEAD_TIME_LABELS: Record<string, string> = {
 
 function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[#E5E1D8] rounded-xl overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-[#F5F0E8]">
-        <h3 className="text-[11px] font-[700] font-public-sans text-[#A68B67] uppercase tracking-[0.1em]">
+    <div className="bg-white border border-border-warm rounded-xl overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-muted-bg">
+        <h3 className="text-[11px] font-[700] font-public-sans text-accent uppercase tracking-[0.1em]">
           {title}
         </h3>
       </div>
@@ -87,16 +86,28 @@ function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
       <p className="text-[11px] font-[600] font-public-sans text-[#9CA3AF] uppercase tracking-[0.06em] mb-0.5">
         {label}
       </p>
-      <div className="text-[13.5px] font-public-sans text-[#1A1A1A] leading-[1.5]">{value}</div>
+      <div className="text-[13.5px] font-public-sans text-primary leading-[1.5]">{value}</div>
     </div>
   )
 }
 
-function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="bg-white border border-[#E5E1D8] rounded-xl px-5 py-4 text-center">
-      <p className="text-[22px] font-[600] font-public-sans text-[#1A1A1A]">{value}</p>
+function StatCard({ label, value, href }: { label: string; value: React.ReactNode; href?: string }) {
+  const content = (
+    <>
+      <p className="text-[22px] font-[600] font-public-sans text-primary">{value}</p>
       <p className="text-[12px] font-public-sans text-[#9CA3AF] mt-0.5">{label}</p>
+    </>
+  )
+  if (href) {
+    return (
+      <Link href={href} className="bg-white border border-border-warm rounded-xl px-5 py-4 text-center block hover:border-accent hover:bg-muted-bg/40 transition-colors">
+        {content}
+      </Link>
+    )
+  }
+  return (
+    <div className="bg-white border border-border-warm rounded-xl px-5 py-4 text-center">
+      {content}
     </div>
   )
 }
@@ -150,10 +161,10 @@ function DocumentViewerModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E5E1D8] shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-warm shrink-0">
           <div className="flex items-center gap-2.5">
-            <FileText size={15} className="text-[#A68B67]" />
-            <span className="text-[14px] font-[600] font-public-sans text-[#1A1A1A]">{label}</span>
+            <FileText size={15} className="text-accent" />
+            <span className="text-[14px] font-[600] font-public-sans text-primary">{label}</span>
           </div>
           <div className="flex items-center gap-2">
             {signedUrl && (
@@ -161,7 +172,7 @@ function DocumentViewerModal({
                 type="button"
                 onClick={handleDownload}
                 disabled={downloading}
-                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#E5E1D8] text-[12px] font-[600] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:border-[#A68B67] hover:text-[#A68B67] transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border-warm text-[12px] font-[600] font-public-sans text-muted-text hover:bg-muted-bg hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
               >
                 <Download size={13} />
                 {downloading ? 'Downloading…' : 'Download'}
@@ -170,7 +181,7 @@ function DocumentViewerModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E5E1D8] text-[#9CA3AF] hover:bg-[#F5F0E8] hover:text-[#1A1A1A] transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-warm text-[#9CA3AF] hover:bg-muted-bg hover:text-primary transition-colors"
             >
               <X size={15} />
             </button>
@@ -178,7 +189,7 @@ function DocumentViewerModal({
         </div>
 
         {/* Viewer */}
-        <div className="flex-1 overflow-auto bg-[#F5F0E8] flex items-center justify-center p-4">
+        <div className="flex-1 overflow-auto bg-muted-bg flex items-center justify-center p-4">
           {error ? (
             <p className="text-[13px] font-public-sans text-[#9CA3AF]">Failed to load document.</p>
           ) : !signedUrl ? (
@@ -186,7 +197,7 @@ function DocumentViewerModal({
           ) : isPdf ? (
             <iframe
               src={signedUrl}
-              className="w-full h-full min-h-[600px] rounded-lg border border-[#E5E1D8] bg-white"
+              className="w-full h-full min-h-[600px] rounded-lg border border-border-warm bg-white"
               title={label}
             />
           ) : (
@@ -208,13 +219,13 @@ function DocumentLink({ label, field, url, onOpen }: { label: string; field: str
     <button
       type="button"
       onClick={() => onOpen({ label, field })}
-      className="flex items-center gap-2.5 px-4 py-3 bg-[#FAFAF9] border border-[#E5E1D8] rounded-lg hover:border-[#A68B67] hover:bg-[#F9F7F2] transition-all group w-full text-left"
+      className="flex items-center gap-2.5 px-4 py-3 bg-[#FAFAF9] border border-border-warm rounded-lg hover:border-accent hover:bg-bg transition-all group w-full text-left"
     >
-      <FileText size={15} className="text-[#9CA3AF] group-hover:text-[#A68B67] shrink-0" />
-      <span className="text-[13px] font-[500] font-public-sans text-[#444748] group-hover:text-[#1A1A1A] flex-1">
+      <FileText size={15} className="text-[#9CA3AF] group-hover:text-accent shrink-0" />
+      <span className="text-[13px] font-[500] font-public-sans text-muted-text group-hover:text-primary flex-1">
         {label}
       </span>
-      <ExternalLink size={12} className="text-[#9CA3AF] group-hover:text-[#A68B67]" />
+      <ExternalLink size={12} className="text-[#9CA3AF] group-hover:text-accent" />
     </button>
   )
 }
@@ -237,23 +248,23 @@ function RejectModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-white border border-[#E5E1D8] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4">
-        <h2 className="text-[18px] font-[600] font-playfair text-[#1A1A1A]">Reject application</h2>
-        <p className="text-[13.5px] font-public-sans text-[#444748]">
-          Rejecting <strong className="text-[#1A1A1A]">{brandName}</strong>. You can optionally include a reason.
+      <div className="relative bg-white border border-border-warm rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <h2 className="text-[18px] font-[600] font-playfair text-primary">Reject application</h2>
+        <p className="text-[13.5px] font-public-sans text-muted-text">
+          Rejecting <strong className="text-primary">{brandName}</strong>. You can optionally include a reason.
         </p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason for rejection (optional)..."
           rows={3}
-          className="w-full px-3 py-2.5 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-[13.5px] font-public-sans text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#A68B67] transition-colors resize-none"
+          className="w-full px-3 py-2.5 rounded-lg border border-border-warm bg-bg text-[13.5px] font-public-sans text-primary placeholder:text-[#9CA3AF] focus:outline-none focus:border-accent transition-colors resize-none"
         />
         <div className="flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="h-9 px-4 rounded-lg border border-[#E5E1D8] text-[13px] font-[500] font-public-sans text-[#444748] hover:bg-[#F9F7F2] transition-colors"
+            className="h-9 px-4 rounded-lg border border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:bg-bg transition-colors"
           >
             Cancel
           </button>
@@ -266,7 +277,7 @@ function RejectModal({
               )
             }
             disabled={rejectBrand.isPending}
-            className="h-9 px-4 rounded-lg bg-[#BA1A1A] text-white text-[13px] font-[600] font-public-sans hover:bg-[#9B1515] transition-colors disabled:opacity-50"
+            className="h-9 px-4 rounded-lg bg-error text-white text-[13px] font-[600] font-public-sans hover:bg-[#9B1515] transition-colors disabled:opacity-50"
           >
             {rejectBrand.isPending ? 'Rejecting…' : 'Confirm Reject'}
           </button>
@@ -291,7 +302,6 @@ export default function AdminBrandDetailPage() {
 
   const isPending   = brand?.status === 'PENDING'
   const isApproved  = brand?.status === 'APPROVED'
-  const isRejected  = brand?.status === 'REJECTED'
   const isSuspended = brand?.user?.isActive === false
   const status      = isSuspended ? 'SUSPENDED' : (brand?.status ?? 'PENDING')
   const statusStyle = STATUS_STYLE[status] ?? STATUS_STYLE.PENDING
@@ -328,12 +338,12 @@ export default function AdminBrandDetailPage() {
   if (!brand) {
     return (
       <div className="max-w-5xl mx-auto">
-        <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[13px] font-public-sans text-[#9CA3AF] hover:text-[#1A1A1A] mb-6">
+        <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[13px] font-public-sans text-[#9CA3AF] hover:text-primary mb-6">
           <ArrowLeft size={14} /> Back
         </button>
-        <div className="bg-white border border-[#E5E1D8] rounded-xl py-20 flex flex-col items-center gap-3">
-          <Building2 size={32} className="text-[#E5E1D8]" />
-          <p className="text-[15px] font-[600] font-public-sans text-[#1A1A1A]">
+        <div className="bg-white border border-border-warm rounded-xl py-20 flex flex-col items-center gap-3">
+          <Building2 size={32} className="text-border-warm" />
+          <p className="text-[15px] font-[600] font-public-sans text-primary">
             {isError ? 'Failed to load brand — check that the backend is running' : 'Brand not found'}
           </p>
           {isError && (
@@ -352,7 +362,7 @@ export default function AdminBrandDetailPage() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-[13px] font-public-sans text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
+          className="flex items-center gap-1.5 text-[13px] font-public-sans text-[#9CA3AF] hover:text-primary transition-colors"
         >
           <ArrowLeft size={14} />
           Back
@@ -364,7 +374,7 @@ export default function AdminBrandDetailPage() {
               href={`/brands/${brand.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[#E5E1D8] text-[13px] font-[500] font-public-sans text-[#444748] hover:bg-[#F5F0E8] hover:text-[#1A1A1A] transition-colors"
+              className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:bg-muted-bg hover:text-primary transition-colors"
             >
               <ExternalLink size={13} />
               View storefront
@@ -388,7 +398,7 @@ export default function AdminBrandDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowReject(true)}
-                className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#FFF0F0] border border-[#FFB3B3] text-[#BA1A1A] text-[13px] font-[600] font-public-sans hover:bg-[#FFE0E0] transition-colors"
+                className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#FFF0F0] border border-[#FFB3B3] text-error text-[13px] font-[600] font-public-sans hover:bg-[#FFE0E0] transition-colors"
               >
                 <XCircle size={14} />
                 Reject
@@ -412,7 +422,7 @@ export default function AdminBrandDetailPage() {
                 type="button"
                 onClick={() => suspendUser.mutate(brand.userId)}
                 disabled={suspendUser.isPending}
-                className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#FFF0F0] border border-[#FFB3B3] text-[#BA1A1A] text-[13px] font-[600] font-public-sans hover:bg-[#FFE0E0] transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#FFF0F0] border border-[#FFB3B3] text-error text-[13px] font-[600] font-public-sans hover:bg-[#FFE0E0] transition-colors disabled:opacity-50"
               >
                 <AlertTriangle size={13} />
                 {suspendUser.isPending ? 'Suspending…' : 'Suspend Brand'}
@@ -423,14 +433,14 @@ export default function AdminBrandDetailPage() {
       </div>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#E5E1D8] rounded-xl overflow-hidden mb-5">
+      <div className="bg-white border border-border-warm rounded-xl overflow-hidden mb-5">
         {/* Banner */}
         {brand.bannerUrl ? (
           <div className="h-48 w-full overflow-hidden">
             <img src={brand.bannerUrl} alt="Brand banner" className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="h-32 bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC]" />
+          <div className="h-32 bg-gradient-to-br from-muted-bg to-[#EDE8DC]" />
         )}
 
         {/* Logo + identity */}
@@ -443,8 +453,8 @@ export default function AdminBrandDetailPage() {
                 className="w-20 h-20 rounded-xl object-cover border-4 border-white shadow-md shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 rounded-xl bg-[#F5F0E8] border-4 border-white shadow-md flex items-center justify-center shrink-0">
-                <Building2 size={28} className="text-[#A68B67]" />
+              <div className="w-20 h-20 rounded-xl bg-muted-bg border-4 border-white shadow-md flex items-center justify-center shrink-0">
+                <Building2 size={28} className="text-accent" />
               </div>
             )}
             <div className="mb-1 flex items-center gap-3 flex-wrap">
@@ -462,11 +472,11 @@ export default function AdminBrandDetailPage() {
             </div>
           </div>
 
-          <h1 className="font-playfair text-[28px] font-[500] text-[#1A1A1A] leading-tight mb-1">
+          <h1 className="font-playfair text-[28px] font-[500] text-primary leading-tight mb-1">
             {brand.brandName}
           </h1>
           {brand.description && (
-            <p className="text-[14px] font-public-sans text-[#444748] mb-3">{brand.description}</p>
+            <p className="text-[14px] font-public-sans text-muted-text mb-3">{brand.description}</p>
           )}
 
           {/* Quick meta */}
@@ -483,7 +493,7 @@ export default function AdminBrandDetailPage() {
                 href={brand.websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[#A68B67] hover:underline"
+                className="flex items-center gap-1 text-accent hover:underline"
               >
                 <Globe size={12} />
                 {brand.websiteUrl.replace(/^https?:\/\/(www\.)?/, '')}
@@ -506,13 +516,13 @@ export default function AdminBrandDetailPage() {
       {/* ── Stats (approved only) ─────────────────────────────────────────── */}
       {isApproved && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard label="Products" value={brand._count?.products ?? 0} />
+          <StatCard label="Products" value={brand._count?.products ?? 0} href={`/admin/products?brandId=${brand.id}`} />
           <StatCard label="Orders" value={brand._count?.orders ?? 0} />
           <StatCard
             label="Avg Rating"
             value={
               <span className="flex items-center justify-center gap-1">
-                <Star size={16} className="text-[#A68B67]" />
+                <Star size={16} className="text-accent" />
                 {brand.avgRating > 0 ? brand.avgRating.toFixed(1) : '—'}
               </span>
             }
@@ -530,7 +540,7 @@ export default function AdminBrandDetailPage() {
           {/* Brand story */}
           {brand.brandStory && (
             <InfoCard title="Brand Story">
-              <p className="text-[13.5px] font-public-sans text-[#444748] leading-[1.8] whitespace-pre-wrap break-words">
+              <p className="text-[13.5px] font-public-sans text-muted-text leading-[1.8] whitespace-pre-wrap break-words">
                 {brand.brandStory}
               </p>
             </InfoCard>
@@ -543,7 +553,7 @@ export default function AdminBrandDetailPage() {
                 {brand.category.map((cat: string) => (
                   <span
                     key={cat}
-                    className="text-[12.5px] font-public-sans font-[500] text-[#444748] bg-[#F5F0E8] border border-[#E5E1D8] px-3 py-1.5 rounded-lg"
+                    className="text-[12.5px] font-public-sans font-[500] text-muted-text bg-muted-bg border border-border-warm px-3 py-1.5 rounded-lg"
                   >
                     {cat}
                   </span>
@@ -561,7 +571,7 @@ export default function AdminBrandDetailPage() {
                 {brand.enabledZones.map((z: string) => (
                   <span
                     key={z}
-                    className="text-[12.5px] font-public-sans font-[500] text-[#444748] bg-[#F5F0E8] border border-[#E5E1D8] px-3 py-1.5 rounded-lg"
+                    className="text-[12.5px] font-public-sans font-[500] text-muted-text bg-muted-bg border border-border-warm px-3 py-1.5 rounded-lg"
                   >
                     {SHIPPING_ZONE_LABELS[z] ?? z}
                   </span>
@@ -607,7 +617,7 @@ export default function AdminBrandDetailPage() {
                   defaultValue={brand.achievementLevel}
                   onChange={(e) => overrideLevel.mutate({ id: brand.id, level: e.target.value })}
                   disabled={overrideLevel.isPending}
-                  className="flex-1 h-9 px-3 rounded-lg border border-[#E5E1D8] bg-[#F9F7F2] text-[13px] font-[500] font-public-sans text-[#1A1A1A] focus:outline-none focus:border-[#A68B67] transition-colors disabled:opacity-50 appearance-none"
+                  className="flex-1 h-9 px-3 rounded-lg border border-border-warm bg-bg text-[13px] font-[500] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors disabled:opacity-50 appearance-none"
                 >
                   {ACHIEVEMENT_LEVELS.map((l) => (
                     <option key={l.value} value={l.value}>{l.label}</option>
@@ -627,9 +637,9 @@ export default function AdminBrandDetailPage() {
 
       {/* ── Documents ────────────────────────────────────────────────────── */}
       {hasDocuments && (
-        <div className="bg-white border border-[#E5E1D8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-[#F5F0E8]">
-            <h3 className="text-[11px] font-[700] font-public-sans text-[#A68B67] uppercase tracking-[0.1em]">
+        <div className="bg-white border border-border-warm rounded-xl overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-muted-bg">
+            <h3 className="text-[11px] font-[700] font-public-sans text-accent uppercase tracking-[0.1em]">
               Submitted Documents
             </h3>
           </div>

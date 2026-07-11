@@ -122,6 +122,7 @@ export default function BrandsPage() {
 
   const { data, isLoading } = useBrands({
     search: search || undefined,
+    category: activeCategory ?? undefined,
     page,
     limit: PAGE_SIZE,
   })
@@ -200,10 +201,10 @@ export default function BrandsPage() {
                 <button
                   key={l1.slug}
                   type="button"
-                  onClick={() => handleCategory(l1.slug)}
+                  onClick={() => handleCategory(l1.name)}
                   className={cn(
                     'inline-flex items-center h-8 px-4 rounded-full text-[13px] font-[500] font-public-sans whitespace-nowrap flex-shrink-0 transition-colors border',
-                    activeCategory === l1.slug
+                    activeCategory === l1.name
                       ? 'bg-primary text-white border-primary'
                       : 'bg-transparent text-muted-text border-border-warm hover:border-primary/40 hover:text-primary'
                   )}

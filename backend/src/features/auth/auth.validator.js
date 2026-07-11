@@ -1,8 +1,17 @@
 import { z } from 'zod';
 import { STORE_TYPES, AESTHETICS } from '../../shared/constants/roles.js';
 
+// Email is the effective primary key for a User — normalising it here means
+// "Anuj@gmail.com" and "anuj@gmail.com" are always treated as the same
+// address everywhere downstream (signup, login, OTP lookups, etc.), instead
+// of relying on every call site to remember to lowercase it.
+export const emailField = z
+  .string()
+  .transform((v) => v.trim().toLowerCase())
+  .pipe(z.string().email('Invalid email address'));
+
 export const buyerSignupSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
   businessName: z.string().min(1).max(100),
   countryCode: z.string().length(2),
@@ -18,7 +27,7 @@ export const buyerSignupSchema = z.object({
 });
 
 export const brandSignupSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
   brandName: z.string().min(1).max(100),
   category: z.array(z.string()).min(1),
@@ -47,28 +56,41 @@ export const brandSignupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(1),
 });
 
+export const requestLoginOtpSchema = z.object({
+  email: emailField,
+});
+
+export const loginOtpSchema = z.object({
+  email: emailField,
+  otp: z.string().length(6),
+});
+
 export const verifyOtpSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   otp: z.string().length(6),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   otp: z.string().length(6),
   newPassword: z.string().min(8).regex(/\d/, 'Password must contain at least 1 number'),
 });
 
+export const resendOtpSchema = z.object({
+  email: emailField,
+});
+
 export const changePendingEmailSchema = z.object({
-  currentEmail: z.string().email(),
-  newEmail: z.string().email(),
+  currentEmail: emailField,
+  newEmail: emailField,
 });
 
 export const storeTypeQuizSchema = z.object({

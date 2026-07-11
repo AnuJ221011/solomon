@@ -1,6 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
+import { ACHIEVEMENT_LEVELS } from '../../shared/constants/achievements.js';
+import { env } from '../../config/env.js';
+import { logger } from '../../shared/utils/logger.js';
+
+const MIN_BULK_IMPORT_LEVEL = ACHIEVEMENT_LEVELS.L3_TRUSTED.level;
 
 const VALID_LEAD_TIMES = ['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS'];
 const VALID_ZONES = ['DOMESTIC', 'SOUTH_ASIA', 'SOUTHEAST_ASIA', 'MIDDLE_EAST', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD'];
@@ -48,14 +53,14 @@ async function resolveAndCreateCategories(unmatchedNames) {
     });
     existingByName.set(key, created);
     createdThisRun.set(runKey, created);
-    console.log(`[import] Created category L${level}: "${name}"`);
+    logger.info(`[import] Created category L${level}: "${name}"`);
     return created;
   };
 
   // 3. Try Gemini for intelligent L1/L2/L3 placement
   let placements = [];
 
-  if (process.env.GEMINI_API_KEY) {
+  if (env.GEMINI_API_KEY) {
     const l1s = existingCats.filter((c) => c.level === 1);
     const l2s = existingCats.filter((c) => c.level === 2);
     const l3s = existingCats.filter((c) => c.level === 3);
@@ -89,17 +94,17 @@ Return format — JSON array only:
 [{ "source": "...", "l1": "...", "l2": "..." or null, "l3": "..." or null }]`;
 
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const result = await model.generateContent(prompt);
       const text = result.response.text().trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
       placements = JSON.parse(text);
-      console.log(`[import] Gemini classified ${placements.length} categories`);
+      logger.info(`[import] Gemini classified ${placements.length} categories`);
     } catch (err) {
-      console.error('[import] Gemini classification failed, using direct creation fallback:', err.message);
+      logger.error('[import] Gemini classification failed, using direct creation fallback', { error: err.message });
     }
   } else {
-    console.warn('[import] GEMINI_API_KEY not set — using direct category creation');
+    logger.warn('[import] GEMINI_API_KEY not set — using direct category creation');
   }
 
   // 4. Fallback: any category not returned by Gemini gets created directly as-is
@@ -131,7 +136,7 @@ Return format — JSON array only:
 
       resolution[source] = resolvedName;
     } catch (err) {
-      console.error(`[import] Failed to create category for "${source}":`, err.message);
+      logger.error(`[import] Failed to create category for "${source}"`, { error: err.message });
     }
   }
 
@@ -243,6 +248,11 @@ export const importProductsFromCsv = async (userId, csvText) => {
   if (!brand) throw createError('Brand profile not found', 404);
   if (brand.status !== 'APPROVED') throw createError('Brand must be approved to import products', 403);
 
+  const brandLevel = ACHIEVEMENT_LEVELS[brand.achievementLevel]?.level ?? 1;
+  if (brandLevel < MIN_BULK_IMPORT_LEVEL) {
+    throw createError('Bulk CSV import is available to Trusted-tier brands and above', 403);
+  }
+
   const rows = parseCsv(csvText);
   const results = { created: 0, skipped: 0, errors: [] };
 
@@ -307,6 +317,74 @@ export const importProductsFromCsv = async (userId, csvText) => {
   return results;
 };
 
+// ─── Import-time description polishing ────────────────────────────────────────
+//
+// WooCommerce/Shopify exports carry the description as raw HTML
+// (e.g. "<ul><li><b>Material:</b> ...</li></ul>"). Stored as-is, that markup
+// shows up as literal tags on the storefront. Gemini rewrites it into clean
+// plain text — preserving every bullet's content — with a regex-based
+// fallback so imports still work without an HTML-to-text conversion when
+// GEMINI_API_KEY is unset or the call fails.
+
+const HTML_TAG_RE = /<[a-z][\s\S]*>/i;
+
+function stripHtmlToPlainText(html) {
+  const text = html
+    .replace(/<li[^>]*>/gi, '\n- ')
+    .replace(/<\/(li|p|div|h[1-6])>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/gi, '&').replace(/&nbsp;/gi, ' ').replace(/&#39;/g, "'").replace(/&quot;/gi, '"')
+    .replace(/[ \t]+/g, ' ');
+
+  return text.split('\n').map((l) => l.trim()).filter(Boolean).join('\n');
+}
+
+async function polishImportDescription(genAI, rawDescription) {
+  if (!HTML_TAG_RE.test(rawDescription)) return rawDescription;
+
+  const fallback = stripHtmlToPlainText(rawDescription);
+  if (!genAI) return fallback;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+    const prompt = `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
+Convert this HTML product description into clean, well-formatted plain text for wholesale buyers:
+- Strip all HTML tags
+- Turn each <li> into its own "- " bullet line
+- Keep bold labels like "<b>Material:</b>" as plain "Material:" (no markdown asterisks)
+- Do NOT add, remove, or change any factual information — preserve every bullet's content
+- Collapse extra whitespace and blank lines
+
+Return ONLY the cleaned plain-text description, no explanation.
+
+Input:
+${rawDescription}`;
+    const result = await model.generateContent(prompt);
+    const cleaned = result.response.text().trim();
+    return cleaned || fallback;
+  } catch (err) {
+    logger.error('[import] Gemini description polish failed, using fallback', { error: err.message });
+    return fallback;
+  }
+}
+
+// Polishes descriptions with limited concurrency so large imports don't
+// serialize one Gemini call after another.
+const POLISH_CONCURRENCY = 5;
+
+async function polishDescriptions(genAI, rawDescriptions) {
+  const polished = new Array(rawDescriptions.length);
+  for (let i = 0; i < rawDescriptions.length; i += POLISH_CONCURRENCY) {
+    const batchIdxs = rawDescriptions.slice(i, i + POLISH_CONCURRENCY).map((_, j) => i + j);
+    const results = await Promise.all(
+      batchIdxs.map((idx) => polishImportDescription(genAI, rawDescriptions[idx])),
+    );
+    results.forEach((r, j) => { polished[batchIdxs[j]] = r; });
+  }
+  return polished;
+}
+
 // ─── JSON import (frontend wizard → backend) ──────────────────────────────────
 //
 // products: pre-parsed product array from the import wizard
@@ -326,9 +404,14 @@ export const importProductsFromJson = async (userId, products, unmatchedCategori
   // Resolve unmatched categories via Gemini, creating missing L1/L2/L3 nodes
   const categoryResolution = await resolveAndCreateCategories(unmatchedCategories);
 
+  // Clean up HTML descriptions from the source CSV before they're stored
+  const genAI = env.GEMINI_API_KEY ? new GoogleGenerativeAI(env.GEMINI_API_KEY) : null;
+  const polishedDescriptions = await polishDescriptions(genAI, products.map((p) => (p.description ?? '').trim()));
+
   const results = { created: 0, skipped: 0, errors: [], categoriesCreated: Object.keys(categoryResolution).length };
 
-  for (const p of products) {
+  for (let productIdx = 0; productIdx < products.length; productIdx++) {
+    const p = products[productIdx];
     try {
       if (!p.name?.trim()) {
         results.errors.push('Skipping a product with no name');
@@ -337,7 +420,7 @@ export const importProductsFromJson = async (userId, products, unmatchedCategori
       }
 
       const name = p.name.trim().slice(0, 80);
-      const description = (p.description ?? '').trim() || name;
+      const description = polishedDescriptions[productIdx] || name;
       const wholesalePriceInr = Math.max(0.01, Number(p.wholesalePriceInr) || 0.01);
       const moq = Math.max(1, parseInt(p.moq, 10) || 1);
       const weightGrams = Math.max(1, parseInt(p.weightGrams, 10) || 100);

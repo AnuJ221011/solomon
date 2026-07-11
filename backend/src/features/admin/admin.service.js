@@ -1,6 +1,8 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendBrandApprovalEmail } from '../../shared/utils/email.js';
+import { validateCategories } from '../categories/index.js';
+import { assertValidReturnTransition } from '../returns/return.service.js';
 
 export const approveBrand = async (brandProfileId) => {
   const brand = await prisma.brandProfile.findUnique({
@@ -320,6 +322,53 @@ export const listProducts = async ({ page = 1, limit = 20, search, brandId, avai
   };
 };
 
+const PRODUCT_DETAIL_INCLUDE = {
+  photos: { orderBy: { position: 'asc' } },
+  priceTiers: { orderBy: { moq: 'asc' } },
+  variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+  brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
+  _count: { select: { orderItems: true } },
+};
+
+export const getProductById = async (productId) => {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: PRODUCT_DETAIL_INCLUDE,
+  });
+  if (!product) throw createError('Product not found', 404);
+  return product;
+};
+
+// Admin edit — bypasses the brand-ownership check that product.service's
+// updateProduct enforces, since admins can fix any brand's listing.
+export const updateProductById = async (productId, data) => {
+  const existing = await prisma.product.findUnique({ where: { id: productId } });
+  if (!existing) throw createError('Product not found', 404);
+  if (data.categories?.length) await validateCategories(data.categories);
+
+  const { priceTiers, ...productData } = data;
+
+  if (priceTiers !== undefined) {
+    await prisma.$transaction([
+      prisma.productPriceTier.deleteMany({ where: { productId } }),
+      ...(priceTiers.length
+        ? [prisma.productPriceTier.createMany({
+            data: priceTiers
+              .slice()
+              .sort((a, b) => a.moq - b.moq)
+              .map(({ moq, priceInr }) => ({ productId, moq, priceInr })),
+          })]
+        : []),
+    ]);
+  }
+
+  return prisma.product.update({
+    where: { id: productId },
+    data: productData,
+    include: PRODUCT_DETAIL_INCLUDE,
+  });
+};
+
 // ── Returns (platform-wide) ───────────────────────────────────────────────────
 
 export const listReturns = async ({ page = 1, limit = 20, status }) => {
@@ -369,12 +418,14 @@ export const listReturns = async ({ page = 1, limit = 20, status }) => {
 export const approveReturn = async (returnId) => {
   const ret = await prisma.return.findUnique({ where: { id: returnId } });
   if (!ret) throw createError('Return not found', 404);
+  assertValidReturnTransition(ret.status, 'APPROVED');
   return prisma.return.update({ where: { id: returnId }, data: { status: 'APPROVED' } });
 };
 
 export const rejectReturn = async (returnId, adminNotes) => {
   const ret = await prisma.return.findUnique({ where: { id: returnId } });
   if (!ret) throw createError('Return not found', 404);
+  assertValidReturnTransition(ret.status, 'REJECTED');
   return prisma.return.update({
     where: { id: returnId },
     data: { status: 'REJECTED', adminNotes: adminNotes ?? null, resolvedAt: new Date() },
@@ -384,6 +435,7 @@ export const rejectReturn = async (returnId, adminNotes) => {
 export const refundReturn = async (returnId) => {
   const ret = await prisma.return.findUnique({ where: { id: returnId } });
   if (!ret) throw createError('Return not found', 404);
+  assertValidReturnTransition(ret.status, 'REFUNDED');
   return prisma.return.update({
     where: { id: returnId },
     data: { status: 'REFUNDED', resolvedAt: new Date() },
@@ -393,7 +445,7 @@ export const refundReturn = async (returnId) => {
 export const issueReturnLabel = async (returnId, returnLabelUrl) => {
   const ret = await prisma.return.findUnique({ where: { id: returnId } });
   if (!ret) throw createError('Return not found', 404);
-  if (ret.status !== 'APPROVED') throw createError('Return must be APPROVED before issuing a label', 400);
+  assertValidReturnTransition(ret.status, 'LABEL_ISSUED');
   return prisma.return.update({
     where: { id: returnId },
     data: { status: 'LABEL_ISSUED', returnLabelUrl: returnLabelUrl ?? null },

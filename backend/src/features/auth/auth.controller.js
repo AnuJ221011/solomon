@@ -11,7 +11,12 @@ const REFRESH_COOKIE_OPTIONS = {
 };
 
 export const buyerSignup = async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.registerBuyer(req.body);
+  await authService.initiateBuyerSignup(req.body);
+  sendSuccess(res, { email: req.body.email }, 'Verification code sent to your email.');
+};
+
+export const verifyBuyerSignup = async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.verifyBuyerSignup(req.body);
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
   sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Welcome! Your account is ready.', 201);
 };
@@ -27,6 +32,17 @@ export const brandSignup = async (req, res) => {
 
 export const login = async (req, res) => {
   const { user, accessToken, refreshToken } = await authService.login(req.body);
+  res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+  sendSuccess(res, { accessToken, user: sanitizeUser(user) });
+};
+
+export const requestLoginOtp = async (req, res) => {
+  await authService.requestLoginOtp(req.body.email);
+  sendSuccess(res, null, 'If an account exists, a code has been sent to your email.');
+};
+
+export const loginWithOtp = async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.loginWithOtp(req.body);
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
   sendSuccess(res, { accessToken, user: sanitizeUser(user) });
 };

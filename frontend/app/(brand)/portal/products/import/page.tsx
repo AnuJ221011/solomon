@@ -153,7 +153,7 @@ function detectFormat(headers: string[]): 'shopify' | 'woocommerce' | 'generic' 
 // ─── WooCommerce Parser ───────────────────────────────────────────────────────
 
 function parseWoocommerce(text: string): ParsedProduct[] {
-  const { headers, rows } = parseCsvToRows(text)
+  const { rows } = parseCsvToRows(text)
 
   const productRows = rows.filter((r) => r['type'] === 'simple' || r['type'] === 'variable')
   const variationRows = rows.filter((r) => r['type'] === 'variation')
@@ -721,13 +721,11 @@ function ImageModal({ product, onClose }: { product: ParsedProduct; onClose: () 
 
 function PreviewStep({
   parseState,
-  categories,
   onBack,
   onImport,
   importing,
 }: {
   parseState: ParseState
-  categories: Category[]
   onBack: () => void
   onImport: () => void
   importing: boolean
@@ -737,6 +735,7 @@ function PreviewStep({
 
   const unmatchedCount = products.filter((p) => p.sourceCategory && !categoryMap[p.sourceCategory]).length
   const withVariants = products.filter((p) => p.variants.length > 0).length
+  const htmlDescCount = products.filter((p) => /<[a-z][\s\S]*>/i.test(p.description)).length
 
   const formatBadge: Record<string, string> = {
     WooCommerce: 'bg-blue-50 border-blue-200 text-blue-700',
@@ -881,6 +880,16 @@ function PreviewStep({
           <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
           <p className="text-[12px] font-public-sans text-amber-700">
             {unmatchedCount} product{unmatchedCount !== 1 ? 's have' : ' has'} an unrecognized category. AI will classify and auto-create the missing L1/L2/L3 categories during import.
+          </p>
+        </div>
+      )}
+
+      {/* HTML description notice */}
+      {htmlDescCount > 0 && (
+        <div className="flex items-start gap-2 p-3 rounded border border-border-warm bg-muted-bg/30">
+          <Info size={14} className="text-muted-text mt-0.5 shrink-0" aria-hidden="true" />
+          <p className="text-[12px] font-public-sans text-muted-text">
+            {htmlDescCount} product{htmlDescCount !== 1 ? 's have' : ' has'} an HTML-formatted description. AI will clean it up into readable text, preserving every detail, during import.
           </p>
         </div>
       )}
@@ -1066,7 +1075,6 @@ export default function ImportPage() {
       {step === 'preview' && parseState && (
         <PreviewStep
           parseState={parseState}
-          categories={categories}
           onBack={() => setStep('upload')}
           onImport={handleImport}
           importing={importing}

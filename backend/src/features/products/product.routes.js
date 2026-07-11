@@ -11,6 +11,7 @@ import { sendSuccess } from '../../shared/utils/response.js';
 import { createError } from '../../shared/utils/createError.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import multer from 'multer';
+import { env } from '../../config/env.js';
 
 const router = Router();
 
@@ -100,7 +101,7 @@ router.post('/ai/polish', authenticate, async (req, res) => {
 
   const allowed = ['name', 'description', 'tags', 'brandStory'];
   if (!allowed.includes(field)) throw createError('Invalid field', 400);
-  if (!process.env.GEMINI_API_KEY) throw createError('AI polishing is not configured', 503);
+  if (!env.GEMINI_API_KEY) throw createError('AI polishing is not configured', 503);
 
   const PROMPTS = {
     name: `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
@@ -155,7 +156,7 @@ Input:
 ${value}`,
   };
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
   const result = await model.generateContent(PROMPTS[field]);
   const cleaned = result.response.text().trim();

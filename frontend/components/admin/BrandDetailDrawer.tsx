@@ -40,12 +40,6 @@ const SHIPPING_ZONE_LABELS: Record<string, string> = {
   REST_OF_WORLD: 'Rest of World',
 }
 
-const LEAD_TIME_LABELS: Record<string, string> = {
-  ONE_TO_THREE_DAYS: '1–3 days',
-  ONE_TO_TWO_WEEKS: '1–2 weeks',
-  TWO_TO_FOUR_WEEKS: '2–4 weeks',
-}
-
 // ─── Detail row ───────────────────────────────────────────────────────────────
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {

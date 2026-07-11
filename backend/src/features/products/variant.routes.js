@@ -30,6 +30,17 @@ const bulkCreateSchema = z.object({
 
 const updateVariantSchema = createVariantSchema.partial();
 
+const reconcileSchema = z.object({
+  updates: z.array(z.object({
+    id: z.string().min(1),
+    priceInr: z.number().positive(),
+    stock: z.number().int().min(0).default(0),
+    attributes: z.array(attributeSchema).min(1).optional(),
+  })).default([]),
+  creates: z.array(createVariantSchema).default([]),
+  deleteIds: z.array(z.string().min(1)).default([]),
+});
+
 const stockSchema = z.object({
   stock: z.number().int().min(0).optional(),
   delta: z.number().int().optional(),
@@ -73,6 +84,20 @@ router.post('/bulk',
       req.user.id, req.params.productId, req.body.variants
     );
     sendSuccess(res, variants, `${variants.length} variants created`, 201);
+  }
+);
+
+// Reconcile the full Size/Color variant set (update + create + delete) in one
+// atomic transaction — used by the product edit form's variant grid so a
+// mid-way failure can't leave the product with a half-applied variant set.
+router.put('/reconcile',
+  authenticate, authorize('BRAND'),
+  validate(reconcileSchema),
+  async (req, res) => {
+    const variants = await variantService.reconcileVariants(
+      req.user.id, req.params.productId, req.body
+    );
+    sendSuccess(res, variants, 'Variants updated successfully.');
   }
 );
 

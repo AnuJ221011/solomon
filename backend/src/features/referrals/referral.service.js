@@ -1,6 +1,7 @@
 import prisma from '../../config/db.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendReferralRewardEmail } from '../../shared/utils/email.js';
+import { env } from '../../config/env.js';
 
 const REWARD_INR = 500;
 const BONUS_INR = 500;
@@ -16,8 +17,7 @@ export const getReferralStats = async (userId) => {
     master = await prisma.buyerReferral.create({ data: { referrerUserId: userId } });
   }
 
-  const baseUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-  const referralLink = `${baseUrl}/apply?ref=${master.token}`;
+  const referralLink = `${env.CLIENT_URL}/apply?ref=${master.token}`;
 
   // All referrals that were actually used (brand signed up)
   const used = await prisma.buyerReferral.findMany({
@@ -59,12 +59,16 @@ export const processReferralReward = async (brandProfileId) => {
   });
   if (!referral) return;
 
-  await issueCredit(referral.referrerUserId, REWARD_INR, 'Referral reward: brand completed first sale');
-
-  await prisma.buyerReferral.update({
-    where: { id: referral.id },
+  // Atomically claim the reward before issuing credit — if this brand's
+  // first dispatch fires twice concurrently, only one call wins the race
+  // and proceeds; the other sees count 0 and returns.
+  const claimed = await prisma.buyerReferral.updateMany({
+    where: { id: referral.id, rewardIssued: false },
     data: { rewardIssued: true },
   });
+  if (claimed.count === 0) return;
+
+  await issueCredit(referral.referrerUserId, REWARD_INR, 'Referral reward: brand completed first sale');
 
   // Notify referrer
   const referrer = await prisma.user.findUnique({ where: { id: referral.referrerUserId } });
@@ -90,12 +94,15 @@ export const processBonusIfEligible = async (brandProfileId) => {
   const daysSinceReferral = (Date.now() - referral.createdAt.getTime()) / (1000 * 60 * 60 * 24);
   if (daysSinceReferral > BONUS_WINDOW_DAYS) return;
 
-  await issueCredit(referral.referrerUserId, BONUS_INR, 'Referral bonus: brand reached Rising within 90 days');
-
-  await prisma.buyerReferral.update({
-    where: { id: referral.id },
+  // Atomically claim the bonus before issuing credit — same concurrent-call
+  // guard as processReferralReward above.
+  const claimed = await prisma.buyerReferral.updateMany({
+    where: { id: referral.id, bonusIssued: false },
     data: { bonusIssued: true },
   });
+  if (claimed.count === 0) return;
+
+  await issueCredit(referral.referrerUserId, BONUS_INR, 'Referral bonus: brand reached Rising within 90 days');
 };
 
 export const getWallet = async (userId) => {

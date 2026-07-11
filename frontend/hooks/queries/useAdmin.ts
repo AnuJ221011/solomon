@@ -253,14 +253,18 @@ export function useBulkMarkPayoutsPaid() {
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export function useAdminUsers(params?: { page?: number; search?: string; role?: string; status?: string }) {
-  return useQuery<{ users: AdminUser[]; total: number }>({
+  return useQuery<{ users: AdminUser[]; total: number; limit: number; totalPages: number }>({
     queryKey: ['admin-users', params],
     queryFn: async () => {
       const res = await api.get('/admin/users', { params })
       const payload = res.data.data
+      const total = payload.total ?? res.data.meta?.total ?? 0
+      const limit = payload.limit ?? 20
       return {
         users: payload.users ?? payload ?? [],
-        total: payload.total ?? res.data.meta?.total ?? 0,
+        total,
+        limit,
+        totalPages: payload.totalPages ?? Math.ceil(total / limit),
       }
     },
   })
@@ -293,14 +297,18 @@ export function useReactivateUser() {
 // ─── Disputes ─────────────────────────────────────────────────────────────────
 
 export function useAdminDisputes(params?: { page?: number; status?: string }) {
-  return useQuery<{ disputes: AdminDispute[]; total: number }>({
+  return useQuery<{ disputes: AdminDispute[]; total: number; limit: number; totalPages: number }>({
     queryKey: ['admin-disputes', params],
     queryFn: async () => {
       const res = await api.get('/admin/disputes', { params })
       const payload = res.data.data
+      const total = res.data.meta?.total ?? payload.total ?? 0
+      const limit = payload.limit ?? 20
       return {
         disputes: payload.disputes ?? payload ?? [],
-        total: res.data.meta?.total ?? payload.total ?? 0,
+        total,
+        limit,
+        totalPages: payload.totalPages ?? Math.ceil(total / limit),
       }
     },
   })
@@ -354,16 +362,44 @@ export interface AdminProduct {
 }
 
 export function useAdminProducts(params?: { page?: number; search?: string; brandId?: string; availability?: string }) {
-  return useQuery<{ products: AdminProduct[]; total: number }>({
+  return useQuery<{ products: AdminProduct[]; total: number; limit: number; totalPages: number }>({
     queryKey: ['admin-products', params],
     queryFn: async () => {
       const res = await api.get('/admin/products', { params })
       const payload = res.data.data
+      const total = payload.total ?? 0
+      const limit = payload.limit ?? 20
       return {
         products: payload.products ?? payload ?? [],
-        total: payload.total ?? 0,
+        total,
+        limit,
+        totalPages: payload.totalPages ?? Math.ceil(total / limit),
       }
     },
+  })
+}
+
+export function useAdminProduct(id: string | null) {
+  return useQuery({
+    queryKey: ['admin-product', id],
+    queryFn: async () => {
+      const res = await api.get(`/admin/products/${id}`)
+      return res.data.data
+    },
+    enabled: !!id,
+  })
+}
+
+export function useAdminUpdateProduct() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; data: Record<string, unknown> }>({
+    mutationFn: ({ id, data }) => api.patch(`/admin/products/${id}`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-product', vars.id] })
+      qc.invalidateQueries({ queryKey: ['admin-products'] })
+      toast.success('Product updated.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
   })
 }
 
@@ -460,7 +496,7 @@ export function useAdminOrders(params?: {
   dateFrom?: string
   dateTo?: string
 }) {
-  return useQuery<{ orders: AdminOrder[]; total: number; totalPages: number }>({
+  return useQuery<{ orders: AdminOrder[]; total: number; limit: number; totalPages: number }>({
     queryKey: ['admin-orders', params],
     queryFn: async () => {
       const res = await api.get('/admin/orders', { params })
@@ -468,6 +504,7 @@ export function useAdminOrders(params?: {
       return {
         orders: payload.orders ?? [],
         total: payload.total ?? 0,
+        limit: payload.limit ?? 20,
         totalPages: payload.totalPages ?? 1,
       }
     },

@@ -38,9 +38,6 @@ export const PAYOUT_SPEED = {
   EXPRESS: 'EXPRESS',
 };
 
-// Express payout fee rate (2.5%)
-export const EXPRESS_PAYOUT_FEE = 0.025;
-
 export const RETURN_STATUS = {
   REQUESTED: 'REQUESTED',
   APPROVED: 'APPROVED',
@@ -62,9 +59,3 @@ export const PROMOTION_SCOPE = {
 
 export const STORE_TYPES = ['boutique', 'gift_shop', 'subscription_box', 'online_store', 'pop_up', 'other'];
 export const AESTHETICS = ['minimalist', 'bohemian', 'artisan', 'luxury', 'contemporary', 'eclectic'];
-
-// Opening order return window in days
-export const OPENING_ORDER_RETURN_DAYS = 30;
-
-// Share link attribution window in days (0% commission)
-export const SHARE_LINK_ATTRIBUTION_DAYS = 30;

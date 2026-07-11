@@ -8,9 +8,9 @@ interface CartState {
 
 interface CartActions {
   addItem: (item: CartItem) => void
-  removeItem: (productId: string) => void
+  removeItem: (productId: string, variantId?: string) => void
   removeItems: (productIds: string[]) => void
-  updateQuantity: (productId: string, qty: number) => void
+  updateQuantity: (productId: string, qty: number, variantId?: string) => void
   clearCart: () => void
   getItemsByBrand: () => Record<string, CartItem[]>
   getTotalItems: () => number
@@ -24,6 +24,14 @@ interface CartActions {
 
 type CartStore = CartState & CartActions
 
+// Snaps a requested quantity to the moq + k*stepQty grid, clamped at moq.
+function snapToStep(qty: number, moq: number, stepQty?: number): number {
+  const floor = Math.max(qty, moq)
+  const step = stepQty ?? 1
+  if (step <= 1) return floor
+  return moq + Math.round((floor - moq) / step) * step
+}
+
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
@@ -35,27 +43,31 @@ export const useCartStore = create<CartStore>()(
 
   addItem: (item: CartItem) => {
     set((state) => {
-      const existing = state.items.find((i) => i.productId === item.productId)
+      // A line is unique by product + variant — two different variants of the
+      // same product must not collapse into one row with one blended price.
+      const existing = state.items.find(
+        (i) => i.productId === item.productId && i.variantId === item.variantId
+      )
 
       if (existing) {
-        // Increment quantity, but never below MOQ
-        const newQty = existing.quantity + item.quantity
+        // Increment quantity, but never below MOQ and always on the case-pack grid
+        const newQty = snapToStep(existing.quantity + item.quantity, existing.moq, existing.stepQty)
         return {
           items: state.items.map((i) =>
-            i.productId === item.productId ? { ...i, quantity: newQty } : i
+            i === existing ? { ...i, quantity: newQty } : i
           ),
         }
       }
 
-      // Ensure added quantity respects MOQ
-      const safeQty = Math.max(item.quantity, item.moq)
+      // Ensure added quantity respects MOQ and the case-pack step
+      const safeQty = snapToStep(item.quantity, item.moq, item.stepQty)
       return { items: [...state.items, { ...item, quantity: safeQty }] }
     })
   },
 
-  removeItem: (productId: string) => {
+  removeItem: (productId: string, variantId?: string) => {
     set((state) => ({
-      items: state.items.filter((i) => i.productId !== productId),
+      items: state.items.filter((i) => !(i.productId === productId && i.variantId === variantId)),
     }))
   },
 
@@ -66,21 +78,19 @@ export const useCartStore = create<CartStore>()(
     }))
   },
 
-  updateQuantity: (productId: string, qty: number) => {
+  updateQuantity: (productId: string, qty: number, variantId?: string) => {
     set((state) => {
-      const item = state.items.find((i) => i.productId === productId)
+      const item = state.items.find((i) => i.productId === productId && i.variantId === variantId)
       if (!item) return state
 
       // Quantity must be at least the MOQ; if set to 0 or below, remove item
       if (qty <= 0) {
-        return { items: state.items.filter((i) => i.productId !== productId) }
+        return { items: state.items.filter((i) => i !== item) }
       }
 
-      const safeQty = Math.max(qty, item.moq)
+      const safeQty = snapToStep(qty, item.moq, item.stepQty)
       return {
-        items: state.items.map((i) =>
-          i.productId === productId ? { ...i, quantity: safeQty } : i
-        ),
+        items: state.items.map((i) => (i === item ? { ...i, quantity: safeQty } : i)),
       }
     })
   },

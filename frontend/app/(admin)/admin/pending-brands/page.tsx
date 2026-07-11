@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, ExternalLink, CheckCircle, XCircle, Search, MapPin, Globe, CalendarDays } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, Search, MapPin, Globe, CalendarDays } from 'lucide-react'
 import {
   useAdminPendingBrands,
   useApproveBrand,

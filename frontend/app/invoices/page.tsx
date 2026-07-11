@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { FileText, Download, X, Package, Calendar, Hash } from 'lucide-react'
 import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { useMyOrders, type Order, type OrderStatus } from '@/hooks/queries/useOrders'
@@ -11,10 +12,12 @@ import { cn } from '@/lib/utils'
 type InvoiceStatus = 'Paid' | 'Due' | 'Disputed' | 'Void'
 
 function getInvoiceStatus(status: OrderStatus): InvoiceStatus {
-  if (status === 'DELIVERED') return 'Paid'
   if (status === 'CANCELLED') return 'Void'
   if (status === 'DISPUTED') return 'Disputed'
-  return 'Due'
+  // Orders from checkout are only created after PayPal payment is captured —
+  // PENDING is reserved for brand-created manual orders awaiting payment.
+  if (status === 'PENDING') return 'Due'
+  return 'Paid'
 }
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
@@ -177,11 +180,36 @@ function RowSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function InvoicesPage() {
+  return (
+    <Suspense fallback={
+      <AccountPageWrapper title="Invoices" description="Download and manage your order invoices">
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-12 bg-muted-bg rounded animate-pulse" />
+          ))}
+        </div>
+      </AccountPageWrapper>
+    }>
+      <InvoicesContent />
+    </Suspense>
+  )
+}
+
+function InvoicesContent() {
+  const searchParams = useSearchParams()
   const [tab, setTab] = useState<InvoiceStatus | 'All'>('All')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   const { data, isLoading } = useMyOrders({ limit: 100 })
   const orders = data?.orders ?? []
+
+  // Deep-link support — /invoices?order=<id> opens that order's invoice directly
+  useEffect(() => {
+    const orderId = searchParams.get('order')
+    if (!orderId) return
+    const match = orders.find((o) => o.id === orderId)
+    if (match) setSelectedOrder(match)
+  }, [searchParams, orders])
 
   const filtered = tab === 'All'
     ? orders

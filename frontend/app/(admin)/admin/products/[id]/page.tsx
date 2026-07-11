@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, Check, Search, Sparkles, RotateCcw, Video, AlertCircle } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, Check, Search, Sparkles, RotateCcw, Video, AlertCircle, ExternalLink, Pencil, Package } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -10,16 +10,13 @@ import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
 import { useCategories } from '@/hooks/queries/useCategories'
+import type { Category } from '@/hooks/queries/useCategories'
+import { useAdminProduct } from '@/hooks/queries/useAdmin'
 
 const LEAD_TIMES: { label: string; value: string }[] = [
   { label: '1–3 days',   value: 'ONE_TO_THREE_DAYS' },
   { label: '1–2 weeks',  value: 'ONE_TO_TWO_WEEKS' },
   { label: '2–4 weeks',  value: 'TWO_TO_FOUR_WEEKS' },
-]
-
-const ALL_SHIPPING_ZONES = [
-  'DOMESTIC', 'SOUTH_ASIA', 'SOUTHEAST_ASIA', 'MIDDLE_EAST',
-  'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD',
 ]
 
 const MAX_MEDIA = 20
@@ -38,18 +35,17 @@ interface ProductForm {
   availability: 'ACTIVE' | 'INACTIVE' | 'COMING_SOON'
 }
 
-
 interface PriceTier {
   id: string
   moq: string
   priceInr: string
 }
 
-interface MediaFile {
+interface Media {
   id: string
-  file: File
-  preview: string
-  type: 'image' | 'video'
+  url: string
+  position: number
+  mediaType: string
 }
 
 interface ProductAttrs {
@@ -75,12 +71,12 @@ interface ScoreRule {
 function calcListingScore(
   form: ProductForm,
   priceTiers: PriceTier[],
-  media: MediaFile[],
+  media: Media[],
   attrs: ProductAttrs,
   craft: CraftStory,
 ): { score: number; maxScore: number; rules: ScoreRule[] } {
   const wordCount = form.description.trim().split(/\s+/).filter(Boolean).length
-  const imageCount = media.filter((m) => m.type === 'image').length
+  const imageCount = media.filter((m) => m.mediaType !== 'video').length
   const tagCount = form.tags.split(',').map((t) => t.trim()).filter(Boolean).length
   const hasTiers = priceTiers.some((t) => t.moq && t.priceInr)
 
@@ -239,15 +235,7 @@ function ScoreWidget({ score, maxScore, rules, canPublish }: {
 
 // ─── Category picker ──────────────────────────────────────────────────────────
 
-import type { Category } from '@/hooks/queries/useCategories'
-
-function CategoryPicker({
-  categories,
-  selected,
-  onToggle,
-  onCreateNew,
-  creating,
-}: {
+function CategoryPicker({ categories, selected, onToggle, onCreateNew, creating }: {
   categories: Category[]
   selected: string[]
   onToggle: (name: string) => void
@@ -267,15 +255,12 @@ function CategoryPicker({
   }, [])
 
   const trimmed = query.trim()
-  const filtered = categories
-    .filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase()))
-    .slice(0, 10)
+  const filtered = categories.filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase())).slice(0, 10)
   const exactMatch = categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
   const canAdd = selected.length < 2
 
   return (
     <div ref={containerRef} className="space-y-2">
-      {/* Selected chips */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((name) => (
@@ -289,19 +274,14 @@ function CategoryPicker({
         </div>
       )}
 
-      {/* Search input — hidden once 2 selected */}
       {canAdd && (
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" />
           <input
-            type="text"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
-            onFocus={() => setOpen(true)}
+            type="text" value={query} onChange={(e) => { setQuery(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)}
             placeholder="Search categories…"
             className="w-full h-10 pl-9 pr-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors"
           />
-
           {open && (
             <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-surface border border-border-warm rounded shadow-lg overflow-hidden max-h-52 overflow-y-auto">
               {filtered.length === 0 && !trimmed && (
@@ -309,8 +289,7 @@ function CategoryPicker({
               )}
               {filtered.map((c) => (
                 <button
-                  key={c.id}
-                  type="button"
+                  key={c.id} type="button"
                   onClick={() => { onToggle(c.name); setQuery(''); setOpen(false) }}
                   disabled={selected.includes(c.name)}
                   className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-primary hover:bg-muted-bg transition-colors flex items-center justify-between disabled:opacity-40"
@@ -327,7 +306,7 @@ function CategoryPicker({
                   className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-accent hover:bg-muted-bg transition-colors border-t border-border-warm flex items-center gap-1.5"
                 >
                   {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                  Create "{trimmed}"
+                  Create &quot;{trimmed}&quot;
                 </button>
               )}
               {filtered.length === 0 && trimmed && exactMatch && (
@@ -345,13 +324,326 @@ function CategoryPicker({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Media (photos & videos) — uploads/deletes immediately since the product
+// already exists (unlike the create form, which stages files until submit) ────
 
-export default function NewProductPage() {
-  const router      = useRouter()
-  const queryClient = useQueryClient()
+function MediaSection({ productId, initialMedia }: { productId: string; initialMedia: Media[] }) {
+  const [media, setMedia] = useState<Media[]>(initialMedia)
+  const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    if (media.length + files.length > MAX_MEDIA) {
+      toast.error(`You can upload at most ${MAX_MEDIA - media.length} more file(s).`)
+      return
+    }
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      Array.from(files).forEach((f) => formData.append('photos', f))
+      const res = await api.post(`/admin/products/${productId}/photos`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const uploaded: Media[] = res.data.data
+      setMedia((prev) => [...prev, ...uploaded].sort((a, b) => a.position - b.position))
+      toast.success(`${uploaded.length} file${uploaded.length !== 1 ? 's' : ''} uploaded.`)
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  async function handleDelete(photoId: string) {
+    setDeletingId(photoId)
+    try {
+      await api.delete(`/admin/products/${productId}/photos/${photoId}`)
+      setMedia((prev) => prev.filter((p) => p.id !== photoId))
+      toast.success('Removed from gallery.')
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const imageCount = media.filter((m) => m.mediaType !== 'video').length
+  const videoCount = media.filter((m) => m.mediaType === 'video').length
+
+  return (
+    <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
+      <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">
+        Photos &amp; Videos
+      </h2>
+      <input ref={fileInputRef} type="file"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+        multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+      <div role="button" tabIndex={0}
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
+        onDragOver={(e) => e.preventDefault()}
+        className="border-2 border-dashed border-border-warm rounded p-6 flex flex-col items-center gap-2 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+        <div className="w-10 h-10 rounded-full bg-muted-bg flex items-center justify-center">
+          {uploading ? <Loader2 size={18} className="text-muted-text animate-spin" /> : <Upload size={18} className="text-muted-text" />}
+        </div>
+        <p className="text-[14px] font-[500] font-public-sans text-primary">
+          {uploading ? 'Uploading…' : 'Click or drag photos / videos here'}
+        </p>
+        <p className="text-[12px] font-public-sans text-muted-text">Up to {MAX_MEDIA} · JPG, PNG, WebP, MP4, MOV · Images max 8 MB · Videos max 100 MB</p>
+      </div>
+      {media.length > 0 && (
+        <div className="grid grid-cols-4 gap-3">
+          {media.map((m, i) => (
+            <div key={m.id} className="relative group aspect-square rounded overflow-hidden border border-border-warm bg-muted-bg">
+              {m.mediaType === 'video' ? (
+                <>
+                  <video src={m.url} className="w-full h-full object-cover" muted playsInline />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                      <Video size={14} className="text-white" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.url} alt="" className="w-full h-full object-cover" />
+              )}
+              <button type="button" onClick={() => handleDelete(m.id)} disabled={deletingId === m.id}
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                aria-label="Remove">
+                {deletingId === m.id ? <Loader2 size={11} className="animate-spin" /> : <X size={12} />}
+              </button>
+              {i === 0 && (
+                <span className="absolute bottom-1 left-1 text-[10px] font-[600] font-public-sans bg-black/60 text-white px-1.5 py-0.5 rounded">Cover</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[11px] font-public-sans text-muted-text">
+        {media.length}/{MAX_MEDIA} selected
+        {videoCount > 0 && <span className="ml-2 text-muted-text">({imageCount} image{imageCount !== 1 ? 's' : ''}, {videoCount} video{videoCount !== 1 ? 's' : ''})</span>}
+      </p>
+    </div>
+  )
+}
+
+// ─── Read-only view ─────────────────────────────────────────────────────────
+
+const LEAD_TIME_LABELS: Record<string, string> = {
+  ONE_TO_THREE_DAYS: '1–3 days',
+  ONE_TO_TWO_WEEKS: '1–2 weeks',
+  TWO_TO_FOUR_WEEKS: '2–4 weeks',
+}
+
+const AVAILABILITY_STYLE: Record<string, string> = {
+  ACTIVE: 'bg-success/10 text-success',
+  INACTIVE: 'bg-muted-bg text-muted-text',
+  COMING_SOON: 'bg-accent/10 text-accent',
+}
+
+function ViewSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
+      <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">{title}</h2>
+      {children}
+    </div>
+  )
+}
+
+function ViewRow({ label, value }: { label: string; value?: React.ReactNode }) {
+  if (value === undefined || value === null || value === '') return null
+  return (
+    <div>
+      <p className="text-[11px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.06em] mb-1">{label}</p>
+      <div className="text-[14px] font-public-sans text-primary leading-[1.5]">{value}</div>
+    </div>
+  )
+}
+
+function ProductView({ product }: { product: any }) {
+  const photos = product.photos ?? []
+  const variants = product.variants ?? []
+  const tiers = product.priceTiers ?? []
+  const hasVariants = variants.length > 0
+  const totalStock = variants.reduce((s: number, v: any) => s + v.stock, 0)
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      {/* Photos & Videos */}
+      <ViewSection title="Photos & Videos">
+        {photos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-8 rounded border border-dashed border-border-warm text-muted-text">
+            <Package size={24} className="opacity-40" />
+            <p className="text-[13px] font-public-sans">No photos or videos yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+            {photos.map((m: any, i: number) => (
+              <div key={m.id} className="relative aspect-square rounded overflow-hidden border border-border-warm bg-muted-bg">
+                {m.mediaType === 'video' ? (
+                  <>
+                    <video src={m.url} className="w-full h-full object-cover" muted playsInline />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                        <Video size={14} className="text-white" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                )}
+                {i === 0 && (
+                  <span className="absolute bottom-1 left-1 text-[10px] font-[600] font-public-sans bg-black/60 text-white px-1.5 py-0.5 rounded">Cover</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </ViewSection>
+
+      {/* Core Details */}
+      <ViewSection title="Core Details">
+        <ViewRow label="Categories" value={
+          (product.categories ?? []).length > 0
+            ? <div className="flex flex-wrap gap-1.5">{product.categories.map((c: string) => (
+                <span key={c} className="inline-block px-2.5 py-1 rounded bg-primary text-white text-[12px] font-[500] font-public-sans">{c}</span>
+              ))}</div>
+            : '—'
+        } />
+        <ViewRow label="Description" value={<span className="whitespace-pre-wrap">{product.description}</span>} />
+        <ViewRow label="Tags" value={
+          (product.tags ?? []).length > 0
+            ? <div className="flex flex-wrap gap-1.5">{product.tags.map((t: string) => (
+                <span key={t} className="inline-block px-2 py-0.5 rounded border border-border-warm text-[12px] font-public-sans text-muted-text">{t}</span>
+              ))}</div>
+            : '—'
+        } />
+      </ViewSection>
+
+      {/* Variants or flat pricing */}
+      {hasVariants ? (
+        <ViewSection title={`Variants (${variants.length})`}>
+          <div className="rounded border border-border-warm overflow-hidden">
+            <table className="w-full text-[13px] font-public-sans">
+              <thead>
+                <tr className="bg-muted-bg/40 border-b border-border-warm">
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Variant</th>
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">SKU</th>
+                  <th className="text-right py-2.5 px-3 font-[600] text-muted-text">Price (₹)</th>
+                  <th className="text-center py-2.5 px-3 font-[600] text-muted-text">Stock</th>
+                  <th className="text-center py-2.5 px-3 font-[600] text-muted-text">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-warm">
+                {variants.map((v: any) => (
+                  <tr key={v.id}>
+                    <td className="py-2.5 px-3 text-primary font-[500]">
+                      {(v.attributes ?? []).map((a: any) => a.value).join(' / ') || '—'}
+                    </td>
+                    <td className="py-2.5 px-3 text-muted-text">{v.sku}</td>
+                    <td className="py-2.5 px-3 text-right text-primary tabular-nums">₹{Number(v.priceInr).toLocaleString('en-IN')}</td>
+                    <td className="py-2.5 px-3 text-center tabular-nums">{v.stock}</td>
+                    <td className="py-2.5 px-3 text-center text-muted-text">{v.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[12px] font-public-sans text-muted-text">Total stock across variants: {totalStock}</p>
+        </ViewSection>
+      ) : (
+        <ViewSection title="Pricing & Wholesale Terms">
+          {tiers.length > 0 ? (
+            <div className="rounded border border-border-warm overflow-hidden">
+              <table className="w-full text-[13px] font-public-sans">
+                <thead>
+                  <tr className="bg-muted-bg/40 border-b border-border-warm">
+                    <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Min Order Qty</th>
+                    <th className="text-right py-2.5 px-3 font-[600] text-muted-text">Price per unit (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-warm">
+                  {tiers.map((t: any) => (
+                    <tr key={t.id}>
+                      <td className="py-2 px-3 text-primary tabular-nums">{t.moq}</td>
+                      <td className="py-2 px-3 text-right text-primary tabular-nums">₹{Number(t.priceInr).toLocaleString('en-IN')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <ViewRow label="Wholesale Price" value={`₹${Number(product.wholesalePriceInr).toLocaleString('en-IN')} · MOQ ${product.moq}`} />
+          )}
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <ViewRow label="Order Step" value={`${product.stepQty ?? 1} unit${(product.stepQty ?? 1) !== 1 ? 's' : ''}`} />
+            <ViewRow label="Lead Time" value={LEAD_TIME_LABELS[product.leadTime] ?? product.leadTime} />
+          </div>
+        </ViewSection>
+      )}
+
+      {hasVariants && (
+        <ViewSection title="Order Terms">
+          <div className="grid grid-cols-2 gap-4">
+            <ViewRow label="Order Step" value={`${product.stepQty ?? 1} unit${(product.stepQty ?? 1) !== 1 ? 's' : ''}`} />
+            <ViewRow label="Lead Time" value={LEAD_TIME_LABELS[product.leadTime] ?? product.leadTime} />
+          </div>
+        </ViewSection>
+      )}
+
+      {/* Product Attributes */}
+      <ViewSection title="Product Attributes">
+        <div className="grid grid-cols-2 gap-4">
+          <ViewRow label="Material" value={product.material} />
+          <ViewRow label="Dimensions" value={product.dimensions} />
+          <ViewRow label="Place of Origin" value={product.placeOfOrigin} />
+          <ViewRow label="Weight" value={product.weightGrams != null ? `${(product.weightGrams / 1000).toString().replace(/\.?0+$/, '')} kg` : undefined} />
+        </div>
+        <div className="flex gap-2 pt-1">
+          {product.isHandmade && (
+            <span className="inline-block px-2.5 py-1 rounded bg-primary/10 text-primary text-[12px] font-[500] font-public-sans">Handmade</span>
+          )}
+          {product.isGITagged && (
+            <span className="inline-block px-2.5 py-1 rounded bg-primary/10 text-primary text-[12px] font-[500] font-public-sans">GI Tagged</span>
+          )}
+          {!product.isHandmade && !product.isGITagged && (
+            <span className="text-[12px] font-public-sans text-muted-text">—</span>
+          )}
+        </div>
+      </ViewSection>
+
+      {/* How It's Made */}
+      {(product.howItIsMade || product.artisanName) && (
+        <ViewSection title="How It's Made">
+          <ViewRow label="Craft Process" value={<span className="whitespace-pre-wrap">{product.howItIsMade}</span>} />
+          <ViewRow label="Artisan Name" value={product.artisanName} />
+        </ViewSection>
+      )}
+
+      {/* Availability */}
+      <ViewSection title="Availability">
+        <span className={`inline-flex items-center h-6 px-3 rounded text-[12px] font-[600] font-public-sans ${AVAILABILITY_STYLE[product.availability] ?? ''}`}>
+          {product.availability === 'COMING_SOON' ? 'Coming Soon' : product.availability.charAt(0) + product.availability.slice(1).toLowerCase()}
+        </span>
+      </ViewSection>
+    </div>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function AdminProductDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  const { data: product, isLoading } = useAdminProduct(id)
   const { data: categoryList = [], isLoading: catsLoading } = useCategories()
 
   // ── Category creation ──────────────────────────────────────────────────────
@@ -368,44 +660,109 @@ export default function NewProductPage() {
     onError: (err) => toast.error(getApiError(err)),
   })
 
-  // ── Product form ───────────────────────────────────────────────────────────
+  // ── Product form ────────────────────────────────────────────────────────────
   const [form, setForm] = useState<ProductForm>({
-    name: '', categories: [], description: '',
-    stepQty: '1', leadTime: 'ONE_TO_TWO_WEEKS',
+    name: '', categories: [], description: '', stepQty: '1', leadTime: 'ONE_TO_TWO_WEEKS',
     weightKg: '', tags: '', availability: 'ACTIVE',
   })
-  const [media, setMedia]       = useState<MediaFile[]>([])
-  const imageCount = media.filter((m) => m.type === 'image').length
-  const videoCount = media.filter((m) => m.type === 'video').length
+  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([{ id: uid(), moq: '', priceInr: '' }])
+  const [attrs, setAttrs] = useState<ProductAttrs>({ material: '', dimensions: '', isHandmade: false, placeOfOrigin: '', isGITagged: false })
+  const [craft, setCraft] = useState<CraftStory>({ howItIsMade: '', artisanName: '' })
   const [submitting, setSubmitting] = useState(false)
 
-  // ── Price tiers ────────────────────────────────────────────────────────────
-  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([
-    { id: uid(), moq: '', priceInr: '' },
-  ])
+  // ── Variants (Size + Color, tab-style — mirrors the create form) ───────────
+  const [variantsEnabled, setVariantsEnabled] = useState(false)
+  const [activeVariantTab, setActiveVariantTab] = useState<'size' | 'color'>('size')
+  const [sizeValues, setSizeValues] = useState<string[]>([])
+  const [colorValues, setColorValues] = useState<string[]>([])
+  const [sizeInput, setSizeInput] = useState('')
+  const [colorInput, setColorInput] = useState('')
+  const [variantPricing, setVariantPricing] = useState<Record<string, { stock: string; tiers: PriceTier[] }>>({})
+  // Maps a combo key (e.g. "M__Red") to the existing variant it came from, so
+  // Save can update in place instead of creating a duplicate.
+  const [existingVariantByKey, setExistingVariantByKey] = useState<Record<string, { id: string; sku: string }>>({})
 
-  function addTier() {
-    setPriceTiers((prev) => [...prev, { id: uid(), moq: '', priceInr: '' }])
+  // ── View / edit toggle ──────────────────────────────────────────────────────
+  const [editing, setEditing] = useState(false)
+
+  // ── Prefill everything from the loaded product ─────────────────────────────
+  function hydrateFromProduct(product: any) {
+    setForm({
+      name: product.name ?? '',
+      categories: product.categories ?? [],
+      description: product.description ?? '',
+      stepQty: product.stepQty != null ? String(product.stepQty) : '1',
+      leadTime: product.leadTime ?? 'ONE_TO_TWO_WEEKS',
+      weightKg: product.weightGrams != null ? String(product.weightGrams / 1000) : '',
+      tags: (product.tags ?? []).join(', '),
+      availability: product.availability ?? 'ACTIVE',
+    })
+
+    const tiers = product.priceTiers ?? []
+    setPriceTiers(
+      tiers.length > 0
+        ? tiers.map((t: any) => ({ id: uid(), moq: String(t.moq), priceInr: String(t.priceInr) }))
+        : [{ id: uid(), moq: product.moq != null ? String(product.moq) : '', priceInr: product.wholesalePriceInr != null ? String(product.wholesalePriceInr) : '' }]
+    )
+
+    setAttrs({
+      material: product.material ?? '',
+      dimensions: product.dimensions ?? '',
+      isHandmade: !!product.isHandmade,
+      placeOfOrigin: product.placeOfOrigin ?? '',
+      isGITagged: !!product.isGITagged,
+    })
+
+    setCraft({ howItIsMade: product.howItIsMade ?? '', artisanName: product.artisanName ?? '' })
+
+    // Parse existing variants into the Size/Color tab model. Only variants whose
+    // attributes are exactly "Size" and/or "Color" fit this UI — anything else
+    // (e.g. custom attributes from a CSV import) is left alone and untouched.
+    const variants = product.variants ?? []
+    const sizes = new Set<string>()
+    const colors = new Set<string>()
+    const byKey: Record<string, { id: string; sku: string }> = {}
+    const pricing: Record<string, { stock: string; tiers: PriceTier[] }> = {}
+
+    for (const v of variants) {
+      const sizeAttr = v.attributes?.find((a: any) => a.name.toLowerCase() === 'size')
+      const colorAttr = v.attributes?.find((a: any) => a.name.toLowerCase() === 'color' || a.name.toLowerCase() === 'colour')
+      const otherAttrs = (v.attributes ?? []).filter((a: any) => a !== sizeAttr && a !== colorAttr)
+      if (otherAttrs.length > 0 || (!sizeAttr && !colorAttr)) continue
+
+      const key = sizeAttr && colorAttr ? `${sizeAttr.value}__${colorAttr.value}` : (sizeAttr?.value ?? colorAttr?.value)
+      if (!key) continue
+      if (sizeAttr) sizes.add(sizeAttr.value)
+      if (colorAttr) colors.add(colorAttr.value)
+      byKey[key] = { id: v.id, sku: v.sku }
+      pricing[key] = { stock: String(v.stock), tiers: [{ id: uid(), moq: product.moq != null ? String(product.moq) : '', priceInr: String(v.priceInr) }] }
+    }
+
+    setVariantsEnabled(Object.keys(byKey).length > 0)
+    setSizeValues([...sizes])
+    setColorValues([...colors])
+    setExistingVariantByKey(byKey)
+    setVariantPricing(pricing)
   }
-  function removeTier(id: string) {
-    if (priceTiers.length === 1) return
-    setPriceTiers((prev) => prev.filter((t) => t.id !== id))
+
+  useEffect(() => {
+    if (product) hydrateFromProduct(product)
+  }, [product])
+
+  function handleStartEdit() { setEditing(true) }
+  function handleCancelEdit() {
+    if (product) hydrateFromProduct(product)
+    setEditing(false)
   }
+
+  function addTier() { setPriceTiers((prev) => [...prev, { id: uid(), moq: '', priceInr: '' }]) }
+  function removeTier(id: string) { if (priceTiers.length > 1) setPriceTiers((prev) => prev.filter((t) => t.id !== id)) }
   function updateTier(id: string, field: 'moq' | 'priceInr', value: string) {
     setPriceTiers((prev) => prev.map((t) => t.id === id ? { ...t, [field]: value } : t))
   }
 
-  // ── Product attributes ─────────────────────────────────────────────────────
-  const [attrs, setAttrs] = useState<ProductAttrs>({
-    material: '', dimensions: '', isHandmade: false, placeOfOrigin: '', isGITagged: false,
-  })
-  const setAttr = (key: keyof ProductAttrs) => (value: string | boolean) =>
-    setAttrs((a) => ({ ...a, [key]: value }))
-
-  // ── Craft story ────────────────────────────────────────────────────────────
-  const [craft, setCraft] = useState<CraftStory>({ howItIsMade: '', artisanName: '' })
-  const setCraftField = (key: keyof CraftStory) => (value: string) =>
-    setCraft((c) => ({ ...c, [key]: value }))
+  const setAttr = (key: keyof ProductAttrs) => (value: string | boolean) => setAttrs((a) => ({ ...a, [key]: value }))
+  const setCraftField = (key: keyof CraftStory) => (value: string) => setCraft((c) => ({ ...c, [key]: value }))
 
   const [polishing, setPolishing] = useState<Partial<Record<PolishableField, boolean>>>({})
   const [prevValues, setPrevValues] = useState<Partial<Record<PolishableField, string>>>({})
@@ -433,8 +790,7 @@ export default function NewProductPage() {
     setPrevValues((p) => { const n = { ...p }; delete n[field]; return n })
   }
 
-  const set = (key: keyof ProductForm) => (value: string) =>
-    setForm((f) => ({ ...f, [key]: value }))
+  const set = (key: keyof ProductForm) => (value: string) => setForm((f) => ({ ...f, [key]: value }))
 
   function toggleCategory(cat: string) {
     setForm((f) => {
@@ -445,22 +801,10 @@ export default function NewProductPage() {
     })
   }
 
-  // ── Variants (Size + Color, tab-style) ────────────────────────────────────
-  const [variantsEnabled, setVariantsEnabled]       = useState(false)
-  const [activeVariantTab, setActiveVariantTab]     = useState<'size' | 'color'>('size')
-  const [sizeValues, setSizeValues]                 = useState<string[]>([])
-  const [colorValues, setColorValues]               = useState<string[]>([])
-  const [sizeInput, setSizeInput]                   = useState('')
-  const [colorInput, setColorInput]                 = useState('')
-  // per-variant: each combo key → { stock, tiers[] }
-  const [variantPricing, setVariantPricing] = useState<Record<string, { stock: string; tiers: PriceTier[] }>>({})
-
   function getVP(key: string) {
     return variantPricing[key] ?? { stock: '0', tiers: [{ id: `t-${key}`, moq: '', priceInr: '' }] }
   }
-  function setVPStock(key: string, stock: string) {
-    setVariantPricing((p) => ({ ...p, [key]: { ...getVP(key), stock } }))
-  }
+  function setVPStock(key: string, stock: string) { setVariantPricing((p) => ({ ...p, [key]: { ...getVP(key), stock } })) }
   function addVPTier(key: string) {
     const vp = getVP(key)
     setVariantPricing((p) => ({ ...p, [key]: { ...vp, tiers: [...vp.tiers, { id: uid(), moq: '', priceInr: '' }] } }))
@@ -516,40 +860,15 @@ export default function NewProductPage() {
   }, [variantsEnabled, priceTiers, variantCombos, variantPricing])
 
   const { score, maxScore, rules } = useMemo(
-    () => calcListingScore(form, scoreTiers, media, attrs, craft),
-    [form, scoreTiers, media, attrs, craft],
+    () => calcListingScore(form, scoreTiers, product?.photos ?? [], attrs, craft),
+    [form, scoreTiers, product, attrs, craft],
   )
   const canPublish = score >= MIN_SCORE_TO_PUBLISH
 
-  // ── Media (photos + videos) ────────────────────────────────────────────────
-  const handleFiles = useCallback((incoming: FileList | null) => {
-    if (!incoming) return
-    const accepted = Array.from(incoming).filter(
-      (f) => f.type.startsWith('image/') || f.type.startsWith('video/')
-    )
-    if (!accepted.length) return
-    setMedia((prev) => [
-      ...prev,
-      ...accepted.map((f) => ({
-        id: uid(),
-        file: f,
-        preview: URL.createObjectURL(f),
-        type: (f.type.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
-      })),
-    ].slice(0, MAX_MEDIA))
-  }, [])
-
-  function removeMedia(id: string) {
-    setMedia((prev) => {
-      const item = prev.find((m) => m.id === id)
-      if (item) URL.revokeObjectURL(item.preview)
-      return prev.filter((m) => m.id !== id)
-    })
-  }
-
-  // ── Submit ─────────────────────────────────────────────────────────────────
+  // ── Submit ───────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!product) return
 
     if (!form.name.trim())        { toast.error('Product name is required.'); return }
     if (!form.categories.length)  { toast.error('Select at least one category.'); return }
@@ -599,8 +918,8 @@ export default function NewProductPage() {
 
     setSubmitting(true)
     try {
-      // 1 — Create product
-      const res = await api.post('/products', {
+      // 1 — Update the product record
+      await api.patch(`/admin/products/${product.id}`, {
         name:              form.name.trim(),
         categories:        form.categories,
         description:       form.description.trim(),
@@ -611,60 +930,70 @@ export default function NewProductPage() {
         weightGrams:       Math.round(Number(form.weightKg) * 1000),
         tags:              form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         availability:      form.availability,
-        enabledZones:      ALL_SHIPPING_ZONES,
         ...(!variantsEnabled && { priceTiers: sortedTiers.map((t) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })) }),
-        // Attributes
         material:          attrs.material.trim() || undefined,
         dimensions:        attrs.dimensions.trim() || undefined,
         isHandmade:        attrs.isHandmade,
         placeOfOrigin:     attrs.placeOfOrigin.trim() || undefined,
         isGITagged:        attrs.isGITagged,
-        // Craft story
         howItIsMade:       craft.howItIsMade.trim() || undefined,
         artisanName:       craft.artisanName.trim() || undefined,
       })
 
-      const productId: string = res.data.data?.id
+      // 2 — Reconcile Size/Color variants: update existing, create new combos,
+      // remove combos the admin took away — applied as a single atomic
+      // request so a mid-way failure can't leave the product with only some
+      // of the variant changes applied.
+      const remainingKeys = new Set(Object.keys(existingVariantByKey))
+      const updates: any[] = []
+      const creates: any[] = []
 
-      // 2 — Upload photos/videos
-      if (media.length > 0 && productId) {
-        const fd = new FormData()
-        media.forEach((m) => fd.append('photos', m.file))
-        await api.post(`/photos/product/${productId}`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-      }
-
-      // 3 — Bulk-create variants with per-variant pricing
-      if (variantCombos.length > 0 && productId) {
+      if (variantsEnabled) {
         const namePrefix = form.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').toUpperCase().slice(0, 12) || 'PROD'
-        await api.post(`/products/${productId}/variants/bulk`, {
-          variants: variantCombos.map((combo) => {
-            const vp = getVP(combo.key)
+
+        for (const combo of variantCombos) {
+          const vp = getVP(combo.key)
+          // Only tiers with both a MOQ and a price are valid — an unfilled
+          // default tier can sort ahead of a valid one by MOQ (blank = 0),
+          // so filter before picking the cheapest instead of after.
+          const sortedVpTiers = vp.tiers
+            .filter((t) => Number(t.moq) > 0 && Number(t.priceInr) > 0)
+            .sort((a, b) => Number(a.moq) - Number(b.moq))
+          const priceInr = Number(sortedVpTiers[0]?.priceInr) || 0
+          const stock = Number(vp.stock) || 0
+          const existing = existingVariantByKey[combo.key]
+
+          if (existing) {
+            remainingKeys.delete(combo.key)
+            updates.push({ id: existing.id, priceInr, stock, attributes: combo.attributes })
+          } else {
             const autoSku = `${namePrefix}-${combo.key.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase()}`
-            // Only tiers with both a MOQ and a price are valid — an unfilled
-            // default tier can sort ahead of a valid one by MOQ (blank = 0),
-            // so filter before picking the cheapest instead of after.
-            const sortedVpTiers = vp.tiers
-              .filter((t) => Number(t.moq) > 0 && Number(t.priceInr) > 0)
-              .sort((a, b) => Number(a.moq) - Number(b.moq))
-            return {
-              sku:        autoSku,
-              priceInr:   Number(sortedVpTiers[0]?.priceInr) || 0,
-              stock:      Number(vp.stock) || 0,
-              status:     'ACTIVE',
-              attributes: combo.attributes,
-              priceTiers: sortedVpTiers
-                .filter((t) => t.moq && t.priceInr)
-                .map((t) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })),
-            }
-          }),
-        })
+            creates.push({ sku: autoSku, priceInr, stock, status: 'ACTIVE', attributes: combo.attributes })
+          }
+        }
+      } else {
+        // Variants turned off entirely — remove every Size/Color variant.
+        Object.keys(existingVariantByKey).forEach((k) => remainingKeys.add(k))
       }
 
-      queryClient.invalidateQueries({ queryKey: ['my-products'] })
-      toast.success('Product created successfully.')
-      router.push('/portal/products')
+      const deleteIds = [...remainingKeys]
+        .map((key) => existingVariantByKey[key]?.id)
+        .filter((id): id is string => !!id)
+
+      if (updates.length > 0 || creates.length > 0 || deleteIds.length > 0) {
+        try {
+          await api.put(`/admin/products/${product.id}/variants/reconcile`, { updates, creates, deleteIds })
+        } catch (err) {
+          toast.error(`Could not save variant changes: ${getApiError(err)}`)
+          return
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['admin-product', product.id] })
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+
+      toast.success('Product updated.')
+      setEditing(false)
     } catch (err) {
       toast.error(getApiError(err))
     } finally {
@@ -672,81 +1001,68 @@ export default function NewProductPage() {
     }
   }
 
+  if (isLoading || !product) {
+    return (
+      <div>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-8 h-8 rounded bg-muted-bg animate-pulse" />
+          <div className="h-7 bg-muted-bg rounded w-40 animate-pulse" />
+        </div>
+        <div className="max-w-2xl space-y-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-10 bg-muted-bg rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div>
-      <div className="flex items-center gap-3 mb-8">
-        <Link href="/portal/products"
-          className="inline-flex items-center justify-center w-8 h-8 rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
-          aria-label="Back to products">
-          <ArrowLeft size={15} />
-        </Link>
-        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">Add Product</h1>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => router.push('/admin/products')}
+            className="inline-flex items-center justify-center w-8 h-8 rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
+            aria-label="Back to products">
+            <ArrowLeft size={15} />
+          </button>
+          <div>
+            <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
+              {editing ? 'Edit Product' : product.name}
+            </h1>
+            <p className="text-[13px] font-public-sans text-muted-text mt-0.5 flex items-center gap-1.5">
+              Sold by{' '}
+              <Link href={`/admin/brands/${product.brandProfile.id}`} className="text-accent hover:underline inline-flex items-center gap-1">
+                {product.brandProfile.brandName}
+                <ExternalLink size={11} />
+              </Link>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="hidden sm:flex items-center gap-4 text-[12px] font-public-sans text-muted-text">
+            <span>{product._count?.orderItems ?? 0} orders</span>
+            <span>{product.viewCount ?? 0} views</span>
+          </div>
+          {!editing && (
+            <Button type="button" variant="ghost" size="sm" onClick={handleStartEdit}>
+              <Pencil size={13} className="mr-1.5" />
+              Edit
+            </Button>
+          )}
+        </div>
       </div>
 
+      {!editing ? (
+        <ProductView product={product} />
+      ) : (
       <form onSubmit={handleSubmit} noValidate>
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 items-start">
       <div className="space-y-6">
 
         {/* ── Photos & Videos ──────────────────────────────────────────────── */}
-        <div className="bg-surface border border-border-warm rounded p-6 space-y-4">
-          <h2 className="text-[16px] font-[600] font-public-sans text-primary pb-3 border-b border-border-warm">
-            Photos &amp; Videos
-          </h2>
-          <input ref={fileInputRef} type="file"
-            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
-            multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-          <div role="button" tabIndex={0}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-            onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
-            onDragOver={(e) => e.preventDefault()}
-            className="border-2 border-dashed border-border-warm rounded p-6 flex flex-col items-center gap-2 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-muted-bg flex items-center justify-center">
-              <Upload size={18} className="text-muted-text" />
-            </div>
-            <p className="text-[14px] font-[500] font-public-sans text-primary">Click or drag photos / videos here</p>
-            <p className="text-[12px] font-public-sans text-muted-text">Up to {MAX_MEDIA} · JPG, PNG, WebP, MP4, MOV · Images max 8 MB · Videos max 100 MB</p>
-          </div>
-          {media.length > 0 && (
-            <div className="grid grid-cols-4 gap-3">
-              {media.map((m, i) => (
-                <div key={m.id} className="relative group aspect-square rounded overflow-hidden border border-border-warm bg-muted-bg">
-                  {m.type === 'video' ? (
-                    <>
-                      <video src={m.preview} className="w-full h-full object-cover" muted playsInline />
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-                          <Video size={14} className="text-white" />
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <img src={m.preview} alt="" className="w-full h-full object-cover" />
-                  )}
-                  <button type="button" onClick={() => removeMedia(m.id)}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Remove">
-                    <X size={12} />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute bottom-1 left-1 text-[10px] font-[600] font-public-sans bg-black/60 text-white px-1.5 py-0.5 rounded">Cover</span>
-                  )}
-                </div>
-              ))}
-              {media.length < MAX_MEDIA && (
-                <button type="button" onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded border-2 border-dashed border-border-warm flex items-center justify-center text-muted-text hover:border-accent hover:text-accent transition-colors">
-                  <Upload size={16} />
-                </button>
-              )}
-            </div>
-          )}
-          <p className="text-[11px] font-public-sans text-muted-text">
-            {media.length}/{MAX_MEDIA} selected
-            {videoCount > 0 && <span className="ml-2 text-muted-text">({imageCount} image{imageCount !== 1 ? 's' : ''}, {videoCount} video{videoCount !== 1 ? 's' : ''})</span>}
-          </p>
-        </div>
+        <MediaSection productId={product.id} initialMedia={product.photos ?? []} />
 
         {/* ── Core details ────────────────────────────────────────────────── */}
         <div className="bg-surface border border-border-warm rounded p-6 space-y-5">
@@ -791,7 +1107,6 @@ export default function NewProductPage() {
         {/* ── Variants ────────────────────────────────────────────────────── */}
         <div className="bg-surface border border-border-warm rounded p-6 space-y-5">
 
-          {/* Master toggle */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[16px] font-[600] font-public-sans text-primary">Variants</h2>
@@ -807,37 +1122,27 @@ export default function NewProductPage() {
           {variantsEnabled && (
             <div className="space-y-4 pt-4 border-t border-border-warm">
 
-              {/* Size / Color tab buttons */}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setActiveVariantTab('size')}
                   className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
-                    activeVariantTab === 'size'
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                    activeVariantTab === 'size' ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
                   }`}>
                   Size
                   {sizeValues.length > 0 && (
-                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'size' ? 'bg-white/20' : 'bg-muted-bg'}`}>
-                      {sizeValues.length}
-                    </span>
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'size' ? 'bg-white/20' : 'bg-muted-bg'}`}>{sizeValues.length}</span>
                   )}
                 </button>
                 <button type="button" onClick={() => setActiveVariantTab('color')}
                   className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
-                    activeVariantTab === 'color'
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                    activeVariantTab === 'color' ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
                   }`}>
                   Color
                   {colorValues.length > 0 && (
-                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'color' ? 'bg-white/20' : 'bg-muted-bg'}`}>
-                      {colorValues.length}
-                    </span>
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'color' ? 'bg-white/20' : 'bg-muted-bg'}`}>{colorValues.length}</span>
                   )}
                 </button>
               </div>
 
-              {/* Size panel */}
               {activeVariantTab === 'size' && (
                 <div className="space-y-2">
                   <p className="text-[12px] font-public-sans text-muted-text">e.g. S, M, L, XL, Free Size — press Enter or click + to add</p>
@@ -865,7 +1170,6 @@ export default function NewProductPage() {
                 </div>
               )}
 
-              {/* Color panel */}
               {activeVariantTab === 'color' && (
                 <div className="space-y-2">
                   <p className="text-[12px] font-public-sans text-muted-text">e.g. Red, Navy Blue, Ivory — press Enter or click + to add</p>
@@ -893,17 +1197,19 @@ export default function NewProductPage() {
                 </div>
               )}
 
-              {/* Per-variant pricing cards */}
               {variantCombos.length > 0 && (
                 <div className="space-y-4 pt-1">
                   <p className="text-[12px] font-public-sans text-muted-text">Set MOQ tiers and stock for each variant.</p>
                   {variantCombos.map((combo) => {
                     const vp = getVP(combo.key)
+                    const isNew = !existingVariantByKey[combo.key]
                     return (
                       <div key={combo.key} className="rounded border border-border-warm overflow-hidden">
-                        {/* Card header */}
                         <div className="flex items-center justify-between bg-muted-bg/40 px-3 py-2 border-b border-border-warm">
-                          <span className="text-[13px] font-[600] font-public-sans text-primary">{combo.label}</span>
+                          <span className="text-[13px] font-[600] font-public-sans text-primary flex items-center gap-1.5">
+                            {combo.label}
+                            {isNew && <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded bg-accent/10 text-accent">New</span>}
+                          </span>
                           <div className="flex items-center gap-2">
                             <span className="text-[12px] font-public-sans text-muted-text">Stock</span>
                             <input type="number" value={vp.stock} min="0"
@@ -911,7 +1217,6 @@ export default function NewProductPage() {
                               className="w-20 h-7 px-2 rounded border border-border-warm bg-surface text-[13px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors" />
                           </div>
                         </div>
-                        {/* MOQ tier table */}
                         <table className="w-full text-[13px] font-public-sans">
                           <thead>
                             <tr className="border-b border-border-warm">
@@ -956,7 +1261,6 @@ export default function NewProductPage() {
                   })}
                 </div>
               )}
-
             </div>
           )}
         </div>
@@ -1121,7 +1425,7 @@ export default function NewProductPage() {
           {form.availability === 'ACTIVE' && !canPublish ? (
             <div className="relative group">
               <Button type="button" variant="primary" size="md" disabled>
-                Create Product
+                Save Changes
               </Button>
               <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded border border-border-warm bg-surface shadow-md px-3 py-2
                 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
@@ -1132,25 +1436,23 @@ export default function NewProductPage() {
             </div>
           ) : (
             <Button type="submit" variant="primary" size="md" disabled={submitting}>
-              {submitting
-                ? (media.length > 0 ? 'Uploading…' : 'Creating…')
-                : 'Create Product'}
+              {submitting ? 'Saving…' : 'Save Changes'}
             </Button>
           )}
-          <Button variant="ghost" size="md" asChild>
-            <Link href="/portal/products">Cancel</Link>
+          <Button type="button" variant="ghost" size="md" onClick={handleCancelEdit} disabled={submitting}>
+            Cancel
           </Button>
         </div>
 
       </div>{/* end left column */}
 
-      {/* ── Score sidebar ─────────────────────────────────────────────────── */}
       <div className="xl:sticky xl:top-24 xl:self-start">
         <ScoreWidget score={score} maxScore={maxScore} rules={rules} canPublish={canPublish} />
       </div>
 
       </div>{/* end grid */}
       </form>
+      )}
     </div>
   )
 }

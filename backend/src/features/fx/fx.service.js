@@ -7,7 +7,15 @@ const FRANKFURTER_URL = 'https://api.frankfurter.app/latest';
 /**
  * Currencies not in Frankfurter (ECB) but derivable from the USD rate.
  * Value = units of that currency per 1 USD (official/fixed peg or close approximation).
+ *
+ * The hard pegs (AED, SAR, QAR, BHD, OMR, JOD) essentially never move. The
+ * rest are managed floats or approximations that drift over time and have no
+ * live source — update USD_DERIVED_LAST_VERIFIED whenever these are re-checked
+ * against a live source, so refreshFxRates() can warn once they go stale.
  */
+const USD_DERIVED_LAST_VERIFIED = '2026-07-11';
+const USD_DERIVED_STALE_AFTER_DAYS = 180;
+
 const USD_DERIVED = {
   AED: 3.6725,  // UAE dirham — hard peg
   SAR: 3.7500,  // Saudi riyal — hard peg
@@ -56,6 +64,14 @@ export const refreshFxRates = async () => {
 
   await cacheRates(rates);
   await prisma.fxRateSnapshot.create({ data: { rates } });
+
+  const daysSinceVerified = (Date.now() - new Date(USD_DERIVED_LAST_VERIFIED).getTime()) / 86_400_000;
+  if (daysSinceVerified > USD_DERIVED_STALE_AFTER_DAYS) {
+    logger.warn('USD_DERIVED fallback FX rates have not been reverified recently — approximate rates (EGP, PKR, BDT, LKR, NPR) may have drifted from live values', {
+      lastVerified: USD_DERIVED_LAST_VERIFIED,
+      daysSinceVerified: Math.round(daysSinceVerified),
+    });
+  }
 
   logger.info('FX rates refreshed via Frankfurter', {
     date: json.date,

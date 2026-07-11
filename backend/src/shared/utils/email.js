@@ -39,7 +39,7 @@ export const sendWelcomeEmail = (to, name) =>
     subject: 'Welcome to Solomon Bharat',
     html: `
       <h1>Welcome, ${name}!</h1>
-      <p>Your account is ready. Start exploring Indian wholesale brands at solomonbharat.com.</p>
+      <p>Your account is ready. Start exploring Indian wholesale brands at <a href="${env.CLIENT_URL}">${env.CLIENT_URL.replace(/^https?:\/\//, '')}</a>.</p>
       <p>Browse thousands of unique Indian artisan products and place your first wholesale order today.</p>
     `,
   });
@@ -150,7 +150,7 @@ export const sendReferralRewardEmail = (to, { buyerName, brandName, creditAmount
 
 export const sendWeeklyDigest = (to, { buyerName, products }) => {
   const productRows = products.map((p) =>
-    `<li><a href="https://solomonbharat.com/products/${p.slug}">${p.name}</a> by ${p.brandName} — ₹${p.wholesalePriceInr}</li>`
+    `<li><a href="${env.CLIENT_URL}/products/${p.slug}">${p.name}</a> by ${p.brandName} — ₹${p.wholesalePriceInr}</li>`
   ).join('');
 
   return send({
@@ -160,7 +160,7 @@ export const sendWeeklyDigest = (to, { buyerName, products }) => {
       <h1>Hi ${buyerName}, here's what's new this week</h1>
       <p>Curated picks based on your preferences:</p>
       <ul>${productRows}</ul>
-      <p><a href="https://solomonbharat.com">Browse all products →</a></p>
+      <p><a href="${env.CLIENT_URL}">Browse all products →</a></p>
     `,
   });
 };

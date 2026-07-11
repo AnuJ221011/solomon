@@ -11,6 +11,15 @@ import { NavBar } from '@/components/shared/NavBar'
 import { useFormatPrice } from '@/components/ui/Price'
 import type { CartItem } from '@/types'
 
+// Fallback INR threshold when a brand hasn't configured one.
+const DEFAULT_FREE_SHIP_INR = 15000
+
+// A cart line is unique by product + variant — two variants of the same
+// product are two separate rows, so selection/keys must account for both.
+function lineKey(item: { productId: string; variantId?: string }): string {
+  return item.variantId ? `${item.productId}::${item.variantId}` : item.productId
+}
+
 function formatLeadTime(lt?: string): string {
   if (!lt) return '1–2 weeks'
   const u = lt.toUpperCase()
@@ -91,6 +100,7 @@ function CartItemRow({
 }) {
   const fmt = useFormatPrice()
   const updateQuantity = useCartStore((s) => s.updateQuantity)
+  const step = item.stepQty ?? 1
 
   return (
     <div className={cn(
@@ -130,8 +140,12 @@ function CartItemRow({
           <p className="font-public-sans text-[15px] font-[600] text-primary leading-snug mb-0.5">
             {item.productName}
           </p>
+          {item.variantLabel && (
+            <p className="font-public-sans text-[12px] text-muted-text mb-0.5">{item.variantLabel}</p>
+          )}
           <p className="font-public-sans text-[13px] text-muted-text">
             Min. {item.moq} units per order
+            {step > 1 && <span> · in steps of {step}</span>}
           </p>
         </div>
 
@@ -140,7 +154,7 @@ function CartItemRow({
           <div className="inline-flex items-center border border-border-warm rounded-md overflow-hidden">
             <button
               type="button"
-              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+              onClick={() => updateQuantity(item.productId, item.quantity - step, item.variantId)}
               disabled={item.quantity <= item.moq}
               aria-label="Decrease quantity"
               className="w-9 h-9 flex items-center justify-center text-muted-text hover:text-primary hover:bg-muted-bg transition-colors disabled:opacity-30 disabled:pointer-events-none"
@@ -152,7 +166,7 @@ function CartItemRow({
             </span>
             <button
               type="button"
-              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+              onClick={() => updateQuantity(item.productId, item.quantity + step, item.variantId)}
               aria-label="Increase quantity"
               className="w-9 h-9 flex items-center justify-center text-muted-text hover:text-primary hover:bg-muted-bg transition-colors"
             >
@@ -205,9 +219,8 @@ export default function BrandCartPage({
     }
   }, [hasHydrated, isAuthenticated, router, openAuthModal])
 
-  const allItems         = useCartStore((s) => s.items)
-  const removeItem       = useCartStore((s) => s.removeItem)
-  const setCheckoutItems = useCartStore((s) => s.setCheckoutItems)
+  const allItems   = useCartStore((s) => s.items)
+  const removeItem = useCartStore((s) => s.removeItem)
 
   // Derive from allItems so the page re-renders on every quantity change
   const items   = allItems.filter((i) => i.brandId === brandId)
@@ -219,13 +232,13 @@ export default function BrandCartPage({
 
   // Per-item selection — all selected by default
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(items.map((i) => i.productId))
+    () => new Set(items.map(lineKey))
   )
 
   // Keep selection in sync when items are added/removed
   useEffect(() => {
     setSelectedIds((prev) => {
-      const current = new Set(items.map((i) => i.productId))
+      const current = new Set(items.map(lineKey))
       const next = new Set([...prev].filter((id) => current.has(id)))
       // Auto-select any newly added items
       for (const id of current) {
@@ -235,22 +248,22 @@ export default function BrandCartPage({
     })
   }, [items.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function toggleItem(productId: string) {
+  function toggleItem(key: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      next.has(productId) ? next.delete(productId) : next.add(productId)
+      next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
   }
 
-  const allSelected  = items.length > 0 && items.every((i) => selectedIds.has(i.productId))
-  const noneSelected = items.every((i) => !selectedIds.has(i.productId))
+  const allSelected  = items.length > 0 && items.every((i) => selectedIds.has(lineKey(i)))
+  const noneSelected = items.every((i) => !selectedIds.has(lineKey(i)))
 
   function toggleAll() {
     if (allSelected) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(items.map((i) => i.productId)))
+      setSelectedIds(new Set(items.map(lineKey)))
     }
   }
 
@@ -288,7 +301,7 @@ export default function BrandCartPage({
   const brandSlug    = firstItem?.brandSlug
   const leadTime     = firstItem?.leadTime
 
-  const selectedItems = items.filter((i) => selectedIds.has(i.productId))
+  const selectedItems = items.filter((i) => selectedIds.has(lineKey(i)))
   const currentValue  = selectedItems.reduce((s, i) => s + i.wholesalePrice * i.quantity, 0)
   const targetValue   = firstItem?.brandMinimumOrderValue ?? 0
   const met           = currentValue >= targetValue
@@ -344,7 +357,7 @@ export default function BrandCartPage({
                     {brandName}
                   </h1>
                   <p className="font-public-sans text-[12px] text-accent">
-                    Free shipping on orders over ₹15,000
+                    Free shipping on orders over {fmt(firstItem?.freeShippingAboveInr ?? DEFAULT_FREE_SHIP_INR)}
                   </p>
                 </div>
               </div>
@@ -425,11 +438,11 @@ export default function BrandCartPage({
 
                 {items.map((item) => (
                   <CartItemRow
-                    key={item.productId}
+                    key={lineKey(item)}
                     item={item}
-                    selected={selectedIds.has(item.productId)}
-                    onToggle={() => toggleItem(item.productId)}
-                    onRemove={() => removeItem(item.productId)}
+                    selected={selectedIds.has(lineKey(item))}
+                    onToggle={() => toggleItem(lineKey(item))}
+                    onRemove={() => removeItem(item.productId, item.variantId)}
                   />
                 ))}
               </main>

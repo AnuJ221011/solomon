@@ -10,10 +10,13 @@ import {
   buyerSignupSchema,
   brandSignupSchema,
   loginSchema,
+  requestLoginOtpSchema,
+  loginOtpSchema,
   verifyOtpSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   storeTypeQuizSchema,
+  resendOtpSchema,
   changePendingEmailSchema,
 } from './auth.validator.js';
 
@@ -64,7 +67,10 @@ const parseFormDataBody = (req, _res, next) => {
 };
 
 // Email / password flows
+// Buyer signup is two-step: initiate stashes the form + sends a code, verify
+// creates the account only once that code is confirmed.
 router.post('/buyer/signup', authLimiter, validate(buyerSignupSchema), ctrl.buyerSignup);
+router.post('/buyer/signup/verify', otpLimiter, validate(verifyOtpSchema), ctrl.verifyBuyerSignup);
 router.post(
   '/brand/signup',
   authLimiter,
@@ -74,12 +80,18 @@ router.post(
   ctrl.brandSignup,
 );
 router.post('/login', authLimiter, validate(loginSchema), ctrl.login);
+
+// Alternate login — a one-time emailed code instead of a password. Leads to
+// the exact same signed-in session as /login.
+router.post('/login/otp/request', otpLimiter, validate(requestLoginOtpSchema), ctrl.requestLoginOtp);
+router.post('/login/otp/verify', otpLimiter, validate(loginOtpSchema), ctrl.loginWithOtp);
+
 router.post('/logout', ctrl.logout);
 router.post('/refresh', ctrl.refreshToken);
 
 // Email verification
 router.post('/verify-email', otpLimiter, validate(verifyOtpSchema), ctrl.verifyEmail);
-router.post('/resend-otp', otpLimiter, ctrl.resendOtp);
+router.post('/resend-otp', otpLimiter, validate(resendOtpSchema), ctrl.resendOtp);
 router.post('/change-pending-email', otpLimiter, validate(changePendingEmailSchema), ctrl.changePendingEmail);
 
 // Password reset

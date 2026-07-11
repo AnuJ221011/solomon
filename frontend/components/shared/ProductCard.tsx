@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Heart, Plus, Check, Star } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -76,6 +77,7 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
   const swatches = colorSwatches(product)
 
   const fmt = useFormatPrice()
+  const router = useRouter()
   const addItem = useCartStore((s) => s.addItem)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
@@ -112,6 +114,16 @@ export function ProductCard({ product, onAddToCart, className }: ProductCardProp
     }
     if (onAddToCart) {
       onAddToCart(product)
+    } else if (product.variants?.length) {
+      // This card has no variant picker — sizes/colors have different prices
+      // and stock, so send the buyer to the product page to choose one
+      // rather than guessing and charging the base price.
+      toast.info('This product has options to choose from', {
+        description: 'Select a size or color on the product page.',
+        duration: 3000,
+      })
+      router.push(`/products/${slug}`)
+      return
     } else {
       addItem({
         productId: id,

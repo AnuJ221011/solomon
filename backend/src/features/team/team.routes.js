@@ -2,20 +2,22 @@ import { Router } from 'express';
 import { z } from 'zod';
 import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
+import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
+import { emailField } from '../auth/auth.validator.js';
 
 const router = Router();
 
 const inviteSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   role: z.enum(['ADMIN', 'CUSTOM']).default('CUSTOM'),
   canViewPayouts: z.boolean().default(false),
   canViewAnalytics: z.boolean().default(true),
 });
 
-router.use(authenticate);
+router.use(authenticate, authorize('BRAND'));
 
 router.get('/', async (req, res) => {
   const members = await prisma.teamMember.findMany({

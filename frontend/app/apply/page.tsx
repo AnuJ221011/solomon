@@ -213,20 +213,20 @@ function PhaseIndicator({ currentPhase }: { currentPhase: number }) {
             <div className="flex flex-col items-center">
               <div className={cn(
                 'w-8 h-8 rounded-full border-2 flex items-center justify-center text-[13px] font-[600]',
-                (isDone || isCurrent) ? 'bg-[#1A1A1A] border-[#1A1A1A] text-white' : 'border-[#CACAC5] text-[#CACAC5] bg-white',
+                (isDone || isCurrent) ? 'bg-primary border-primary text-white' : 'border-[#CACAC5] text-[#CACAC5] bg-white',
               )}>
                 {isDone ? <Check size={13} strokeWidth={2.5} /> : phase}
               </div>
               <span className={cn(
                 'text-[11px] mt-1.5 whitespace-nowrap font-[500]',
-                isCurrent ? 'text-[#1A1A1A]' : isDone ? 'text-[#1A1A1A]' : 'text-[#CACAC5]',
+                isCurrent ? 'text-primary' : isDone ? 'text-primary' : 'text-[#CACAC5]',
               )}>
                 {label}
               </span>
             </div>
             {!isLast && (
               <div
-                className={cn('h-[2px] mt-[15px] mx-2', isDone ? 'bg-[#1A1A1A]' : 'bg-[#E2E0DA]')}
+                className={cn('h-[2px] mt-[15px] mx-2', isDone ? 'bg-primary' : 'bg-[#E2E0DA]')}
                 style={{ width: '52px' }}
               />
             )}
@@ -242,7 +242,7 @@ function PhaseIndicator({ currentPhase }: { currentPhase: number }) {
 function TopBar({ showPhase, currentPhase }: { showPhase?: boolean; currentPhase?: number }) {
   return (
     <header className="flex-shrink-0 h-[60px] flex items-center justify-between px-6 md:px-10 border-b border-[#E8E3DC] bg-white z-10">
-      <Link href="/" className="font-playfair text-[18px] font-[600] text-[#1A1A1A] tracking-[0.01em] flex-shrink-0">
+      <Link href="/" className="font-playfair text-[18px] font-[600] text-primary tracking-[0.01em] flex-shrink-0">
         Solomon Bharat
       </Link>
 
@@ -253,10 +253,10 @@ function TopBar({ showPhase, currentPhase }: { showPhase?: boolean; currentPhase
       )}
 
       <div className="flex items-center gap-5 flex-shrink-0 ml-auto">
-        <a href="#" className="hidden sm:block text-[13px] text-[#555] hover:text-[#1A1A1A] transition-colors">
+        <a href="#" className="hidden sm:block text-[13px] text-[#555] hover:text-primary transition-colors">
           Get help
         </a>
-        <Link href="/sell" className="text-[13px] text-[#555] hover:text-[#1A1A1A] transition-colors">
+        <Link href="/sell" className="text-[13px] text-[#555] hover:text-primary transition-colors">
           Save &amp; exit
         </Link>
       </div>
@@ -312,14 +312,14 @@ function TransitionScreen({
         {/* Right: large serif heading + description + CTA */}
         <div className="flex-1 flex items-center overflow-y-auto bg-white">
           <div className="max-w-[560px] mx-auto px-5 lg:px-10 py-14">
-            <h1 className="font-playfair text-[44px] md:text-[54px] font-[400] text-[#1A1A1A] leading-[1.05] mb-5">
+            <h1 className="font-playfair text-[44px] md:text-[54px] font-[400] text-primary leading-[1.05] mb-5">
               {data.heading}
             </h1>
             <p className="text-[15px] text-[#555] leading-[1.75] mb-3">
               {data.body}
             </p>
             {data.estimatedTime && (
-              <p className="text-[15px] text-[#1A1A1A] font-[500] mb-10">
+              <p className="text-[15px] text-primary font-[500] mb-10">
                 Estimated time: <strong>{data.estimatedTime}</strong>
               </p>
             )}
@@ -328,7 +328,7 @@ function TransitionScreen({
                 <button
                   type="button"
                   onClick={onBack}
-                  className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded border border-[#E2E0DA] text-[#777] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors"
+                  className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded border border-[#E2E0DA] text-[#777] hover:border-primary hover:text-primary transition-colors"
                   aria-label="Go back"
                 >
                   <ArrowLeft size={16} />
@@ -337,7 +337,7 @@ function TransitionScreen({
               <button
                 type="button"
                 onClick={onContinue}
-                className="flex-1 h-11 bg-[#1A1A1A] text-white text-[14px] font-[600] rounded hover:bg-[#333] transition-colors"
+                className="flex-1 h-11 bg-primary text-white text-[14px] font-[600] rounded hover:bg-primary/90 transition-colors"
               >
                 {data.cta}
               </button>
@@ -397,7 +397,7 @@ function SplitShell({
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-[14px] font-[500] text-[#1A1A1A] mb-1.5">
+    <label className="block text-[14px] font-[500] text-primary mb-1.5">
       {children}
     </label>
   )
@@ -420,8 +420,8 @@ function Chip({ label, selected, onClick, disabled }: {
       className={cn(
         'px-4 py-2 rounded border text-[13px] font-[500] transition-colors',
         selected
-          ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-          : 'bg-white text-[#1A1A1A] border-[#D4D0C8] hover:border-[#1A1A1A]',
+          ? 'bg-primary text-white border-primary'
+          : 'bg-white text-primary border-[#D4D0C8] hover:border-primary',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
@@ -447,8 +447,8 @@ function Textarea({ id, value, onChange, placeholder, rows = 6, disabled, maxLen
       maxLength={maxLength}
       className={cn(
         'w-full rounded border border-[#D4D0C8] bg-white px-4 py-3',
-        'text-[15px] text-[#1A1A1A] placeholder:text-[#B0ACA3]',
-        'outline-none focus:border-[#1A1A1A] focus:ring-0',
+        'text-[15px] text-primary placeholder:text-[#B0ACA3]',
+        'outline-none focus:border-primary focus:ring-0',
         'transition-colors resize-none disabled:opacity-50',
       )}
     />
@@ -484,15 +484,15 @@ function FileUploadBox({ label, hint, file, onChange, required, disabled }: {
         disabled={disabled}
         className={cn(
           'flex items-center gap-4 px-5 py-4 rounded border-2 border-dashed transition-colors text-left w-full',
-          file ? 'border-[#1A1A1A] bg-[#F8F7F4]' : 'border-[#D4D0C8] hover:border-[#1A1A1A] bg-white',
+          file ? 'border-primary bg-[#F8F7F4]' : 'border-[#D4D0C8] hover:border-primary bg-white',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
       >
         {file ? (
           <>
-            <FileText size={20} className="text-[#1A1A1A] flex-shrink-0" />
+            <FileText size={20} className="text-primary flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-[500] text-[#1A1A1A] truncate">{file.name}</p>
+              <p className="text-[13px] font-[500] text-primary truncate">{file.name}</p>
               <p className="text-[12px] text-[#888]">{(file.size / 1024).toFixed(0)} KB</p>
             </div>
             <span
@@ -532,7 +532,7 @@ function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) 
   return (
     <div className="flex flex-col gap-0.5 py-3 border-b border-[#E8E3DC] last:border-0">
       <span className="text-[11px] font-[600] uppercase tracking-[0.08em] text-[#B0ACA3]">{label}</span>
-      <span className="text-[14px] text-[#1A1A1A] leading-[1.4]">
+      <span className="text-[14px] text-primary leading-[1.4]">
         {value || <span className="text-[#B0ACA3] italic text-[13px]">Not provided</span>}
       </span>
     </div>
@@ -552,7 +552,7 @@ function NavButtons({ step, loading, isSubmit, onBack }: {
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded border border-[#D4D0C8] text-[#777] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors disabled:opacity-40"
+          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded border border-[#D4D0C8] text-[#777] hover:border-primary hover:text-primary transition-colors disabled:opacity-40"
           aria-label="Go back"
         >
           <ArrowLeft size={16} />
@@ -561,7 +561,7 @@ function NavButtons({ step, loading, isSubmit, onBack }: {
       <button
         type="submit"
         disabled={loading}
-        className="flex-1 h-11 bg-[#1A1A1A] text-white text-[14px] font-[600] rounded hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex-1 h-11 bg-primary text-white text-[14px] font-[600] rounded hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Submitting…' : isSubmit ? 'Submit application' : 'Save & continue'}
       </button>
@@ -601,7 +601,12 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
   }
 
   async function handleResend() {
-    try { await api.post('/auth/resend-otp', { email }); setResent(true) } catch { /* silent */ }
+    try {
+      await api.post('/auth/resend-otp', { email })
+      setResent(true)
+    } catch (err) {
+      toast.error(getApiError(err))
+    }
   }
 
   async function handleEmailUpdate(e: React.SyntheticEvent) {
@@ -624,18 +629,18 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
 
   return (
     <div className="max-w-[560px] mx-auto py-14 px-5 lg:px-10">
-      <h1 className="font-playfair text-[40px] font-[400] text-[#1A1A1A] leading-[1.1] mb-5">
+      <h1 className="font-playfair text-[40px] font-[400] text-primary leading-[1.1] mb-5">
         Confirm your email address
       </h1>
       <p className="text-[15px] text-[#555] leading-[1.75] mb-8">
         Before you continue, check your inbox at{' '}
-        <strong className="text-[#1A1A1A]">{email}</strong> to confirm the email address
+        <strong className="text-primary">{email}</strong> to confirm the email address
         for your Solomon Bharat account.{' '}
         {!editingEmail && (
           <button
             type="button"
             onClick={() => { setEditingEmail(true); setNewEmail(email) }}
-            className="underline text-[#1A1A1A] hover:text-[#555] transition-colors"
+            className="underline text-primary hover:text-[#555] transition-colors"
           >
             Edit Email Address
           </button>
@@ -644,7 +649,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
 
       {editingEmail && (
         <div className="mb-8 p-4 rounded border border-[#E8E3DC] bg-[#FAFAF8]">
-          <p className="text-[14px] font-[600] text-[#1A1A1A] mb-3">Update your email address</p>
+          <p className="text-[14px] font-[600] text-primary mb-3">Update your email address</p>
           <form onSubmit={handleEmailUpdate} className="flex flex-col gap-3">
             <Input
               type="email"
@@ -659,7 +664,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
               <button
                 type="submit"
                 disabled={emailLoading}
-                className="flex-1 h-10 bg-[#1A1A1A] text-white text-[13px] font-[600] rounded hover:bg-[#333] transition-colors disabled:opacity-50"
+                className="flex-1 h-10 bg-primary text-white text-[13px] font-[600] rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {emailLoading ? 'Updating…' : 'Update & resend code'}
               </button>
@@ -667,7 +672,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
                 type="button"
                 onClick={() => { setEditingEmail(false); setEmailError(null) }}
                 disabled={emailLoading}
-                className="px-4 h-10 border border-[#D4D0C8] text-[13px] text-[#555] rounded hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors"
+                className="px-4 h-10 border border-[#D4D0C8] text-[13px] text-[#555] rounded hover:border-primary hover:text-primary transition-colors"
               >
                 Cancel
               </button>
@@ -691,7 +696,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-11 bg-[#1A1A1A] text-white text-[14px] font-[600] rounded hover:bg-[#333] transition-colors disabled:opacity-50"
+          className="w-full h-11 bg-primary text-white text-[14px] font-[600] rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {loading ? 'Verifying…' : 'Verify email'}
         </button>
@@ -699,7 +704,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
           type="button"
           onClick={handleResend}
           disabled={resent}
-          className="text-[13px] text-[#555] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors disabled:opacity-50 text-center"
+          className="text-[13px] text-[#555] hover:text-primary underline underline-offset-2 transition-colors disabled:opacity-50 text-center"
         >
           {resent ? 'Code resent!' : "Didn't receive it? Resend email"}
         </button>
@@ -716,7 +721,7 @@ function SuccessContent() {
       <div className="w-12 h-12 rounded-full bg-[#EEFAEE] flex items-center justify-center mb-8">
         <Check size={22} className="text-[#3D8B3D]" />
       </div>
-      <h1 className="font-playfair text-[46px] font-[400] text-[#1A1A1A] leading-[1.05] mb-5">
+      <h1 className="font-playfair text-[46px] font-[400] text-primary leading-[1.05] mb-5">
         Your email is confirmed
       </h1>
       <p className="text-[15px] text-[#555] leading-[1.75] mb-10">
@@ -725,7 +730,7 @@ function SuccessContent() {
       </p>
       <Link
         href="/"
-        className="inline-flex items-center justify-center h-11 px-10 bg-[#1A1A1A] text-white text-[14px] font-[600] rounded hover:bg-[#333] transition-colors self-start"
+        className="inline-flex items-center justify-center h-11 px-10 bg-primary text-white text-[14px] font-[600] rounded hover:bg-primary/90 transition-colors self-start"
       >
         Return to home
       </Link>
@@ -800,6 +805,9 @@ export default function ApplyPage() {
   useEffect(() => {
     // Don't save once the form has been successfully submitted
     if (submittedEmail) return
+    // Destructured only to exclude these non-serialisable File fields from
+    // what gets persisted — the individual bindings are intentionally unused.
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const {
       brandLogoFile, brandBannerFile,
       aadharFile, panFile,
@@ -807,6 +815,7 @@ export default function ApplyPage() {
       msmeCertFile, isoCertFile, iecCertFile,
       ...serialisable
     } = form
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     const payload: PersistedState = { step, registrationType, form: serialisable }
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload)) } catch { /* quota */ }
   }, [step, registrationType, form, submittedEmail])
@@ -998,7 +1007,7 @@ export default function ApplyPage() {
     return (
       <SplitShell step={0} showPhase={false}>
         <div className="max-w-[560px] mx-auto py-14 px-5 lg:px-10">
-          <h1 className="font-playfair text-[44px] md:text-[52px] font-[400] text-[#1A1A1A] leading-[1.05] mb-4">
+          <h1 className="font-playfair text-[44px] md:text-[52px] font-[400] text-primary leading-[1.05] mb-4">
             Grow your wholesale business
           </h1>
           <p className="text-[15px] text-[#555] leading-[1.7] mb-10">
@@ -1029,21 +1038,21 @@ export default function ApplyPage() {
                 className={cn(
                   'w-full p-5 rounded border-2 text-left flex items-start gap-4 transition-all',
                   registrationType === type
-                    ? 'border-[#1A1A1A] bg-white shadow-sm'
-                    : 'border-[#E2E0DA] bg-white hover:border-[#1A1A1A]/40',
+                    ? 'border-primary bg-white shadow-sm'
+                    : 'border-[#E2E0DA] bg-white hover:border-primary/40',
                 )}
               >
                 <div className={cn(
                   'w-10 h-10 rounded flex-shrink-0 flex items-center justify-center mt-0.5 transition-colors',
-                  registrationType === type ? 'bg-[#1A1A1A] text-white' : 'bg-[#F3F0EA] text-[#777]',
+                  registrationType === type ? 'bg-primary text-white' : 'bg-[#F3F0EA] text-[#777]',
                 )}>
                   <Icon size={18} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-0.5">
-                    <p className="text-[15px] font-[600] text-[#1A1A1A]">{title}</p>
+                    <p className="text-[15px] font-[600] text-primary">{title}</p>
                     {registrationType === type && (
-                      <div className="w-5 h-5 rounded-full bg-[#1A1A1A] flex items-center justify-center flex-shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                         <Check size={11} className="text-white" />
                       </div>
                     )}
@@ -1052,7 +1061,7 @@ export default function ApplyPage() {
                   <p className="text-[11px] font-[600] text-[#B0ACA3] uppercase tracking-[0.07em] mt-3 mb-0.5">
                     Documents needed
                   </p>
-                  <p className="text-[13px] text-[#1A1A1A]">{docs}</p>
+                  <p className="text-[13px] text-primary">{docs}</p>
                 </div>
               </button>
             ))}
@@ -1062,7 +1071,7 @@ export default function ApplyPage() {
             type="button"
             disabled={!registrationType}
             onClick={() => { if (registrationType) setStep(1) }}
-            className="w-full h-12 bg-[#1A1A1A] text-white text-[15px] font-[600] rounded hover:bg-[#333] transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-primary text-white text-[15px] font-[600] rounded hover:bg-primary/90 transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
           >
             Continue
           </button>
@@ -1072,7 +1081,7 @@ export default function ApplyPage() {
             <button
               type="button"
               onClick={() => openAuthModal('login')}
-              className="text-[#1A1A1A] font-[600] underline underline-offset-2"
+              className="text-primary font-[600] underline underline-offset-2"
             >
               Log in
             </button>
@@ -1091,7 +1100,7 @@ export default function ApplyPage() {
       <div className="max-w-[580px] mx-auto py-10 px-5 lg:px-10">
 
         {/* Large Faire-style serif heading */}
-        <h1 className="font-playfair text-[38px] md:text-[44px] font-[400] text-[#1A1A1A] leading-[1.1] mb-3">
+        <h1 className="font-playfair text-[38px] md:text-[44px] font-[400] text-primary leading-[1.1] mb-3">
           {heading.title}
         </h1>
         <p className="text-[15px] text-[#555] leading-[1.7] mb-10">
@@ -1123,7 +1132,7 @@ export default function ApplyPage() {
                   />
                   <button
                     type="button" onClick={() => setShowPassword((v) => !v)} tabIndex={-1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0ACA3] hover:text-[#1A1A1A] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0ACA3] hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -1274,7 +1283,7 @@ export default function ApplyPage() {
                 <div className="flex items-center gap-3">
                   {prevStory ? (
                     <button type="button" onClick={undoStory}
-                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#888] hover:text-[#1A1A1A] transition-colors shrink-0">
+                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#888] hover:text-primary transition-colors shrink-0">
                       <RotateCcw size={11} />Undo
                     </button>
                   ) : (
@@ -1284,7 +1293,7 @@ export default function ApplyPage() {
                       {polishingStory ? 'Polishing…' : 'Polish'}
                     </button>
                   )}
-                  <span className={cn('text-[12px]', form.brandStory.length < 100 ? 'text-[#B0ACA3]' : 'text-[#1A1A1A]')}>
+                  <span className={cn('text-[12px]', form.brandStory.length < 100 ? 'text-[#B0ACA3]' : 'text-primary')}>
                     {form.brandStory.length} / 1000
                   </span>
                 </div>
@@ -1448,7 +1457,7 @@ export default function ApplyPage() {
                     disabled={loading}
                     className={cn(
                       'w-full h-10 px-3 rounded border border-[#D4D0C8] bg-white',
-                      'text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors'
+                      'text-[15px] text-primary focus:outline-none focus:border-primary transition-colors'
                     )}
                   >
                     <option value="SAVINGS">Savings</option>
@@ -1542,14 +1551,14 @@ export default function ApplyPage() {
                   />
                   <div className={cn(
                     'w-4 h-4 rounded border transition-colors flex items-center justify-center',
-                    agreedToTerms ? 'bg-[#1A1A1A] border-[#1A1A1A]' : 'bg-white border-[#C8C4BB] group-hover:border-[#1A1A1A]/40',
+                    agreedToTerms ? 'bg-primary border-primary' : 'bg-white border-[#C8C4BB] group-hover:border-primary/40',
                   )}>
                     {agreedToTerms && <Check size={10} className="text-white" />}
                   </div>
                 </div>
                 <span className="text-[13px] text-[#555] leading-[1.55]">
                   I agree to Solomon Bharat's{' '}
-                  <Link href="/terms" className="text-[#1A1A1A] underline underline-offset-2">
+                  <Link href="/terms" className="text-primary underline underline-offset-2">
                     Seller Terms
                   </Link>{' '}
                   and confirm all information provided is accurate.
@@ -1577,7 +1586,7 @@ export default function ApplyPage() {
           <button
             type="button"
             onClick={() => openAuthModal('login')}
-            className="text-[#1A1A1A] font-[600] underline underline-offset-2"
+            className="text-primary font-[600] underline underline-offset-2"
           >
             Log in
           </button>

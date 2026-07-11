@@ -274,6 +274,7 @@ export default function SettingsPage() {
   const [showShopifyModal, setShowShopifyModal] = useState(false)
   const [shopifyDomain, setShopifyDomain] = useState('')
   const [shopifyToken, setShopifyToken] = useState('')
+  const [shopifyWebhookSecret, setShopifyWebhookSecret] = useState('')
 
   const { data: shopifyStore, isLoading: shopifyLoading } = useQuery<{ shopDomain: string; isActive: boolean; lastSyncAt?: string } | null>({
     queryKey: ['shopify-store'],
@@ -283,7 +284,7 @@ export default function SettingsPage() {
   const shopifyConnected = !!(shopifyStore?.isActive)
 
   const connectShopify = useMutation({
-    mutationFn: (body: { shopDomain: string; accessToken: string }) =>
+    mutationFn: (body: { shopDomain: string; accessToken: string; webhookSecret?: string }) =>
       api.post('/shopify/store/connect', body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopify-store'] })
@@ -291,6 +292,7 @@ export default function SettingsPage() {
       setShowShopifyModal(false)
       setShopifyDomain('')
       setShopifyToken('')
+      setShopifyWebhookSecret('')
     },
     onError: (err) => toast.error(getApiError(err)),
   })
@@ -878,6 +880,21 @@ export default function SettingsPage() {
                   className={INPUT_CLS}
                 />
               </div>
+              <div>
+                <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
+                  Webhook Signing Secret <span className="normal-case font-[400] text-muted-text/70">(optional)</span>
+                </label>
+                <input
+                  type="password"
+                  value={shopifyWebhookSecret}
+                  onChange={(e) => setShopifyWebhookSecret(e.target.value)}
+                  placeholder="shpss_••••••••••••••••"
+                  className={INPUT_CLS}
+                />
+                <p className="text-[11px] font-public-sans text-muted-text mt-1 leading-relaxed">
+                  From the same app's API credentials page. Lets us verify that webhooks really came from your store — recommended if you register any.
+                </p>
+              </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="ghost" size="sm" className="flex-1"
                   onClick={() => setShowShopifyModal(false)}>
@@ -885,7 +902,11 @@ export default function SettingsPage() {
                 </Button>
                 <Button variant="primary" size="sm" className="flex-1 gap-1.5"
                   disabled={!shopifyDomain.trim() || !shopifyToken.trim() || connectShopify.isPending}
-                  onClick={() => connectShopify.mutate({ shopDomain: shopifyDomain.trim(), accessToken: shopifyToken.trim() })}>
+                  onClick={() => connectShopify.mutate({
+                    shopDomain: shopifyDomain.trim(),
+                    accessToken: shopifyToken.trim(),
+                    ...(shopifyWebhookSecret.trim() && { webhookSecret: shopifyWebhookSecret.trim() }),
+                  })}>
                   <Link2 size={12} />
                   {connectShopify.isPending ? 'Connecting…' : 'Connect'}
                 </Button>

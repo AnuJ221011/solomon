@@ -9,6 +9,7 @@ import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { parseCsv } from '../products/product.import.js';
 import { send as sendEmail } from '../../shared/utils/email.js';
+import { env } from '../../config/env.js';
 
 const router = Router();
 router.use(authenticate, authorize('BRAND'));
@@ -92,8 +93,8 @@ router.post('/campaigns/send-share-link', validate(z.object({
   if (!shareLink) throw createError('Share link not found', 404);
 
   const shareLinkUrl = shareLink.slug
-    ? `https://solomonbharat.com/s/${brand.slug}/${shareLink.slug}`
-    : `https://solomonbharat.com/s/${shareLink.token}`;
+    ? `${env.CLIENT_URL}/s/${brand.slug}/${shareLink.slug}`
+    : `${env.CLIENT_URL}/s/${shareLink.token}`;
 
   const where = { brandProfileId };
   if (req.body.contactIds?.length) where.id = { in: req.body.contactIds };

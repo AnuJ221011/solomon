@@ -50,7 +50,7 @@ export function HowItWorksSection() {
           </div>
 
           {/* Steps */}
-          {STEPS.map(({ number, Icon, heading, description }, idx) => (
+          {STEPS.map(({ number, Icon, heading, description }) => (
             <div
               key={number}
               className="flex-1 border-t lg:border-t-0 lg:border-l border-border-warm pt-10 lg:pt-0 lg:pl-10 xl:pl-12 pb-10 lg:pb-0 last:pb-0"

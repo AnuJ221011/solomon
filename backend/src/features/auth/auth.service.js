@@ -11,10 +11,12 @@ import {
   invalidateRefreshToken,
 } from '../../shared/utils/token.js';
 import { generateOtp, storeOtp, verifyOtp } from '../../shared/utils/otp.js';
+import { storePendingSignup, getPendingSignup, deletePendingSignup } from '../../shared/utils/pendingSignup.js';
 import { sendOtpEmail, sendWelcomeEmail } from '../../shared/utils/email.js';
 import { createError } from '../../shared/utils/createError.js';
 import { recordSignupAttribution } from '../share-links/shareLink.service.js';
 import { recordReferralSignup } from '../referrals/referral.service.js';
+import { cloudinaryFolders } from '../../shared/constants/cloudinary.js';
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -51,16 +53,20 @@ async function uploadDocs(files = {}) {
     Object.entries(map).map(async ([field, urlKey]) => {
       const file = files[field]?.[0];
       if (file) {
-        uploads[urlKey] = await uploadDoc(file.buffer, `Solomon-Bharat2/docs`);
+        uploads[urlKey] = await uploadDoc(file.buffer, cloudinaryFolders.docs);
       }
     }),
   );
   return uploads;
 }
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = env.BCRYPT_SALT_ROUNDS;
 
-export const registerBuyer = async ({
+// Step 1 of buyer signup — the account is NOT created yet. The submitted
+// form (with the password already hashed) is held in Redis until the buyer
+// proves they own the email address; only verifyBuyerSignup() below actually
+// creates the User row.
+export const initiateBuyerSignup = async ({
   email, password, businessName, countryCode, phone,
   storeType, aesthetic, categoryInterests,
   shareLinkToken, referralToken,
@@ -70,20 +76,62 @@ export const registerBuyer = async ({
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
+  await storePendingSignup(email, {
+    email,
+    passwordHash,
+    businessName,
+    countryCode,
+    phone,
+    storeType: storeType ?? null,
+    aesthetic: aesthetic ?? null,
+    categoryInterests: categoryInterests ?? [],
+    shareLinkToken: shareLinkToken ?? null,
+    referralToken: referralToken ?? null,
+  });
+
+  const otp = generateOtp();
+  await storeOtp(email, otp);
+  await sendOtpEmail(email, otp);
+};
+
+// Step 2 of buyer signup — verifies the code, then creates the account from
+// the data stashed by initiateBuyerSignup(). This is the only place a BUYER
+// User row gets created, so every buyer account that exists is, by
+// construction, already email-verified.
+export const verifyBuyerSignup = async ({ email, otp }) => {
+  const result = await verifyOtp(email, otp);
+  if (!result.success) {
+    if (result.reason === 'locked_out') throw createError('Account locked. Try again in 15 minutes.', 429);
+    if (result.reason === 'expired') throw createError('Code expired. Please sign up again.', 410);
+    throw createError(`Invalid code. ${result.attemptsLeft} attempt(s) remaining.`, 400);
+  }
+
+  const pending = await getPendingSignup(email);
+  if (!pending) throw createError('Signup session expired. Please sign up again.', 410);
+
+  // Guard against the email being registered by another flow while this
+  // signup's code was in flight.
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    await deletePendingSignup(email);
+    throw createError('Email already registered', 409);
+  }
+
   const user = await prisma.user.create({
     data: {
-      email,
-      passwordHash,
-      name: businessName,
+      email: pending.email,
+      passwordHash: pending.passwordHash,
+      name: pending.businessName,
       role: 'BUYER',
+      isEmailVerified: true,
       buyerProfile: {
         create: {
-          businessName,
-          countryCode,
-          phone,
-          storeType: storeType ?? null,
-          aesthetic: aesthetic ?? null,
-          categoryInterests: categoryInterests ?? [],
+          businessName: pending.businessName,
+          countryCode: pending.countryCode,
+          phone: pending.phone,
+          storeType: pending.storeType,
+          aesthetic: pending.aesthetic,
+          categoryInterests: pending.categoryInterests,
         },
       },
       wallet: { create: {} },
@@ -91,17 +139,16 @@ export const registerBuyer = async ({
     },
   });
 
-  if (shareLinkToken) {
-    await recordSignupAttribution(shareLinkToken, user.id).catch(() => {});
+  await deletePendingSignup(email);
+
+  if (pending.shareLinkToken) {
+    await recordSignupAttribution(pending.shareLinkToken, user.id).catch(() => {});
+  }
+  if (pending.referralToken) {
+    await recordReferralSignup(pending.referralToken, user.id).catch(() => {});
   }
 
-  if (referralToken) {
-    await recordReferralSignup(referralToken, user.id).catch(() => {});
-  }
-
-  const otp = generateOtp();
-  await storeOtp(email, otp);
-  await sendOtpEmail(email, otp);
+  await sendWelcomeEmail(email, user.name).catch(() => {});
 
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = await generateRefreshToken(user.id);
@@ -109,9 +156,9 @@ export const registerBuyer = async ({
 };
 
 async function generateBrandDescription(brandStory) {
-  if (!process.env.GEMINI_API_KEY) return null;
+  if (!env.GEMINI_API_KEY) return null;
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const prompt = `Write a short 1–2 sentence brand description (under 160 characters) for a wholesale marketplace brand, based on their brand story. Be concise, professional, and buyer-focused. Return only the description text with no quotes or extra formatting.\n\nBrand story: ${brandStory}`;
     const result = await model.generateContent(prompt);
@@ -253,6 +300,36 @@ export const login = async ({ email, password }) => {
   return { user, accessToken, refreshToken };
 };
 
+// Alternate to password login — sends a one-time code instead. Silent on a
+// missing account so the response can't be used to enumerate registered
+// emails, same posture as sendForgotPasswordOtp below.
+export const requestLoginOtp = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.passwordHash || !user.isActive) return;
+
+  const otp = generateOtp();
+  await storeOtp(`login:${email}`, otp);
+  await sendOtpEmail(email, otp);
+};
+
+// Verifies the login code and issues the exact same session as password
+// login, so either method leads to the same signed-in result.
+export const loginWithOtp = async ({ email, otp }) => {
+  const result = await verifyOtp(`login:${email}`, otp);
+  if (!result.success) {
+    if (result.reason === 'locked_out') throw createError('Too many attempts. Try again in 15 minutes.', 429);
+    if (result.reason === 'expired') throw createError('Code expired. Please request a new one.', 410);
+    throw createError(`Invalid code. ${result.attemptsLeft} attempt(s) remaining.`, 400);
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isActive) throw createError('No account found with this email.', 401);
+
+  const accessToken = generateAccessToken(user.id, user.role);
+  const refreshToken = await generateRefreshToken(user.id);
+  return { user, accessToken, refreshToken };
+};
+
 export const confirmEmailOtp = async ({ email, otp }) => {
   const result = await verifyOtp(email, otp);
   if (!result.success) {
@@ -283,12 +360,21 @@ export const changePendingEmail = async ({ currentEmail, newEmail }) => {
 
 export const resendOtp = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw createError('No account found with this email address.', 404);
-  if (user.isEmailVerified) throw createError('Email already verified', 400);
+  if (user) {
+    if (user.isEmailVerified) throw createError('Email already verified', 400);
+    const otp = generateOtp();
+    await storeOtp(email, otp);
+    sendOtpEmail(email, otp).catch(() => {}); // non-blocking
+    return;
+  }
+
+  // No account yet — this is a buyer signup still awaiting verification.
+  const pending = await getPendingSignup(email);
+  if (!pending) throw createError('No account found with this email address.', 404);
 
   const otp = generateOtp();
   await storeOtp(email, otp);
-  sendOtpEmail(email, otp).catch(() => {}); // non-blocking
+  sendOtpEmail(email, otp).catch(() => {});
 };
 
 export const saveStoreTypeQuiz = async (userId, { storeType, aesthetic, categoryInterests }) => {

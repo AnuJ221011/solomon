@@ -38,6 +38,7 @@ function toTypedProduct(p: HookProduct): Product {
     tags: p.tags ?? [],
     achievementLevel: p.brand?.achievementLevel as Product['achievementLevel'],
     inStock: p.inStock,
+    priceTiers: p.priceTiers,
   }
 }
 
@@ -58,6 +59,7 @@ interface ApiProduct {
   countryOfOrigin?: string
   freeShippingAboveInr?: number | null
   returnsWindowDays?: number | null
+  priceTiers?: { moq: number; priceInr: number }[]
 }
 
 function toTypedFromApi(p: ApiProduct): Product {
@@ -78,6 +80,7 @@ function toTypedFromApi(p: ApiProduct): Product {
     countryOfOrigin: p.countryOfOrigin,
     freeShippingAboveInr: p.freeShippingAboveInr,
     returnsWindowDays: p.returnsWindowDays,
+    priceTiers: p.priceTiers ?? [],
     variants: (p.variants ?? []).map((v) => ({
       id: v.id, sku: v.sku, priceInr: v.priceInr,
       stock: v.stock, status: v.status, attributes: v.attributes,
