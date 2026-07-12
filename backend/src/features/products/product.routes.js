@@ -86,11 +86,12 @@ router.post(
   }
 );
 
-// CSV import wizard — accepts pre-parsed products + unmatched category names.
-// Gemini classifies unmatched categories and creates missing L1/L2/L3 nodes before inserting.
+// CSV import wizard — accepts pre-parsed products. Any category that doesn't
+// match the existing taxonomy falls back to "Other" (categories are never
+// created ad-hoc from imports — see product.import.js).
 router.post('/import-shopify', authenticate, authorize('BRAND'), async (req, res) => {
-  const { products, unmatchedCategories = [] } = req.body;
-  const result = await importProductsFromJson(req.user.id, products, unmatchedCategories);
+  const { products } = req.body;
+  const result = await importProductsFromJson(req.user.id, products);
   sendSuccess(res, result, `Import complete: ${result.created} created, ${result.skipped} skipped`);
 });
 

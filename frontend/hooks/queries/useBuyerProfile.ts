@@ -20,6 +20,8 @@ export interface BuyerProfile {
   notifNewArrivals: boolean
   notifOrderUpdates: boolean
   notifPromotions: boolean
+  businessVerified: boolean
+  businessVerifiedAt?: string | null
 }
 
 export interface UpdateBuyerProfileInput {

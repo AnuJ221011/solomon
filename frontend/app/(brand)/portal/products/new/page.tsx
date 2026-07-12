@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, Check, Search, Sparkles, RotateCcw, Video, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import api from '@/lib/api'
 import { getApiError } from '@/lib/getApiError'
@@ -245,14 +245,10 @@ function CategoryPicker({
   categories,
   selected,
   onToggle,
-  onCreateNew,
-  creating,
 }: {
   categories: Category[]
   selected: string[]
   onToggle: (name: string) => void
-  onCreateNew: (name: string) => void
-  creating: boolean
 }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -270,7 +266,6 @@ function CategoryPicker({
   const filtered = categories
     .filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase()))
     .slice(0, 10)
-  const exactMatch = categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
   const canAdd = selected.length < 2
 
   return (
@@ -319,23 +314,26 @@ function CategoryPicker({
                   {selected.includes(c.name) && <Check size={13} className="text-accent shrink-0" />}
                 </button>
               ))}
-              {trimmed && !exactMatch && (
-                <button
-                  type="button"
-                  onClick={() => { onCreateNew(trimmed); setQuery(''); setOpen(false) }}
-                  disabled={creating}
-                  className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-accent hover:bg-muted-bg transition-colors border-t border-border-warm flex items-center gap-1.5"
-                >
-                  {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                  Create "{trimmed}"
-                </button>
-              )}
-              {filtered.length === 0 && trimmed && exactMatch && (
-                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">No other matches</p>
+              {filtered.length === 0 && trimmed && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">
+                  No matching category — select &quot;Other&quot; below if nothing fits.
+                </p>
               )}
             </div>
           )}
         </div>
+      )}
+
+      {/* Persistent "Other" quick-pick — always available, doesn't require search */}
+      {canAdd && !selected.includes('Other') && (
+        <button
+          type="button"
+          onClick={() => onToggle('Other')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded border border-dashed border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:border-accent hover:text-accent transition-colors"
+        >
+          <Plus size={13} />
+          Other <span className="font-[400] text-muted-text/70">(if nothing above matches)</span>
+        </button>
       )}
 
       {!canAdd && (
@@ -353,20 +351,6 @@ export default function NewProductPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: categoryList = [], isLoading: catsLoading } = useCategories()
-
-  // ── Category creation ──────────────────────────────────────────────────────
-  const createCategory = useMutation({
-    mutationFn: (name: string) => api.post('/categories', { name }),
-    onSuccess: (_, name) => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      setForm((f) => {
-        if (f.categories.includes(name) || f.categories.length >= 2) return f
-        return { ...f, categories: [...f.categories, name] }
-      })
-      toast.success(`Category "${name}" created and selected.`)
-    },
-    onError: (err) => toast.error(getApiError(err)),
-  })
 
   // ── Product form ───────────────────────────────────────────────────────────
   const [form, setForm] = useState<ProductForm>({
@@ -445,13 +429,18 @@ export default function NewProductPage() {
     })
   }
 
-  // ── Variants (Size + Color, tab-style) ────────────────────────────────────
+  // ── Variants (Size / Color / Material / Other, tab-style) ─────────────────
   const [variantsEnabled, setVariantsEnabled]       = useState(false)
-  const [activeVariantTab, setActiveVariantTab]     = useState<'size' | 'color'>('size')
+  const [activeVariantTab, setActiveVariantTab]     = useState<'size' | 'color' | 'material' | 'other'>('size')
   const [sizeValues, setSizeValues]                 = useState<string[]>([])
   const [colorValues, setColorValues]               = useState<string[]>([])
+  const [materialValues, setMaterialValues]         = useState<string[]>([])
+  const [customAxisName, setCustomAxisName]         = useState('')
+  const [customValues, setCustomValues]             = useState<string[]>([])
   const [sizeInput, setSizeInput]                   = useState('')
   const [colorInput, setColorInput]                 = useState('')
+  const [materialInput, setMaterialInput]           = useState('')
+  const [customInput, setCustomInput]               = useState('')
   // per-variant: each combo key → { stock, tiers[] }
   const [variantPricing, setVariantPricing] = useState<Record<string, { stock: string; tiers: PriceTier[] }>>({})
 
@@ -484,24 +473,32 @@ export default function NewProductPage() {
 
   function toggleVariantsMaster() {
     if (variantsEnabled) {
-      setSizeValues([]); setColorValues([])
+      setSizeValues([]); setColorValues([]); setMaterialValues([]); setCustomValues([]); setCustomAxisName('')
       setActiveVariantTab('size')
       setVariantPricing({})
     }
     setVariantsEnabled((v) => !v)
   }
 
+  // Up to 4 axes can combine at once — any axis with no values is left out
+  // of the cartesian product entirely (matches the old Size/Color behavior,
+  // just generalized to N axes instead of hardcoded to 2).
   const variantCombos = useMemo(() => {
-    if (!sizeValues.length && !colorValues.length) return []
-    if (sizeValues.length && colorValues.length) {
-      return cartesian([sizeValues, colorValues]).map(([s, c]: string[]) => ({
-        key: `${s}__${c}`, label: `${s} / ${c}`,
-        attributes: [{ name: 'Size', value: s }, { name: 'Color', value: c }],
-      }))
-    }
-    if (sizeValues.length) return sizeValues.map((s) => ({ key: s, label: s, attributes: [{ name: 'Size', value: s }] }))
-    return colorValues.map((c) => ({ key: c, label: c, attributes: [{ name: 'Color', value: c }] }))
-  }, [sizeValues, colorValues])
+    const axes = [
+      { name: 'Size', values: sizeValues },
+      { name: 'Color', values: colorValues },
+      { name: 'Material', values: materialValues },
+      { name: customAxisName.trim() || 'Other', values: customValues },
+    ].filter((a) => a.values.length > 0)
+
+    if (axes.length === 0) return []
+
+    return cartesian(axes.map((a) => a.values)).map((combo) => ({
+      key: combo.join('__'),
+      label: combo.join(' / '),
+      attributes: axes.map((a, i) => ({ name: a.name, value: combo[i] })),
+    }))
+  }, [sizeValues, colorValues, materialValues, customValues, customAxisName])
 
   // ── Score ──────────────────────────────────────────────────────────────────
   // When variants are on, the flat price-tier table above is hidden — score
@@ -651,6 +648,7 @@ export default function NewProductPage() {
             return {
               sku:        autoSku,
               priceInr:   Number(sortedVpTiers[0]?.priceInr) || 0,
+              moq:        Number(sortedVpTiers[0]?.moq) || 1,
               stock:      Number(vp.stock) || 0,
               status:     'ACTIVE',
               attributes: combo.attributes,
@@ -759,7 +757,7 @@ export default function NewProductPage() {
             <TextInput value={form.name} onChange={set('name')} placeholder="e.g. Hand-Block Printed Cotton Saree" maxLength={80} />
           </Field>
 
-          <Field label="Category" required hint="Select up to 2. Type a new name to create it.">
+          <Field label="Category" required hint="Select up to 2. Choose &quot;Other&quot; if nothing matches.">
             {catsLoading ? (
               <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
                 <Loader2 size={14} className="animate-spin" />Loading categories…
@@ -769,8 +767,6 @@ export default function NewProductPage() {
                 categories={categoryList}
                 selected={form.categories}
                 onToggle={toggleCategory}
-                onCreateNew={(name) => createCategory.mutate(name)}
-                creating={createCategory.isPending}
               />
             )}
           </Field>
@@ -795,7 +791,7 @@ export default function NewProductPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[16px] font-[600] font-public-sans text-primary">Variants</h2>
-              <p className="text-[12px] font-public-sans text-muted-text mt-0.5">Does this product come in different sizes or colors?</p>
+              <p className="text-[12px] font-public-sans text-muted-text mt-0.5">Does this product come in different sizes, colors, materials, or other options?</p>
             </div>
             <button type="button" role="switch" aria-checked={variantsEnabled}
               onClick={toggleVariantsMaster}
@@ -807,7 +803,7 @@ export default function NewProductPage() {
           {variantsEnabled && (
             <div className="space-y-4 pt-4 border-t border-border-warm">
 
-              {/* Size / Color tab buttons */}
+              {/* Size / Color / Material / Other tab buttons */}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setActiveVariantTab('size')}
                   className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
@@ -832,6 +828,32 @@ export default function NewProductPage() {
                   {colorValues.length > 0 && (
                     <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'color' ? 'bg-white/20' : 'bg-muted-bg'}`}>
                       {colorValues.length}
+                    </span>
+                  )}
+                </button>
+                <button type="button" onClick={() => setActiveVariantTab('material')}
+                  className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                    activeVariantTab === 'material'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                  }`}>
+                  Material
+                  {materialValues.length > 0 && (
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'material' ? 'bg-white/20' : 'bg-muted-bg'}`}>
+                      {materialValues.length}
+                    </span>
+                  )}
+                </button>
+                <button type="button" onClick={() => setActiveVariantTab('other')}
+                  className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                    activeVariantTab === 'other'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                  }`}>
+                  Other
+                  {customValues.length > 0 && (
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'other' ? 'bg-white/20' : 'bg-muted-bg'}`}>
+                      {customValues.length}
                     </span>
                   )}
                 </button>
@@ -885,6 +907,68 @@ export default function NewProductPage() {
                         placeholder="Add color…"
                         className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
                       <button type="button" onClick={() => addTag(colorValues, setColorValues, colorInput, setColorInput)}
+                        className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Material panel */}
+              {activeVariantTab === 'material' && (
+                <div className="space-y-2">
+                  <p className="text-[12px] font-public-sans text-muted-text">e.g. Cotton, Brass, Terracotta — press Enter or click + to add</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {materialValues.map((v) => (
+                      <span key={v} className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary">
+                        {v}
+                        <button type="button" onClick={() => setMaterialValues((prev) => prev.filter((x) => x !== v))}
+                          className="text-muted-text hover:text-error transition-colors" aria-label={`Remove ${v}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <input type="text" value={materialInput} onChange={(e) => setMaterialInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(materialValues, setMaterialValues, materialInput, setMaterialInput) } }}
+                        placeholder="Add material…"
+                        className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                      <button type="button" onClick={() => addTag(materialValues, setMaterialValues, materialInput, setMaterialInput)}
+                        className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Other panel — brand types a custom attribute name once, then adds its values */}
+              {activeVariantTab === 'other' && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-[500] font-public-sans text-primary">Attribute name</label>
+                    <input type="text" value={customAxisName} onChange={(e) => setCustomAxisName(e.target.value)}
+                      placeholder="e.g. Fragrance, Pattern, Finish"
+                      className="h-9 px-3 w-full max-w-xs rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                  </div>
+                  <p className="text-[12px] font-public-sans text-muted-text">e.g. Sandalwood, Rose — press Enter or click + to add</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {customValues.map((v) => (
+                      <span key={v} className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary">
+                        {v}
+                        <button type="button" onClick={() => setCustomValues((prev) => prev.filter((x) => x !== v))}
+                          className="text-muted-text hover:text-error transition-colors" aria-label={`Remove ${v}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(customValues, setCustomValues, customInput, setCustomInput) } }}
+                        placeholder="Add value…"
+                        className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                      <button type="button" onClick={() => addTag(customValues, setCustomValues, customInput, setCustomInput)}
                         className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
                         <Plus size={13} />
                       </button>

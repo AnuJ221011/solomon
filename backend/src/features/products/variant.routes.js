@@ -15,13 +15,20 @@ const attributeSchema = z.object({
   value: z.string().min(1).max(100), // e.g. "Red", "L"
 });
 
+const priceTierSchema = z.object({
+  moq: z.number().int().positive(),
+  priceInr: z.number().positive(),
+});
+
 const createVariantSchema = z.object({
   sku: z.string().min(1).max(100),
   priceInr: z.number().positive(),
+  moq: z.number().int().positive().optional(),
   stock: z.number().int().min(0).default(0),
   imageUrl: z.string().url().optional().or(z.literal('')),
   status: z.enum(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']).default('ACTIVE'),
   attributes: z.array(attributeSchema).min(1),
+  priceTiers: z.array(priceTierSchema).min(1).optional(),
 });
 
 const bulkCreateSchema = z.object({
@@ -34,8 +41,10 @@ const reconcileSchema = z.object({
   updates: z.array(z.object({
     id: z.string().min(1),
     priceInr: z.number().positive(),
+    moq: z.number().int().positive().optional(),
     stock: z.number().int().min(0).default(0),
     attributes: z.array(attributeSchema).min(1).optional(),
+    priceTiers: z.array(priceTierSchema).min(1).optional(),
   })).default([]),
   creates: z.array(createVariantSchema).default([]),
   deleteIds: z.array(z.string().min(1)).default([]),

@@ -44,12 +44,13 @@ router.get('/:slug', async (req, res) => {
   sendSuccess(res, category);
 });
 
-// ── Brand — create (inline, while adding a product) ──────────────────────────
+// ── Admin — create ────────────────────────────────────────────────────────────
 
-// Brands can create new categories directly from the product form
+// Category creation is admin-only — brands pick from the existing taxonomy
+// (or "Other") instead of creating ad-hoc categories from the product form.
 router.post('/',
   authenticate,
-  authorize('BRAND', 'ADMIN'),
+  authorize('ADMIN'),
   validate(createSchema),
   async (req, res) => {
     const category = await categoryService.createCategory(req.body);
@@ -83,6 +84,15 @@ router.get('/admin/all',
   async (req, res) => {
     const categories = await categoryService.listCategories({ includeInactive: true });
     sendSuccess(res, categories);
+  }
+);
+
+// GET /api/categories/admin/tree — full L1→L2→L3 tree, includes inactive (admin only)
+router.get('/admin/tree',
+  authenticate, authorize('ADMIN'),
+  async (req, res) => {
+    const tree = await categoryService.getCategoryTree({ includeInactive: true });
+    sendSuccess(res, tree);
   }
 );
 

@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   LogOut,
   MessageSquare,
+  FolderTree,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
@@ -37,6 +38,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/brands', label: 'Brands', icon: Building2 },
       { href: '/admin/pending-brands', label: 'Pending Brands', icon: Clock },
       { href: '/admin/products', label: 'Products', icon: Package },
+      { href: '/admin/categories', label: 'Categories', icon: FolderTree },
     ],
   },
   {

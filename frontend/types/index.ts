@@ -34,9 +34,14 @@ export interface ProductVariant {
   id: string
   sku: string
   priceInr: number
+  moq: number
   stock: number
   status: string
   attributes: ProductVariantAttribute[]
+  // Quantity price breaks for this specific variant — buying at or above a
+  // tier's MOQ charges that tier's per-unit price instead of the variant's
+  // flat priceInr.
+  priceTiers?: { moq: number; priceInr: number }[]
 }
 
 export interface Product {

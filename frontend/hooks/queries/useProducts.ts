@@ -21,9 +21,11 @@ export interface ProductVariant {
   id: string
   sku: string
   priceInr: number
+  moq: number
   stock: number
   status: string
   attributes: VariantAttribute[]
+  priceTiers: { moq: number; priceInr: number }[]
 }
 
 export interface ProductBrandInfo {
@@ -159,10 +161,13 @@ function mapProduct(raw: Record<string, any>): Product {
       id: v.id ?? '',
       sku: v.sku ?? '',
       priceInr: Number(v.priceInr ?? 0),
+      moq: v.moq ?? 1,
       stock: v.stock ?? 0,
       status: v.status ?? 'ACTIVE',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       attributes: (v.attributes ?? []).map((a: any) => ({ id: a.id ?? '', name: a.name ?? '', value: a.value ?? '' })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      priceTiers: (v.priceTiers ?? []).map((t: any) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })),
     })),
     inStock: raw.availability === 'ACTIVE',
     availability: raw.availability ?? '',

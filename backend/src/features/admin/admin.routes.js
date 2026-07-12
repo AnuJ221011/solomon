@@ -11,6 +11,7 @@ import { sendWeeklyDigests } from '../scheduler/digest.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { createError } from '../../shared/utils/createError.js';
 import { cloudinaryFolders } from '../../shared/constants/cloudinary.js';
+import { DOC_FIELDS, getSignedDocUrl } from '../../shared/utils/cloudinaryDocUrl.js';
 import prisma from '../../config/db.js';
 import { env } from '../../config/env.js';
 import { updateProductSchema } from '../products/product.validator.js';
@@ -21,12 +22,6 @@ const router = Router();
 router.use(authenticate, authorize('ADMIN'));
 
 // ── Document viewer — generates a short-lived signed Cloudinary URL ─────────
-// Uses the Admin API download endpoint (private_download_url), not a CDN
-// sign_url — this account restricts direct PDF/ZIP delivery, and a plain
-// sign_url does not bypass that restriction ("deny or ACL failure"); only
-// the Admin-API-authenticated download link does.
-const DOC_FIELDS = ['aadharUrl', 'panUrl', 'gstCertUrl', 'incorporateCertUrl', 'msmeCertUrl', 'isoCertUrl', 'iecCertUrl'];
-
 router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIELDS) })), async (req, res) => {
   const brand = await prisma.brandProfile.findUnique({
     where: { id: req.params.id },
@@ -35,27 +30,9 @@ router.get('/brands/:id/doc-url', validateQuery(z.object({ field: z.enum(DOC_FIE
   const storedUrl = brand?.[req.query.field];
   if (!storedUrl) throw createError('Document not found', 404);
 
-  cloudinary.config({
-    cloud_name: env.CLOUDINARY_CLOUD_NAME,
-    api_key: env.CLOUDINARY_API_KEY,
-    api_secret: env.CLOUDINARY_API_SECRET,
-  });
-
-  // Extract public_id from the stored Cloudinary URL
-  const uploadIdx = storedUrl.indexOf('/upload/');
-  let publicId = storedUrl.slice(uploadIdx + 8).replace(/^v\d+\//, '');
-  const resourceType = storedUrl.includes('/raw/upload/') ? 'raw' : 'image';
-  if (resourceType === 'image') publicId = publicId.replace(/\.[^.]+$/, '');
-
-  const ext = storedUrl.split('.').pop();
-  const signedUrl = cloudinary.utils.private_download_url(publicId, ext, {
-    resource_type: resourceType,
-    type: 'upload',
-    attachment: false,
-  });
-
+  const { url, ext } = getSignedDocUrl(storedUrl);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  sendSuccess(res, { url: signedUrl, ext });
+  sendSuccess(res, { url, ext });
 });
 
 // ── Platform stats ─────────────────────────────────────────────────────────
@@ -341,13 +318,20 @@ const variantAttributeSchema = z.object({
   value: z.string().min(1).max(100),
 });
 
+const variantPriceTierSchema = z.object({
+  moq: z.number().int().positive(),
+  priceInr: z.number().positive(),
+});
+
 const createVariantSchema = z.object({
   sku: z.string().min(1).max(100),
   priceInr: z.number().positive(),
+  moq: z.number().int().positive().optional(),
   stock: z.number().int().min(0).default(0),
   imageUrl: z.string().url().optional().or(z.literal('')),
   status: z.enum(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']).default('ACTIVE'),
   attributes: z.array(variantAttributeSchema).min(1),
+  priceTiers: z.array(variantPriceTierSchema).min(1).optional(),
 });
 
 const bulkVariantSchema = z.object({
@@ -360,8 +344,10 @@ const reconcileVariantSchema = z.object({
   updates: z.array(z.object({
     id: z.string().min(1),
     priceInr: z.number().positive(),
+    moq: z.number().int().positive().optional(),
     stock: z.number().int().min(0).default(0),
     attributes: z.array(variantAttributeSchema).min(1).optional(),
+    priceTiers: z.array(variantPriceTierSchema).min(1).optional(),
   })).default([]),
   creates: z.array(createVariantSchema).default([]),
   deleteIds: z.array(z.string().min(1)).default([]),

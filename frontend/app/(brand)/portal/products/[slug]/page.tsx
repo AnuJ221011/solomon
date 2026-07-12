@@ -252,12 +252,10 @@ function ScoreWidget({ score, maxScore, rules, canPublish }: {
 
 // ─── Category picker ──────────────────────────────────────────────────────────
 
-function CategoryPicker({ categories, selected, onToggle, onCreateNew, creating }: {
+function CategoryPicker({ categories, selected, onToggle }: {
   categories: Category[]
   selected: string[]
   onToggle: (name: string) => void
-  onCreateNew: (name: string) => void
-  creating: boolean
 }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -273,7 +271,6 @@ function CategoryPicker({ categories, selected, onToggle, onCreateNew, creating 
 
   const trimmed = query.trim()
   const filtered = categories.filter((c) => c.name.toLowerCase().includes(trimmed.toLowerCase())).slice(0, 10)
-  const exactMatch = categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
   const canAdd = selected.length < 2
 
   return (
@@ -315,23 +312,26 @@ function CategoryPicker({ categories, selected, onToggle, onCreateNew, creating 
                   {selected.includes(c.name) && <Check size={13} className="text-accent shrink-0" />}
                 </button>
               ))}
-              {trimmed && !exactMatch && (
-                <button
-                  type="button"
-                  onClick={() => { onCreateNew(trimmed); setQuery(''); setOpen(false) }}
-                  disabled={creating}
-                  className="w-full text-left px-3 py-2.5 text-[13px] font-public-sans text-accent hover:bg-muted-bg transition-colors border-t border-border-warm flex items-center gap-1.5"
-                >
-                  {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                  Create &quot;{trimmed}&quot;
-                </button>
-              )}
-              {filtered.length === 0 && trimmed && exactMatch && (
-                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">No other matches</p>
+              {filtered.length === 0 && trimmed && (
+                <p className="px-3 py-2.5 text-[13px] font-public-sans text-muted-text">
+                  No matching category — select &quot;Other&quot; below if nothing fits.
+                </p>
               )}
             </div>
           )}
         </div>
+      )}
+
+      {/* Persistent "Other" quick-pick — always available, doesn't require search */}
+      {canAdd && !selected.includes('Other') && (
+        <button
+          type="button"
+          onClick={() => onToggle('Other')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded border border-dashed border-border-warm text-[13px] font-[500] font-public-sans text-muted-text hover:border-accent hover:text-accent transition-colors"
+        >
+          <Plus size={13} />
+          Other <span className="font-[400] text-muted-text/70">(if nothing above matches)</span>
+        </button>
       )}
 
       {!canAdd && (
@@ -536,21 +536,34 @@ function ProductView({ product }: { product: any }) {
                 <tr className="bg-muted-bg/40 border-b border-border-warm">
                   <th className="text-left py-2.5 px-3 font-[600] text-muted-text">Variant</th>
                   <th className="text-left py-2.5 px-3 font-[600] text-muted-text">SKU</th>
-                  <th className="text-right py-2.5 px-3 font-[600] text-muted-text">Price (₹)</th>
+                  <th className="text-left py-2.5 px-3 font-[600] text-muted-text">MOQ Tiers</th>
                   <th className="text-center py-2.5 px-3 font-[600] text-muted-text">Stock</th>
                   <th className="text-center py-2.5 px-3 font-[600] text-muted-text">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-warm">
-                {variants.map((v: any) => (
-                  <tr key={v.id}>
-                    <td className="py-2.5 px-3 text-primary font-[500]">{(v.attributes ?? []).map((a: any) => a.value).join(' / ') || '—'}</td>
-                    <td className="py-2.5 px-3 text-muted-text">{v.sku}</td>
-                    <td className="py-2.5 px-3 text-right text-primary tabular-nums">₹{Number(v.priceInr).toLocaleString('en-IN')}</td>
-                    <td className="py-2.5 px-3 text-center tabular-nums">{v.stock}</td>
-                    <td className="py-2.5 px-3 text-center text-muted-text">{v.status}</td>
-                  </tr>
-                ))}
+                {variants.map((v: any) => {
+                  const tiers = (v.priceTiers ?? []).length > 0
+                    ? [...v.priceTiers].sort((a: any, b: any) => a.moq - b.moq)
+                    : [{ moq: v.moq ?? 1, priceInr: v.priceInr }]
+                  return (
+                    <tr key={v.id}>
+                      <td className="py-2.5 px-3 text-primary font-[500] align-top">{(v.attributes ?? []).map((a: any) => a.value).join(' / ') || '—'}</td>
+                      <td className="py-2.5 px-3 text-muted-text align-top">{v.sku}</td>
+                      <td className="py-2.5 px-3 text-primary align-top">
+                        <div className="flex flex-col gap-0.5">
+                          {tiers.map((t: any) => (
+                            <span key={t.moq} className="tabular-nums whitespace-nowrap">
+                              {t.moq}+ units — ₹{Number(t.priceInr).toLocaleString('en-IN')}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center tabular-nums align-top">{v.stock}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-text align-top">{v.status}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -639,20 +652,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const { data: categoryList = [], isLoading: catsLoading } = useCategories()
 
-  // ── Category creation ──────────────────────────────────────────────────────
-  const createCategory = useMutation({
-    mutationFn: (name: string) => api.post('/categories', { name }),
-    onSuccess: (_, name) => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      setForm((f) => {
-        if (f.categories.includes(name) || f.categories.length >= 2) return f
-        return { ...f, categories: [...f.categories, name] }
-      })
-      toast.success(`Category "${name}" created and selected.`)
-    },
-    onError: (err) => toast.error(getApiError(err)),
-  })
-
   // ── View / edit toggle ──────────────────────────────────────────────────────
   const [editing, setEditing] = useState(false)
 
@@ -666,13 +665,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [craft, setCraft] = useState<CraftStory>({ howItIsMade: '', artisanName: '' })
   const [submitting, setSubmitting] = useState(false)
 
-  // ── Variants (Size + Color, tab-style) ─────────────────────────────────────
+  // ── Variants (Size / Color / Material / Other, tab-style) ──────────────────
   const [variantsEnabled, setVariantsEnabled] = useState(false)
-  const [activeVariantTab, setActiveVariantTab] = useState<'size' | 'color'>('size')
+  const [activeVariantTab, setActiveVariantTab] = useState<'size' | 'color' | 'material' | 'other'>('size')
   const [sizeValues, setSizeValues] = useState<string[]>([])
   const [colorValues, setColorValues] = useState<string[]>([])
+  const [materialValues, setMaterialValues] = useState<string[]>([])
+  const [customAxisName, setCustomAxisName] = useState('')
+  const [customValues, setCustomValues] = useState<string[]>([])
   const [sizeInput, setSizeInput] = useState('')
   const [colorInput, setColorInput] = useState('')
+  const [materialInput, setMaterialInput] = useState('')
+  const [customInput, setCustomInput] = useState('')
   const [variantPricing, setVariantPricing] = useState<Record<string, { stock: string; tiers: PriceTier[] }>>({})
   // Maps a combo key (e.g. "M__Red") to the existing variant it came from, so
   // Save can update in place instead of creating a duplicate.
@@ -708,32 +712,48 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
     setCraft({ howItIsMade: product.howItIsMade ?? '', artisanName: product.artisanName ?? '' })
 
-    // Parse existing variants into the Size/Color tab model. Only variants whose
-    // attributes are exactly "Size" and/or "Color" fit this UI — anything else
-    // (e.g. custom attributes) is left alone and untouched.
+    // Parse existing variants into the Size/Color/Material/Other tab model.
+    // Any attribute name beyond size/color/material is treated as the single
+    // custom "Other" axis, so custom-named variants round-trip instead of
+    // being skipped — a product can only have one such custom axis at a time.
     const variants = product.variants ?? []
     const sizes = new Set<string>()
     const colors = new Set<string>()
+    const materials = new Set<string>()
+    const customVals = new Set<string>()
+    let customName = ''
     const byKey: Record<string, { id: string; sku: string }> = {}
     const pricing: Record<string, { stock: string; tiers: PriceTier[] }> = {}
 
     for (const v of variants) {
-      const sizeAttr = v.attributes?.find((a: any) => a.name.toLowerCase() === 'size')
-      const colorAttr = v.attributes?.find((a: any) => a.name.toLowerCase() === 'color' || a.name.toLowerCase() === 'colour')
-      const otherAttrs = (v.attributes ?? []).filter((a: any) => a !== sizeAttr && a !== colorAttr)
-      if (otherAttrs.length > 0 || (!sizeAttr && !colorAttr)) continue
+      const attrs = v.attributes ?? []
+      const sizeAttr = attrs.find((a: any) => a.name.toLowerCase() === 'size')
+      const colorAttr = attrs.find((a: any) => a.name.toLowerCase() === 'color' || a.name.toLowerCase() === 'colour')
+      const materialAttr = attrs.find((a: any) => a.name.toLowerCase() === 'material')
+      const customAttr = attrs.find((a: any) => a !== sizeAttr && a !== colorAttr && a !== materialAttr)
+      if (!sizeAttr && !colorAttr && !materialAttr && !customAttr) continue
 
-      const key = sizeAttr && colorAttr ? `${sizeAttr.value}__${colorAttr.value}` : (sizeAttr?.value ?? colorAttr?.value)
+      const keyParts = [sizeAttr?.value, colorAttr?.value, materialAttr?.value, customAttr?.value].filter(Boolean)
+      const key = keyParts.join('__')
       if (!key) continue
       if (sizeAttr) sizes.add(sizeAttr.value)
       if (colorAttr) colors.add(colorAttr.value)
+      if (materialAttr) materials.add(materialAttr.value)
+      if (customAttr) { customVals.add(customAttr.value); customName = customAttr.name }
+
       byKey[key] = { id: v.id, sku: v.sku }
-      pricing[key] = { stock: String(v.stock), tiers: [{ id: uid(), moq: product.moq != null ? String(product.moq) : '', priceInr: String(v.priceInr) }] }
+      const vTiers = (v.priceTiers ?? []).length > 0
+        ? v.priceTiers.map((t: any) => ({ id: uid(), moq: String(t.moq), priceInr: String(t.priceInr) }))
+        : [{ id: uid(), moq: v.moq != null ? String(v.moq) : (product.moq != null ? String(product.moq) : ''), priceInr: String(v.priceInr) }]
+      pricing[key] = { stock: String(v.stock), tiers: vTiers }
     }
 
     setVariantsEnabled(Object.keys(byKey).length > 0)
     setSizeValues([...sizes])
     setColorValues([...colors])
+    setMaterialValues([...materials])
+    setCustomAxisName(customName)
+    setCustomValues([...customVals])
     setExistingVariantByKey(byKey)
     setVariantPricing(pricing)
   }
@@ -820,24 +840,32 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   function toggleVariantsMaster() {
     if (variantsEnabled) {
-      setSizeValues([]); setColorValues([])
+      setSizeValues([]); setColorValues([]); setMaterialValues([]); setCustomValues([]); setCustomAxisName('')
       setActiveVariantTab('size')
       setVariantPricing({})
     }
     setVariantsEnabled((v) => !v)
   }
 
+  // Up to 4 axes can combine at once — any axis with no values is left out
+  // of the cartesian product entirely (matches the old Size/Color behavior,
+  // just generalized to N axes instead of hardcoded to 2).
   const variantCombos = useMemo(() => {
-    if (!sizeValues.length && !colorValues.length) return []
-    if (sizeValues.length && colorValues.length) {
-      return cartesian([sizeValues, colorValues]).map(([s, c]: string[]) => ({
-        key: `${s}__${c}`, label: `${s} / ${c}`,
-        attributes: [{ name: 'Size', value: s }, { name: 'Color', value: c }],
-      }))
-    }
-    if (sizeValues.length) return sizeValues.map((s) => ({ key: s, label: s, attributes: [{ name: 'Size', value: s }] }))
-    return colorValues.map((c) => ({ key: c, label: c, attributes: [{ name: 'Color', value: c }] }))
-  }, [sizeValues, colorValues])
+    const axes = [
+      { name: 'Size', values: sizeValues },
+      { name: 'Color', values: colorValues },
+      { name: 'Material', values: materialValues },
+      { name: customAxisName.trim() || 'Other', values: customValues },
+    ].filter((a) => a.values.length > 0)
+
+    if (axes.length === 0) return []
+
+    return cartesian(axes.map((a) => a.values)).map((combo) => ({
+      key: combo.join('__'),
+      label: combo.join(' / '),
+      attributes: axes.map((a, i) => ({ name: a.name, value: combo[i] })),
+    }))
+  }, [sizeValues, colorValues, materialValues, customValues, customAxisName])
 
   // ── Score ──────────────────────────────────────────────────────────────────
   // When variants are on, the flat price-tier table above is hidden — score
@@ -967,15 +995,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             .filter((t) => Number(t.moq) > 0 && Number(t.priceInr) > 0)
             .sort((a, b) => Number(a.moq) - Number(b.moq))
           const priceInr = Number(sortedVpTiers[0]?.priceInr) || 0
+          const moq = Number(sortedVpTiers[0]?.moq) || 1
           const stock = Number(vp.stock) || 0
+          const priceTiers = sortedVpTiers.map((t) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) }))
           const existing = existingVariantByKey[combo.key]
 
           if (existing) {
             remainingKeys.delete(combo.key)
-            updates.push({ id: existing.id, priceInr, stock, attributes: combo.attributes })
+            updates.push({ id: existing.id, priceInr, moq, stock, attributes: combo.attributes, priceTiers })
           } else {
             const autoSku = `${namePrefix}-${combo.key.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase()}`
-            creates.push({ sku: autoSku, priceInr, stock, status: 'ACTIVE', attributes: combo.attributes })
+            creates.push({ sku: autoSku, priceInr, moq, stock, status: 'ACTIVE', attributes: combo.attributes, priceTiers })
           }
         }
       } else {
@@ -1079,7 +1109,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <TextInput value={form.name} onChange={set('name')} placeholder="e.g. Hand-Block Printed Cotton Saree" maxLength={80} />
           </Field>
 
-          <Field label="Category" required hint="Select up to 2. Type a new name to create it.">
+          <Field label="Category" required hint="Select up to 2. Choose &quot;Other&quot; if nothing matches.">
             {catsLoading ? (
               <div className="flex items-center gap-2 text-[13px] font-public-sans text-muted-text">
                 <Loader2 size={14} className="animate-spin" />Loading categories…
@@ -1089,8 +1119,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 categories={categoryList}
                 selected={form.categories}
                 onToggle={toggleCategory}
-                onCreateNew={(name) => createCategory.mutate(name)}
-                creating={createCategory.isPending}
               />
             )}
           </Field>
@@ -1114,7 +1142,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[16px] font-[600] font-public-sans text-primary">Variants</h2>
-              <p className="text-[12px] font-public-sans text-muted-text mt-0.5">Does this product come in different sizes or colors?</p>
+              <p className="text-[12px] font-public-sans text-muted-text mt-0.5">Does this product come in different sizes, colors, materials, or other options?</p>
             </div>
             <button type="button" role="switch" aria-checked={variantsEnabled}
               onClick={toggleVariantsMaster}
@@ -1143,6 +1171,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   Color
                   {colorValues.length > 0 && (
                     <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'color' ? 'bg-white/20' : 'bg-muted-bg'}`}>{colorValues.length}</span>
+                  )}
+                </button>
+                <button type="button" onClick={() => setActiveVariantTab('material')}
+                  className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                    activeVariantTab === 'material' ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                  }`}>
+                  Material
+                  {materialValues.length > 0 && (
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'material' ? 'bg-white/20' : 'bg-muted-bg'}`}>{materialValues.length}</span>
+                  )}
+                </button>
+                <button type="button" onClick={() => setActiveVariantTab('other')}
+                  className={`flex items-center gap-2 px-4 h-9 rounded border text-[13px] font-[500] font-public-sans transition-colors ${
+                    activeVariantTab === 'other' ? 'border-primary bg-primary text-white' : 'border-border-warm text-muted-text hover:border-primary hover:text-primary'
+                  }`}>
+                  Other
+                  {customValues.length > 0 && (
+                    <span className={`text-[11px] font-[600] px-1.5 py-0.5 rounded-full ${activeVariantTab === 'other' ? 'bg-white/20' : 'bg-muted-bg'}`}>{customValues.length}</span>
                   )}
                 </button>
               </div>
@@ -1193,6 +1239,66 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                         placeholder="Add color…"
                         className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
                       <button type="button" onClick={() => addTag(colorValues, setColorValues, colorInput, setColorInput)}
+                        className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeVariantTab === 'material' && (
+                <div className="space-y-2">
+                  <p className="text-[12px] font-public-sans text-muted-text">e.g. Cotton, Brass, Terracotta — press Enter or click + to add</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {materialValues.map((v) => (
+                      <span key={v} className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary">
+                        {v}
+                        <button type="button" onClick={() => setMaterialValues((prev) => prev.filter((x) => x !== v))}
+                          className="text-muted-text hover:text-error transition-colors" aria-label={`Remove ${v}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <input type="text" value={materialInput} onChange={(e) => setMaterialInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(materialValues, setMaterialValues, materialInput, setMaterialInput) } }}
+                        placeholder="Add material…"
+                        className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                      <button type="button" onClick={() => addTag(materialValues, setMaterialValues, materialInput, setMaterialInput)}
+                        className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeVariantTab === 'other' && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-[500] font-public-sans text-primary">Attribute name</label>
+                    <input type="text" value={customAxisName} onChange={(e) => setCustomAxisName(e.target.value)}
+                      placeholder="e.g. Fragrance, Pattern, Finish"
+                      className="h-9 px-3 w-full max-w-xs rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                  </div>
+                  <p className="text-[12px] font-public-sans text-muted-text">e.g. Sandalwood, Rose — press Enter or click + to add</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {customValues.map((v) => (
+                      <span key={v} className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-border-warm bg-muted-bg/30 text-[13px] font-public-sans text-primary">
+                        {v}
+                        <button type="button" onClick={() => setCustomValues((prev) => prev.filter((x) => x !== v))}
+                          className="text-muted-text hover:text-error transition-colors" aria-label={`Remove ${v}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(customValues, setCustomValues, customInput, setCustomInput) } }}
+                        placeholder="Add value…"
+                        className="h-8 px-2 w-28 rounded border border-dashed border-border-warm bg-transparent text-[13px] font-public-sans text-primary placeholder:text-muted-text/40 focus:outline-none focus:border-accent transition-colors" />
+                      <button type="button" onClick={() => addTag(customValues, setCustomValues, customInput, setCustomInput)}
                         className="h-8 w-8 flex items-center justify-center rounded border border-border-warm text-muted-text hover:text-primary hover:bg-muted-bg transition-colors">
                         <Plus size={13} />
                       </button>

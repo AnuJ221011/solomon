@@ -25,6 +25,9 @@ export const updateBrandProfileSchema = z.object({
   returnsWindowDays: z.number().int().min(1).max(365).nullable().optional(),
   pickupPincode: z.string().max(10).optional(),
   payoutSpeed: z.enum(['NET_30', 'EXPRESS']).optional(),
+  tagline: z.string().max(120).optional(),
+  wholesaleProductCount: z.number().int().min(1).optional(),
+  defaultLeadTime: z.enum(['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS']).optional(),
 });
 
 export const bankAccountSchema = z.object({

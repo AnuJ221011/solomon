@@ -10,137 +10,32 @@ const MIN_BULK_IMPORT_LEVEL = ACHIEVEMENT_LEVELS.L3_TRUSTED.level;
 const VALID_LEAD_TIMES = ['ONE_TO_THREE_DAYS', 'ONE_TO_TWO_WEEKS', 'TWO_TO_FOUR_WEEKS'];
 const VALID_ZONES = ['DOMESTIC', 'SOUTH_ASIA', 'SOUTHEAST_ASIA', 'MIDDLE_EAST', 'EUROPE', 'NORTH_AMERICA', 'OCEANIA', 'REST_OF_WORLD'];
 
-const toSlug = (name) =>
-  name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
-// ─── Gemini-powered category resolver ────────────────────────────────────────
+// ─── Category resolution (existing taxonomy only — never creates new nodes) ──
 //
-// Given a list of unmatched WooCommerce/Shopify category names, fetches the
-// existing platform category tree, asks Gemini where each one belongs (L1/L2/L3),
-// then creates missing nodes top-down with dedup checks.
-// Returns: { "Crochet purse": "Handbags", "Pot & Flower": "Plants & Flowers", ... }
+// Category creation is admin-only (via the Categories tab) — imports must
+// never create ad-hoc categories the way this used to (Gemini would place
+// unmatched WooCommerce/Shopify category names into new L1/L2/L3 nodes).
+// Anything that doesn't match an existing active category name falls back
+// to "Other" instead.
 
-async function resolveAndCreateCategories(unmatchedNames) {
-  const filtered = (unmatchedNames ?? []).filter(
-    (n) => n && n.toLowerCase().trim() !== 'uncategorized',
-  );
-  if (filtered.length === 0) return {};
+async function loadActiveCategoryLookup() {
+  const cats = await prisma.category.findMany({ where: { isActive: true }, select: { name: true } });
+  const byLower = new Map();
+  for (const c of cats) byLower.set(c.name.toLowerCase(), c.name);
+  return byLower;
+}
 
-  // 1. Fetch existing tree
-  const existingCats = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: [{ level: 'asc' }, { sortOrder: 'asc' }],
-    select: { id: true, name: true, slug: true, level: true, parentId: true },
-  });
-
-  // 2. Dedup helpers — defined early so fallback can use them too
-  const existingByName = new Map(existingCats.map((c) => [c.name.toLowerCase().trim(), c]));
-  const createdThisRun = new Map();
-
-  const findOrCreate = async (name, level, parentId) => {
-    const key = name.toLowerCase().trim();
-    if (existingByName.has(key)) return existingByName.get(key);
-    const runKey = `${level}:${key}`;
-    if (createdThisRun.has(runKey)) return createdThisRun.get(runKey);
-
-    const slug = toSlug(name);
-    const dbExisting = await prisma.category.findFirst({ where: { OR: [{ name }, { slug }] } });
-    if (dbExisting) { existingByName.set(key, dbExisting); return dbExisting; }
-
-    const sortOrder = (await prisma.category.count()) + 1;
-    const created = await prisma.category.create({
-      data: { name, slug, parentId: parentId ?? null, level, sortOrder, isActive: true },
-    });
-    existingByName.set(key, created);
-    createdThisRun.set(runKey, created);
-    logger.info(`[import] Created category L${level}: "${name}"`);
-    return created;
-  };
-
-  // 3. Try Gemini for intelligent L1/L2/L3 placement
-  let placements = [];
-
-  if (env.GEMINI_API_KEY) {
-    const l1s = existingCats.filter((c) => c.level === 1);
-    const l2s = existingCats.filter((c) => c.level === 2);
-    const l3s = existingCats.filter((c) => c.level === 3);
-    const treeLines = l1s.map((l1) => {
-      const children = l2s.filter((l2) => l2.parentId === l1.id).map((l2) => {
-        const gc = l3s.filter((l3) => l3.parentId === l2.id).map((l3) => l3.name);
-        return gc.length ? `    ${l2.name}: [${gc.join(', ')}]` : `    ${l2.name}`;
-      });
-      return children.length ? `  ${l1.name}:\n${children.join('\n')}` : `  ${l1.name}`;
-    });
-    const treeText = treeLines.length ? treeLines.join('\n') : '(empty)';
-
-    const prompt = `You are a product category classifier for a B2B wholesale marketplace.
-
-Existing category tree (L1 → L2 → L3):
-${treeText}
-
-For each product category name below, decide where it fits in the 3-level hierarchy.
-Rules:
-- L1 = broad (e.g. "Fashion", "Home & Decor", "Accessories")
-- L2 = medium (e.g. "Bags & Accessories", "Keychains")
-- L3 = specific (e.g. "Clutch Bags", "Crochet Purse") — use only when needed
-- Prefer reusing existing nodes over creating new ones
-- Never create near-duplicate nodes (e.g. "Bags" vs "Bag" — pick one)
-- You MUST return ONLY a JSON array, no explanation, no markdown
-
-Category names to classify:
-${filtered.map((n, i) => `${i + 1}. ${n}`).join('\n')}
-
-Return format — JSON array only:
-[{ "source": "...", "l1": "...", "l2": "..." or null, "l3": "..." or null }]`;
-
-    try {
-      const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt);
-      const text = result.response.text().trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
-      placements = JSON.parse(text);
-      logger.info(`[import] Gemini classified ${placements.length} categories`);
-    } catch (err) {
-      logger.error('[import] Gemini classification failed, using direct creation fallback', { error: err.message });
-    }
-  } else {
-    logger.warn('[import] GEMINI_API_KEY not set — using direct category creation');
+/** Resolves raw category name(s) to existing platform category names, falling
+ *  back to "Other" for anything unmatched. Always returns at least ["Other"]. */
+function resolveCategoryNames(rawNames, byLower) {
+  const resolved = [];
+  for (const raw of (rawNames ?? [])) {
+    const trimmed = (raw ?? '').trim();
+    if (!trimmed || trimmed.toLowerCase() === 'uncategorized') continue;
+    resolved.push(byLower.get(trimmed.toLowerCase()) ?? 'Other');
   }
-
-  // 4. Fallback: any category not returned by Gemini gets created directly as-is
-  const classifiedSources = new Set(placements.map((p) => p.source));
-  for (const name of filtered) {
-    if (!classifiedSources.has(name)) {
-      // Use the raw source name as an L1 category
-      placements.push({ source: name, l1: name, l2: null, l3: null });
-    }
-  }
-
-  // 5. Build resolution map: sourceCategory → resolved platform category name
-  const resolution = {};
-  for (const p of placements) {
-    const { source, l1, l2, l3 } = p;
-    if (!source || !l1) continue;
-    try {
-      const l1Node = await findOrCreate(l1, 1, null);
-      let resolvedName = l1Node.name;
-
-      if (l2) {
-        const l2Node = await findOrCreate(l2, 2, l1Node.id);
-        resolvedName = l2Node.name;
-        if (l3) {
-          const l3Node = await findOrCreate(l3, 3, l2Node.id);
-          resolvedName = l3Node.name;
-        }
-      }
-
-      resolution[source] = resolvedName;
-    } catch (err) {
-      logger.error(`[import] Failed to create category for "${source}"`, { error: err.message });
-    }
-  }
-
-  return resolution;
+  const deduped = [...new Set(resolved)];
+  return (deduped.length ? deduped : ['Other']).slice(0, 2);
 }
 
 // ─── Legacy CSV import (platform-format CSV only) ─────────────────────────────
@@ -255,6 +150,7 @@ export const importProductsFromCsv = async (userId, csvText) => {
 
   const rows = parseCsv(csvText);
   const results = { created: 0, skipped: 0, errors: [] };
+  const categoryLookup = await loadActiveCategoryLookup();
 
   const groups = new Map();
   for (const row of rows) {
@@ -281,6 +177,8 @@ export const importProductsFromCsv = async (userId, csvText) => {
       where: { brandProfileId: brand.id, name: productData.name },
     });
     if (existing) { results.skipped++; continue; }
+
+    productData.categories = resolveCategoryNames(productData.categories, categoryLookup);
 
     const variantPayloads = [];
     let hasVariantError = false;
@@ -388,11 +286,11 @@ async function polishDescriptions(genAI, rawDescriptions) {
 // ─── JSON import (frontend wizard → backend) ──────────────────────────────────
 //
 // products: pre-parsed product array from the import wizard
-// unmatchedCategories: WooCommerce category names that had no platform match
-//   — Gemini places these in the L1/L2/L3 tree, creating nodes as needed,
-//     then products are remapped to the resolved platform category name.
+// Any product whose category didn't match the existing platform taxonomy
+// (client-side matching already tried name/slug/substring — see sourceCategory)
+// falls back to "Other" rather than creating a new category.
 
-export const importProductsFromJson = async (userId, products, unmatchedCategories = []) => {
+export const importProductsFromJson = async (userId, products) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId } });
   if (!brand) throw createError('Brand profile not found', 404);
   if (brand.status !== 'APPROVED') throw createError('Brand must be approved to import products', 403);
@@ -401,14 +299,13 @@ export const importProductsFromJson = async (userId, products, unmatchedCategori
     throw createError('products array is required and must not be empty', 400);
   }
 
-  // Resolve unmatched categories via Gemini, creating missing L1/L2/L3 nodes
-  const categoryResolution = await resolveAndCreateCategories(unmatchedCategories);
+  const categoryLookup = await loadActiveCategoryLookup();
 
   // Clean up HTML descriptions from the source CSV before they're stored
   const genAI = env.GEMINI_API_KEY ? new GoogleGenerativeAI(env.GEMINI_API_KEY) : null;
   const polishedDescriptions = await polishDescriptions(genAI, products.map((p) => (p.description ?? '').trim()));
 
-  const results = { created: 0, skipped: 0, errors: [], categoriesCreated: Object.keys(categoryResolution).length };
+  const results = { created: 0, skipped: 0, errors: [] };
 
   for (let productIdx = 0; productIdx < products.length; productIdx++) {
     const p = products[productIdx];
@@ -428,10 +325,11 @@ export const importProductsFromJson = async (userId, products, unmatchedCategori
       const enabledZones = (p.enabledZones ?? []).filter((z) => VALID_ZONES.includes(z));
       if (enabledZones.length === 0) enabledZones.push('DOMESTIC');
 
-      // Category: use already-matched value, or fall back to Gemini-resolved name
+      // Category: use already-matched value, or resolve sourceCategory against
+      // the existing taxonomy — falls back to "Other" if nothing matches.
       let categories = (p.categories ?? []).slice(0, 2).filter(Boolean);
-      if (categories.length === 0 && p.sourceCategory && categoryResolution[p.sourceCategory]) {
-        categories = [categoryResolution[p.sourceCategory]];
+      if (categories.length === 0) {
+        categories = resolveCategoryNames(p.sourceCategory ? [p.sourceCategory] : [], categoryLookup);
       }
 
       const tags = (p.tags ?? []).slice(0, 10).filter(Boolean);

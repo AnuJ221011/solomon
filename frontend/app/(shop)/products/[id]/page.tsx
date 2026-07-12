@@ -45,7 +45,11 @@ function toTypedProduct(p: HookProduct): Product {
 // ─── Map raw API product → @/types Product (for detail page) ─────────────────
 
 interface ApiVariantAttribute { id: string; name: string; value: string }
-interface ApiVariant { id: string; sku: string; priceInr: number; stock: number; status: string; attributes: ApiVariantAttribute[] }
+interface ApiVariant {
+  id: string; sku: string; priceInr: number; moq?: number; stock: number; status: string
+  attributes: ApiVariantAttribute[]
+  priceTiers?: { moq: number; priceInr: number }[]
+}
 
 interface ApiProduct {
   id: string; name: string; slug: string; brandId: string
@@ -82,8 +86,9 @@ function toTypedFromApi(p: ApiProduct): Product {
     returnsWindowDays: p.returnsWindowDays,
     priceTiers: p.priceTiers ?? [],
     variants: (p.variants ?? []).map((v) => ({
-      id: v.id, sku: v.sku, priceInr: v.priceInr,
+      id: v.id, sku: v.sku, priceInr: v.priceInr, moq: v.moq ?? 1,
       stock: v.stock, status: v.status, attributes: v.attributes,
+      priceTiers: v.priceTiers ?? [],
     })),
   }
 }

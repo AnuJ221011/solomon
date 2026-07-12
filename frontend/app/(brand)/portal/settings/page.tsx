@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Upload, Link2, Trash2, X, Sparkles, RotateCcw, Loader2 } from 'lucide-react'
+import { Plus, Upload, Link2, Trash2, X, Sparkles, RotateCcw, Loader2, FileText, ExternalLink, Download } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,12 @@ const COUNTRIES = [
   { code: 'AE', name: 'United Arab Emirates' },
   { code: 'GB', name: 'United Kingdom' },
   { code: 'US', name: 'United States' },
+]
+
+const LEAD_TIMES = [
+  { value: 'ONE_TO_THREE_DAYS', label: '1–3 days' },
+  { value: 'ONE_TO_TWO_WEEKS', label: '1–2 weeks' },
+  { value: 'TWO_TO_FOUR_WEEKS', label: '2–4 weeks' },
 ]
 
 const SHIPPING_ZONES = [
@@ -92,6 +98,118 @@ function PolishButton({ loading, canUndo, onPolish, onUndo }: {
   )
 }
 
+function DocumentViewerModal({ label, field, onClose }: { label: string; field: string; onClose: () => void }) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null)
+  const [ext, setExt] = useState<string>('pdf')
+  const [error, setError] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  useEffect(() => {
+    api.get('/brands/me/documents/doc-url', { params: { field }, headers: { 'Cache-Control': 'no-cache' } })
+      .then((res) => {
+        setSignedUrl(res.data.data.url)
+        setExt(res.data.data.ext ?? 'pdf')
+      })
+      .catch(() => setError(true))
+  }, [field])
+
+  const isPdf = ext === 'pdf'
+
+  async function handleDownload(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!signedUrl || downloading) return
+    setDownloading(true)
+    try {
+      const res = await fetch(signedUrl)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = `${label.replace(/\s+/g, '_')}.${ext}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      window.open(signedUrl, '_blank')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-[2px]" onClick={onClose}>
+      <div
+        className="relative flex flex-col bg-white w-full h-full max-w-4xl max-h-[92vh] mx-auto my-auto rounded-xl overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-warm shrink-0">
+          <div className="flex items-center gap-2.5">
+            <FileText size={15} className="text-accent" />
+            <span className="text-[14px] font-[600] font-public-sans text-primary">{label}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {signedUrl && (
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border-warm text-[12px] font-[600] font-public-sans text-muted-text hover:bg-muted-bg hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+              >
+                <Download size={13} />
+                {downloading ? 'Downloading…' : 'Download'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-warm text-muted-text hover:bg-muted-bg hover:text-primary transition-colors"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto bg-muted-bg flex items-center justify-center p-4">
+          {error ? (
+            <p className="text-[13px] font-public-sans text-muted-text">Failed to load document.</p>
+          ) : !signedUrl ? (
+            <p className="text-[13px] font-public-sans text-muted-text">Loading…</p>
+          ) : isPdf ? (
+            <iframe
+              src={signedUrl}
+              className="w-full h-full min-h-[600px] rounded-lg border border-border-warm bg-white"
+              title={label}
+            />
+          ) : (
+            <img
+              src={signedUrl}
+              alt={label}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocumentLink({ label, field, url, onOpen }: { label: string; field: string; url?: string | null; onOpen: (doc: { label: string; field: string }) => void }) {
+  if (!url) return null
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen({ label, field })}
+      className="flex items-center gap-2.5 px-4 py-3 bg-muted-bg/40 border border-border-warm rounded hover:border-accent hover:bg-surface transition-all group w-full text-left"
+    >
+      <FileText size={15} className="text-muted-text group-hover:text-accent shrink-0" />
+      <span className="text-[13px] font-[500] font-public-sans text-muted-text group-hover:text-primary flex-1">
+        {label}
+      </span>
+      <ExternalLink size={12} className="text-muted-text group-hover:text-accent" />
+    </button>
+  )
+}
+
 const INPUT_CLS =
   'w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors'
 
@@ -128,6 +246,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'Manager' | 'Viewer'>('Viewer')
+  const [docViewer, setDocViewer] = useState<{ label: string; field: string } | null>(null)
 
   // ── Brand profile fields ───────────────────────────────────────────────────
   const [brandName, setBrandName] = useState('')
@@ -174,6 +293,9 @@ export default function SettingsPage() {
   const [businessRegNumber, setBusinessRegNumber] = useState('')
   const [minimumOrderValue, setMinimumOrderValue] = useState('')
   const [returnsWindowDays, setReturnsWindowDays] = useState('')
+  const [tagline, setTagline] = useState('')
+  const [wholesaleProductCount, setWholesaleProductCount] = useState('')
+  const [defaultLeadTime, setDefaultLeadTime] = useState('ONE_TO_TWO_WEEKS')
 
   // ── CSV export ─────────────────────────────────────────────────────────────
   const [csvExporting, setCsvExporting] = useState(false)
@@ -338,6 +460,9 @@ export default function SettingsPage() {
     setBusinessRegNumber(brandProfile.businessRegNumber ?? '')
     setMinimumOrderValue(brandProfile.minimumOrderValue != null ? String(brandProfile.minimumOrderValue) : '')
     setReturnsWindowDays(brandProfile.returnsWindowDays != null ? String(brandProfile.returnsWindowDays) : '')
+    setTagline(brandProfile.tagline ?? '')
+    setWholesaleProductCount(brandProfile.wholesaleProductCount != null ? String(brandProfile.wholesaleProductCount) : '')
+    setDefaultLeadTime(brandProfile.defaultLeadTime ?? 'ONE_TO_TWO_WEEKS')
   }, [brandProfile])
 
   // ── Populate shipping zone rates ───────────────────────────────────────────
@@ -383,6 +508,9 @@ export default function SettingsPage() {
       businessRegNumber: businessRegNumber.trim() || undefined,
       minimumOrderValue: minimumOrderValue !== '' ? Number(minimumOrderValue) : undefined,
       returnsWindowDays: returnsWindowDays !== '' ? Number(returnsWindowDays) : null,
+      tagline: tagline.trim() || undefined,
+      wholesaleProductCount: wholesaleProductCount !== '' ? Number(wholesaleProductCount) : undefined,
+      defaultLeadTime: defaultLeadTime || undefined,
     })
   }
 
@@ -472,6 +600,10 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Tagline" hint="A short one-line pitch — shown under your brand name on your storefront.">
+              <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)}
+                maxLength={120} placeholder="e.g. Handmade home décor from Rajasthan's artisan workshops" className={INPUT_CLS} />
+            </Field>
             <Field label="Country of Origin">
               <select value={countryOfOrigin} onChange={(e) => setCountryOfOrigin(e.target.value)} className={INPUT_CLS}>
                 {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
@@ -655,7 +787,46 @@ export default function SettingsPage() {
               </div>
             </Field>
           </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Wholesale Product Count" hint="Roughly how many products you can offer wholesale.">
+              <input type="number" min={1} value={wholesaleProductCount} onChange={(e) => setWholesaleProductCount(e.target.value)}
+                placeholder="e.g. 25" className={INPUT_CLS} />
+            </Field>
+            <Field label="Default Lead Time" hint="Typical dispatch time for new orders — shown on your product pages unless overridden per product.">
+              <select value={defaultLeadTime} onChange={(e) => setDefaultLeadTime(e.target.value)} className={INPUT_CLS}>
+                {LEAD_TIMES.map((lt) => <option key={lt.value} value={lt.value}>{lt.label}</option>)}
+              </select>
+            </Field>
+          </div>
         </div>
+      </Section>
+
+      {/* ── Submitted Documents ─────────────────────────────────────────────── */}
+      <Section
+        title="Submitted Documents"
+        description="Identity and business documents you submitted during onboarding. These are reviewed by our team and cannot be edited here — contact support if you need to update one."
+      >
+        {(() => {
+          const docs = [
+            { label: 'Aadhar Card', field: 'aadharUrl', url: brandProfile?.aadharUrl },
+            { label: 'PAN Card', field: 'panUrl', url: brandProfile?.panUrl },
+            { label: 'GST Certificate', field: 'gstCertUrl', url: brandProfile?.gstCertUrl },
+            { label: 'Incorporation Certificate', field: 'incorporateCertUrl', url: brandProfile?.incorporateCertUrl },
+            { label: 'MSME Certificate', field: 'msmeCertUrl', url: brandProfile?.msmeCertUrl },
+            { label: 'ISO Certificate', field: 'isoCertUrl', url: brandProfile?.isoCertUrl },
+            { label: 'IEC Certificate', field: 'iecCertUrl', url: brandProfile?.iecCertUrl },
+          ]
+          const hasAny = docs.some((d) => d.url)
+          return hasAny ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {docs.map((d) => (
+                <DocumentLink key={d.field} label={d.label} field={d.field} url={d.url} onOpen={setDocViewer} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-[13px] font-public-sans text-muted-text">No documents on file.</p>
+          )
+        })()}
       </Section>
 
       {/* ── Save profile ────────────────────────────────────────────────────── */}
@@ -835,6 +1006,11 @@ export default function SettingsPage() {
           </div>
         </div>
       </Section>
+
+      {/* ── Document viewer modal ───────────────────────────────────────────── */}
+      {docViewer && (
+        <DocumentViewerModal label={docViewer.label} field={docViewer.field} onClose={() => setDocViewer(null)} />
+      )}
 
       {/* ── Shopify connect modal ──────────────────────────────────────────── */}
       {showShopifyModal && (

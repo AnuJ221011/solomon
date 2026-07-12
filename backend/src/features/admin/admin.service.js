@@ -325,7 +325,13 @@ export const listProducts = async ({ page = 1, limit = 20, search, brandId, avai
 const PRODUCT_DETAIL_INCLUDE = {
   photos: { orderBy: { position: 'asc' } },
   priceTiers: { orderBy: { moq: 'asc' } },
-  variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+  variants: {
+    include: {
+      attributes: { orderBy: { name: 'asc' } },
+      priceTiers: { orderBy: { moq: 'asc' } },
+    },
+    orderBy: { createdAt: 'asc' },
+  },
   brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true } },
   _count: { select: { orderItems: true } },
 };

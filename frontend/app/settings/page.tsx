@@ -302,6 +302,24 @@ export default function SettingsPage() {
 
       <div className="space-y-6">
         <Section title="Store Profile" description="Your business details as they appear on orders and invoices.">
+          <Field label="Business Verification">
+            {profile?.businessVerified ? (
+              <span className="inline-flex items-center gap-1.5 text-[13px] font-[600] font-public-sans text-success">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
+                Verified
+                {profile.businessVerifiedAt && (
+                  <span className="font-[400] text-muted-text">
+                    &middot; {new Date(profile.businessVerifiedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[13px] font-[500] font-public-sans text-muted-text">
+                <span className="w-1.5 h-1.5 rounded-full bg-border-warm" aria-hidden="true" />
+                Not verified yet — verified automatically after your first confirmed order
+              </span>
+            )}
+          </Field>
           <Field label="Business Name" htmlFor="business-name">
             <Input id="business-name" value={businessName} onChange={setBusinessName} placeholder="Your boutique name" />
           </Field>
@@ -345,19 +363,6 @@ export default function SettingsPage() {
         <Section title="Preferences" description="Adjust how Solomon Bharat works for your store.">
           <Field label="Display Currency" htmlFor="currency">
             <SelectField id="currency" value={currency} onChange={setCurrency} options={CURRENCIES} />
-          </Field>
-          <Field label="Store Type Quiz">
-            <div className="flex items-center gap-3">
-              <span className="text-[14px] font-public-sans text-muted-text">
-                Your profile: Boutique &middot; Artisan &middot; Textiles &amp; Jewellery
-              </span>
-              <a
-                href="/onboarding"
-                className="text-[13px] font-[600] font-public-sans text-accent hover:text-accent-hover underline underline-offset-2 transition-colors whitespace-nowrap"
-              >
-                Update quiz
-              </a>
-            </div>
           </Field>
         </Section>
 

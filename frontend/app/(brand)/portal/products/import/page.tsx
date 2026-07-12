@@ -480,20 +480,11 @@ async function parseFile(
   return { products, categoryMap, detected }
 }
 
-// Import — sends parsed products + unmatched category names to the backend.
-// The backend calls Gemini to classify unmatched categories, creates missing
-// L1/L2/L3 nodes, then imports products with the resolved category names.
+// Import — sends parsed products to the backend. Any product whose category
+// didn't match the existing taxonomy (see categoryMap) is imported under
+// "Other" — categories are never created ad-hoc from an import.
 async function importProducts(parseState: ParseState): Promise<ImportResult> {
   const { products, categoryMap } = parseState
-
-  // Collect category names that had no platform match — backend resolves these via Gemini
-  const unmatchedCategories = [
-    ...new Set(
-      products
-        .map((p) => p.sourceCategory)
-        .filter((sc): sc is string => !!sc && !categoryMap[sc] && sc.toLowerCase() !== 'uncategorized'),
-    ),
-  ]
 
   const payload = products.map((p) => ({
     name: p.name,
@@ -518,7 +509,7 @@ async function importProducts(parseState: ParseState): Promise<ImportResult> {
       })),
   }))
 
-  const res = await api.post('/products/import-shopify', { products: payload, unmatchedCategories })
+  const res = await api.post('/products/import-shopify', { products: payload })
   return res.data.data as ImportResult
 }
 
@@ -758,7 +749,7 @@ function PreviewStep({
           <p className="text-[12px] font-public-sans text-muted-text mt-0.5">
             {withVariants > 0 && `${withVariants} with variants · `}
             {unmatchedCount > 0
-              ? `${products.length - unmatchedCount} categories matched, ${unmatchedCount} unmatched`
+              ? `${products.length - unmatchedCount} categories matched, ${unmatchedCount} will import under "Other"`
               : 'all categories matched'}
           </p>
         </div>
@@ -807,7 +798,7 @@ function PreviewStep({
                     </p>
                     {p.sourceCategory && !catName && (
                       <p className="text-[11px] text-amber-600 mt-0.5 truncate max-w-[200px]">
-                        {p.sourceCategory} → unmatched
+                        {p.sourceCategory} → will import as &quot;Other&quot;
                       </p>
                     )}
                   </td>
@@ -819,7 +810,7 @@ function PreviewStep({
                   <td className="px-4 py-2.5">
                     {catName
                       ? <span className="text-primary">{catName}</span>
-                      : <span className="text-muted-text italic text-[12px]">No category</span>}
+                      : <span className="text-muted-text italic text-[12px]">Other</span>}
                   </td>
                   <td className="px-4 py-2.5 text-muted-text tabular-nums">
                     {weightDisplay}

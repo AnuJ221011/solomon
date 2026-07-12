@@ -5,7 +5,13 @@ import { validateCategories } from '../categories/index.js';
 const PRODUCT_INCLUDE = {
   photos: { orderBy: { position: 'asc' } },
   priceTiers: { orderBy: { moq: 'asc' } },
-  variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+  variants: {
+    include: {
+      attributes: { orderBy: { name: 'asc' } },
+      priceTiers: { orderBy: { moq: 'asc' } },
+    },
+    orderBy: { createdAt: 'asc' },
+  },
   brandProfile: { select: { id: true, brandName: true, slug: true, achievementLevel: true, logoUrl: true, minimumOrderValue: true, returnsWindowDays: true, brandStory: true, description: true, shippingRates: { select: { zone: true, freeShippingAboveInr: true } } } },
 };
 
@@ -310,7 +316,13 @@ export const listMyProducts = async (userId) => {
     where: { brandProfileId: brand.id },
     include: {
       photos: { orderBy: { position: 'asc' }, take: 1 },
-      variants: { include: { attributes: { orderBy: { name: 'asc' } } }, orderBy: { createdAt: 'asc' } },
+      variants: {
+        include: {
+          attributes: { orderBy: { name: 'asc' } },
+          priceTiers: { orderBy: { moq: 'asc' } },
+        },
+        orderBy: { createdAt: 'asc' },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });

@@ -1,13 +1,15 @@
 ﻿'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Minus, Plus, Package, RotateCcw, CalendarDays, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatINR } from '@/lib/utils'
+import { formatINR } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartStore } from '@/lib/store/useCartStore'
 import { useAuthStore } from '@/lib/store/useAuthStore'
+import { useCurrencyStore } from '@/lib/store/useCurrencyStore'
+import { useFormatPrice } from '@/components/ui/Price'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/types'
@@ -35,11 +37,9 @@ const BADGE_MAP: Record<string, string> = {
   'upcycled':       'Upcycled',
 }
 
-// ─── Free-shipping thresholds by currency ─────────────────────────────────────
+// ─── Free-shipping fallback threshold (raw INR; converted via fmt() at render) ─
 
-const FREE_SHIP: Record<string, number> = {
-  INR: 15000, USD: 200, EUR: 180, GBP: 150, AED: 750, SGD: 270, AUD: 300,
-}
+const DEFAULT_FREE_SHIP_INR = 15000
 
 // ─── Delivery range from lead time ───────────────────────────────────────────
 
@@ -155,13 +155,20 @@ function buildAxes(variants: NonNullable<Product['variants']>) {
   return Array.from(map.entries()).map(([name, values]) => ({ name, values }))
 }
 
+/** A variant's price at its own lowest MOQ — what buying the smallest
+ *  possible quantity of it actually costs, not its best bulk-discount price. */
+function entryPrice(v: NonNullable<Product['variants']>[number]): number {
+  if (!v.priceTiers?.length) return v.priceInr
+  return [...v.priceTiers].sort((a, b) => a.moq - b.moq)[0].priceInr
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProductInfo({ product }: { product: Product }) {
   const {
     id, name, brandName, brandSlug,
     description,
-    wholesalePrice, displayPrice, currency,
+    wholesalePrice,
     moq, stepQty = 1, leadTime, weight, category, tags, images, inStock,
     variants = [],
     countryOfOrigin,
@@ -172,12 +179,18 @@ export function ProductInfo({ product }: { product: Product }) {
     priceTiers = [],
   } = product
 
-  const [quantity, setQuantity] = useState(moq)
   const [addedFeedback, setAddedFeedback] = useState(false)
 
   // ── Variant state ──────────────────────────────────────────────────────────
   const axes = buildAxes(variants)
-  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({})
+  // Auto-select the variant with the cheapest entry price (its own lowest-MOQ
+  // price) so the page never opens in an "unselected" state — selectAttr only
+  // ever overwrites these keys, never removes them.
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>(() => {
+    if (variants.length === 0) return {}
+    const cheapest = variants.reduce((min, v) => entryPrice(v) < entryPrice(min) ? v : min)
+    return Object.fromEntries(cheapest.attributes.map((a) => [a.name, a.value]))
+  })
 
   const selectedVariant = variants.find((v) =>
     axes.length > 0 &&
@@ -200,24 +213,55 @@ export function ProductInfo({ product }: { product: Product }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const openAuthModal = useAuthStore((s) => s.openAuthModal)
 
-  const basePrice = displayPrice ?? wholesalePrice
-  // Tiers are stored/returned in INR — scale by the same ratio used for the
-  // base price so they render correctly in the buyer's display currency too.
-  const fxRatio = displayPrice && wholesalePrice ? displayPrice / wholesalePrice : 1
+  // All price fields on `product` are raw INR — fmt() converts to the
+  // buyer's selected display currency (from the navbar dropdown) reactively.
+  const fmt = useFormatPrice()
+  const currency = useCurrencyStore((s) => s.currency)
+  const showINREquiv = currency !== 'INR'
+
   const sortedTiers = useMemo(
     () => [...priceTiers].sort((a, b) => a.moq - b.moq),
     [priceTiers]
   )
-  const tieredBasePrice = useMemo(() => {
-    if (sortedTiers.length === 0) return basePrice
-    const applicable = [...sortedTiers].reverse().find((t) => quantity >= t.moq)
-    return applicable ? applicable.priceInr * fxRatio : basePrice
-  }, [sortedTiers, quantity, fxRatio, basePrice])
-  const activePrice = selectedVariant ? selectedVariant.priceInr : tieredBasePrice
-  const priceCurrency = currency ?? 'INR'
-  const showINREquiv = priceCurrency !== 'INR'
-  const suggestedRetail = activePrice * 2
-  const minOrderValue = activePrice * moq
+
+  // The MOQ/price ladder that's actually in play right now — the selected
+  // variant's own tiers when one is selected (falling back to its flat price
+  // if it has no tiers of its own), the base product's tiers otherwise.
+  const activeTiers = useMemo(() => {
+    if (selectedVariant) {
+      return selectedVariant.priceTiers?.length
+        ? [...selectedVariant.priceTiers].sort((a, b) => a.moq - b.moq)
+        : [{ moq: selectedVariant.moq, priceInr: selectedVariant.priceInr }]
+    }
+    if (variants.length === 0) {
+      return sortedTiers.length ? sortedTiers : [{ moq, priceInr: wholesalePrice }]
+    }
+    // No variant selected yet (shouldn't normally happen — the first variant
+    // is auto-selected on mount) — aggregate every variant's tiers so the
+    // headline price still has something sensible to compute from.
+    const all = variants.flatMap((v) => v.priceTiers?.length ? v.priceTiers : [{ moq: v.moq, priceInr: v.priceInr }])
+    return all.length ? [...all].sort((a, b) => a.moq - b.moq) : [{ moq, priceInr: wholesalePrice }]
+  }, [selectedVariant, variants, sortedTiers, moq, wholesalePrice])
+
+  const lowestMoq = activeTiers[0]?.moq ?? moq
+
+  const [quantity, setQuantity] = useState(lowestMoq)
+  // Reset quantity to the new selection's own lowest MOQ whenever the buyer
+  // switches variants — each variant can have a completely different ladder.
+  useEffect(() => {
+    setQuantity(lowestMoq)
+  }, [selectedVariant?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The tier that applies at the currently chosen quantity — drives the cart
+  // price, suggested retail and the MOQ dropdown's selected option.
+  const currentTier = useMemo(() => {
+    const applicable = [...activeTiers].reverse().find((t) => quantity >= t.moq)
+    return applicable ?? activeTiers[0]
+  }, [activeTiers, quantity])
+  const currentTierPriceInr = currentTier.priceInr
+
+  const suggestedRetailInr = currentTierPriceInr * 2
+  const minOrderValueInr = lowestMoq * (activeTiers[0]?.priceInr ?? wholesalePrice)
 
   const badges = getBadges(tags ?? [])
 
@@ -235,10 +279,10 @@ export function ProductInfo({ product }: { product: Product }) {
         brandSlug,
         image: images?.[0] ?? '',
         quantity,
-        // The selected variant's price when one is chosen — never the base
-        // product price, which can be wrong for any priced variant.
-        wholesalePrice: activePrice,
-        moq,
+        // The price for the currently selected quantity/tier — never the
+        // flat base product price, which can be wrong for any priced tier.
+        wholesalePrice: currentTierPriceInr,
+        moq: lowestMoq,
         stepQty,
         leadTime,
         achievementLevel: product.achievementLevel,
@@ -259,12 +303,7 @@ export function ProductInfo({ product }: { product: Product }) {
     }, 'add_to_cart')
   }
 
-  // freeShippingAboveInr is always INR — scale it by the same fxRatio used
-  // for tier prices so it renders correctly in the buyer's display currency
-  // instead of showing the raw INR number under a different currency symbol.
-  const freeShipThreshold = freeShippingAboveInr != null
-    ? freeShippingAboveInr * fxRatio
-    : (FREE_SHIP[priceCurrency] ?? 15000)
+  const freeShipThresholdInr = freeShippingAboveInr ?? DEFAULT_FREE_SHIP_INR
   const deliveryRange = getDeliveryRange(leadTime)
   const shipFromCountry = (() => {
     try {
@@ -292,19 +331,16 @@ export function ProductInfo({ product }: { product: Product }) {
             Wholesale price
           </p>
           <p className="font-public-sans text-[38px] font-[600] text-primary tracking-[-0.025em] leading-none">
-            {formatCurrency(activePrice, priceCurrency)}
-            {variants.length > 0 && !selectedVariant && (
-              <span className="text-[14px] font-[400] text-muted-text ml-2 tracking-normal">from</span>
-            )}
+            {fmt(currentTierPriceInr)}
           </p>
           <p className="font-public-sans text-[13px] text-muted-text mt-1.5">
             Suggested retail:&nbsp;
-            <span className="text-primary font-[500]">{formatCurrency(suggestedRetail, priceCurrency)}</span>
+            <span className="text-primary font-[500]">{fmt(suggestedRetailInr)}</span>
             &nbsp;/ unit
           </p>
           {showINREquiv && (
             <p className="font-public-sans text-[12px] text-muted-text mt-0.5">
-              {formatINR(wholesalePrice)} per unit (INR)
+              {formatINR(currentTierPriceInr)} per unit (INR)
             </p>
           )}
         </div>
@@ -315,31 +351,6 @@ export function ProductInfo({ product }: { product: Product }) {
           </div>
         )}
       </div>
-
-      {/* Volume pricing — only meaningful for the base product; a selected
-          variant has its own flat price */}
-      {isAuthenticated && sortedTiers.length > 0 && !selectedVariant && (
-        <div className="mb-5 rounded border border-border-warm overflow-hidden">
-          <p className="font-public-sans text-[11px] font-[600] text-muted-text uppercase tracking-[0.07em] px-3 py-2 border-b border-border-warm bg-muted-bg/40">
-            Volume pricing
-          </p>
-          <table className="w-full text-[13px] font-public-sans">
-            <tbody className="divide-y divide-border-warm">
-              {sortedTiers.map((tier) => {
-                const isActive = tier.priceInr * fxRatio === activePrice
-                return (
-                  <tr key={tier.moq} className={isActive ? 'bg-accent/5' : undefined}>
-                    <td className="px-3 py-2 text-muted-text">{tier.moq}+ units</td>
-                    <td className="px-3 py-2 text-right text-primary font-[500]">
-                      {formatCurrency(tier.priceInr * fxRatio, priceCurrency)} / unit
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {/* Variant selector */}
       {axes.length > 0 && (
@@ -404,14 +415,33 @@ export function ProductInfo({ product }: { product: Product }) {
       {/* 4. Min. order */}
       <p className="font-public-sans text-[13px] text-muted-text mb-4">
         Min. order:&nbsp;
-        <span className="font-[600] text-primary">{moq} units</span>
+        <span className="font-[600] text-primary">{lowestMoq} units</span>
         {isAuthenticated && (
           <>
             &nbsp;·&nbsp;
-            <span className="text-primary font-[500]">{formatCurrency(minOrderValue, priceCurrency)} total</span>
+            <span className="text-primary font-[500]">{fmt(minOrderValueInr)} total</span>
           </>
         )}
       </p>
+
+      {/* MOQ tier dropdown — jump to any available price break; sets quantity
+          to that tier's MOQ directly */}
+      {isAuthenticated && activeTiers.length > 1 && (
+        <div className="mb-4">
+          <label className="block font-public-sans text-[12px] font-[500] text-muted-text mb-2">
+            Select quantity tier
+          </label>
+          <select
+            value={currentTier.moq}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="w-full h-10 px-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors appearance-none"
+          >
+            {activeTiers.map((t) => (
+              <option key={t.moq} value={t.moq}>{t.moq}+ units — {fmt(t.priceInr)}/unit</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* 5. Trust / attribute badges */}
       {badges.length > 0 && (
@@ -433,12 +463,12 @@ export function ProductInfo({ product }: { product: Product }) {
       {effectiveInStock && (
         <div className="mb-4">
           <p className="font-public-sans text-[12px] font-[500] text-muted-text mb-2">
-            Quantity&nbsp;<span className="text-primary">(min. {moq})</span>
+            Quantity&nbsp;<span className="text-primary">(min. {lowestMoq})</span>
             {stepQty > 1 && (
               <span className="ml-2 text-muted-text font-[400]">· in steps of {stepQty}</span>
             )}
           </p>
-          <QuantityStepper value={quantity} onChange={setQuantity} min={moq} step={stepQty} />
+          <QuantityStepper value={quantity} onChange={setQuantity} min={lowestMoq} step={stepQty} />
         </div>
       )}
 
@@ -481,7 +511,7 @@ export function ProductInfo({ product }: { product: Product }) {
             <span className="font-public-sans text-[13px] text-muted-text leading-snug">
               Free shipping on orders{' '}
               <span className="border-b border-dotted border-muted-text/60 cursor-default">
-                {formatCurrency(freeShipThreshold, priceCurrency)}+
+                {fmt(freeShipThresholdInr)}+
               </span>
             </span>
           </div>
@@ -535,7 +565,7 @@ export function ProductInfo({ product }: { product: Product }) {
               { label: 'Category',   value: category },
               { label: 'Weight',     value: `${weight}g per unit` },
               { label: 'Lead time',  value: leadTime },
-              { label: 'Min. order', value: `${moq} units` },
+              { label: 'Min. order', value: `${lowestMoq} units` },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-baseline justify-between gap-4">
                 <dt className="font-public-sans text-[12px] font-[600] text-primary uppercase tracking-[0.04em] flex-shrink-0">

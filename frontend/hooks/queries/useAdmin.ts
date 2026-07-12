@@ -579,6 +579,67 @@ export function useAdminCategoryStats() {
   })
 }
 
+// ─── Category Management (L1→L2→L3 tree) ──────────────────────────────────────
+
+export interface CategoryNode {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  imageUrl: string | null
+  level: number
+  parentId: string | null
+  sortOrder: number
+  isActive: boolean
+  children?: CategoryNode[]
+}
+
+export function useAdminCategoryTree() {
+  return useQuery<CategoryNode[]>({
+    queryKey: ['admin-category-tree'],
+    queryFn: async () => {
+      const res = await api.get('/categories/admin/tree')
+      return res.data.data ?? []
+    },
+  })
+}
+
+export function useCreateCategory() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { name: string; description?: string; parentId?: string; sortOrder?: number }>({
+    mutationFn: (body) => api.post('/categories', body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-category-tree'] })
+      toast.success('Category created.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useUpdateCategory() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; data: Partial<{ name: string; description: string; sortOrder: number; isActive: boolean }> }>({
+    mutationFn: ({ id, data }) => api.patch(`/categories/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-category-tree'] })
+      toast.success('Category updated.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
+export function useDeleteCategory() {
+  const qc = useQueryClient()
+  return useMutation<unknown, Error, { id: string; force?: boolean }>({
+    mutationFn: ({ id, force }) => api.delete(`/categories/${id}`, { params: force ? { force: 'true' } : undefined }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-category-tree'] })
+      toast.success(vars.force ? 'Category permanently removed.' : 'Category deactivated.')
+    },
+    onError: (err) => toast.error(getApiError(err)),
+  })
+}
+
 // ─── WhatsApp Broadcasts ───────────────────────────────────────────────────────
 
 export interface WhatsappContact {

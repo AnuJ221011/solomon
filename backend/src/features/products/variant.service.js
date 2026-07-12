@@ -28,7 +28,10 @@ const getOwnedProduct = async (userId, productId) => {
 export const getVariantsByProduct = async (productId) => {
   return prisma.productVariant.findMany({
     where: { productId },
-    include: { attributes: { orderBy: { name: 'asc' } } },
+    include: {
+      attributes: { orderBy: { name: 'asc' } },
+      priceTiers: { orderBy: { moq: 'asc' } },
+    },
     orderBy: { createdAt: 'asc' },
   });
 };
@@ -37,7 +40,10 @@ export const getVariantsByProduct = async (productId) => {
 export const getVariantById = async (variantId) => {
   const variant = await prisma.productVariant.findUnique({
     where: { id: variantId },
-    include: { attributes: true },
+    include: {
+      attributes: true,
+      priceTiers: { orderBy: { moq: 'asc' } },
+    },
   });
   if (!variant) throw createError('Variant not found', 404);
   return variant;
@@ -49,7 +55,7 @@ export const getVariantById = async (variantId) => {
  * Creates a single variant with its attributes.
  * attributes: [{ name: "Color", value: "Red" }, { name: "Size", value: "L" }]
  */
-export const createVariant = async (userId, productId, { sku, priceInr, stock, imageUrl, status, attributes }) => {
+export const createVariant = async (userId, productId, { sku, priceInr, moq, stock, imageUrl, status, attributes, priceTiers }) => {
   await getOwnedProduct(userId, productId);
 
   // Check SKU uniqueness
@@ -61,14 +67,18 @@ export const createVariant = async (userId, productId, { sku, priceInr, stock, i
       productId,
       sku,
       priceInr,
+      moq: moq ?? 1,
       stock: stock ?? 0,
       imageUrl: imageUrl ?? null,
       status: status ?? 'ACTIVE',
       attributes: {
         create: (attributes ?? []).map((a) => ({ name: a.name, value: a.value })),
       },
+      ...(priceTiers?.length && {
+        priceTiers: { create: priceTiers.map(({ moq, priceInr }) => ({ moq, priceInr })) },
+      }),
     },
-    include: { attributes: true },
+    include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
   });
 };
 
@@ -106,12 +116,16 @@ export const createVariantsBulk = async (userId, productId, variants) => {
           productId,
           sku: v.sku,
           priceInr: v.priceInr,
+          moq: v.moq ?? 1,
           stock: v.stock ?? 0,
           imageUrl: v.imageUrl ?? null,
           status: v.status ?? 'ACTIVE',
           attributes: { create: (v.attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+          ...(v.priceTiers?.length && {
+            priceTiers: { create: v.priceTiers.map(({ moq, priceInr }) => ({ moq, priceInr })) },
+          }),
         },
-        include: { attributes: true },
+        include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
       })
     )
   );
@@ -133,7 +147,7 @@ export const updateVariant = async (userId, productId, variantId, updates) => {
     if (conflict) throw createError(`SKU "${updates.sku}" is already in use`, 409);
   }
 
-  const { attributes, ...scalarUpdates } = updates;
+  const { attributes, priceTiers, ...scalarUpdates } = updates;
 
   return prisma.$transaction(async (tx) => {
     // Update scalar fields
@@ -150,9 +164,19 @@ export const updateVariant = async (userId, productId, variantId, updates) => {
       });
     }
 
+    // If price tiers are provided, replace them entirely
+    if (priceTiers !== undefined) {
+      await tx.variantPriceTier.deleteMany({ where: { variantId } });
+      if (priceTiers.length) {
+        await tx.variantPriceTier.createMany({
+          data: priceTiers.map(({ moq, priceInr }) => ({ variantId, moq, priceInr })),
+        });
+      }
+    }
+
     return tx.productVariant.findUnique({
       where: { id: variantId },
-      include: { attributes: true },
+      include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
     });
   });
 };
@@ -277,13 +301,21 @@ const applyVariantReconciliation = async (productId, { updates = [], creates = [
     for (const u of updates) {
       await tx.productVariant.update({
         where: { id: u.id },
-        data: { priceInr: u.priceInr, stock: u.stock },
+        data: { priceInr: u.priceInr, moq: u.moq ?? 1, stock: u.stock },
       });
       if (u.attributes) {
         await tx.variantAttribute.deleteMany({ where: { variantId: u.id } });
         await tx.variantAttribute.createMany({
           data: u.attributes.map((a) => ({ variantId: u.id, name: a.name, value: a.value })),
         });
+      }
+      if (u.priceTiers !== undefined) {
+        await tx.variantPriceTier.deleteMany({ where: { variantId: u.id } });
+        if (u.priceTiers.length) {
+          await tx.variantPriceTier.createMany({
+            data: u.priceTiers.map(({ moq, priceInr }) => ({ variantId: u.id, moq, priceInr })),
+          });
+        }
       }
     }
 
@@ -293,9 +325,13 @@ const applyVariantReconciliation = async (productId, { updates = [], creates = [
           productId,
           sku: c.sku,
           priceInr: c.priceInr,
+          moq: c.moq ?? 1,
           stock: c.stock ?? 0,
           status: c.status ?? 'ACTIVE',
           attributes: { create: (c.attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+          ...(c.priceTiers?.length && {
+            priceTiers: { create: c.priceTiers.map(({ moq, priceInr }) => ({ moq, priceInr })) },
+          }),
         },
       });
     }
@@ -303,7 +339,10 @@ const applyVariantReconciliation = async (productId, { updates = [], creates = [
 
   return prisma.productVariant.findMany({
     where: { productId },
-    include: { attributes: { orderBy: { name: 'asc' } } },
+    include: {
+      attributes: { orderBy: { name: 'asc' } },
+      priceTiers: { orderBy: { moq: 'asc' } },
+    },
     orderBy: { createdAt: 'asc' },
   });
 };
@@ -321,7 +360,7 @@ const getProductOrThrow = async (productId) => {
   return product;
 };
 
-export const adminCreateVariant = async (productId, { sku, priceInr, stock, imageUrl, status, attributes }) => {
+export const adminCreateVariant = async (productId, { sku, priceInr, moq, stock, imageUrl, status, attributes, priceTiers }) => {
   await getProductOrThrow(productId);
 
   const existing = await prisma.productVariant.findUnique({ where: { sku } });
@@ -332,12 +371,16 @@ export const adminCreateVariant = async (productId, { sku, priceInr, stock, imag
       productId,
       sku,
       priceInr,
+      moq: moq ?? 1,
       stock: stock ?? 0,
       imageUrl: imageUrl ?? null,
       status: status ?? 'ACTIVE',
       attributes: { create: (attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+      ...(priceTiers?.length && {
+        priceTiers: { create: priceTiers.map(({ moq, priceInr }) => ({ moq, priceInr })) },
+      }),
     },
-    include: { attributes: true },
+    include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
   });
 };
 
@@ -365,12 +408,16 @@ export const adminCreateVariantsBulk = async (productId, variants) => {
           productId,
           sku: v.sku,
           priceInr: v.priceInr,
+          moq: v.moq ?? 1,
           stock: v.stock ?? 0,
           imageUrl: v.imageUrl ?? null,
           status: v.status ?? 'ACTIVE',
           attributes: { create: (v.attributes ?? []).map((a) => ({ name: a.name, value: a.value })) },
+          ...(v.priceTiers?.length && {
+            priceTiers: { create: v.priceTiers.map(({ moq, priceInr }) => ({ moq, priceInr })) },
+          }),
         },
-        include: { attributes: true },
+        include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
       })
     )
   );
@@ -387,7 +434,7 @@ export const adminUpdateVariant = async (productId, variantId, updates) => {
     if (conflict) throw createError(`SKU "${updates.sku}" is already in use`, 409);
   }
 
-  const { attributes, ...scalarUpdates } = updates;
+  const { attributes, priceTiers, ...scalarUpdates } = updates;
 
   return prisma.$transaction(async (tx) => {
     await tx.productVariant.update({ where: { id: variantId }, data: scalarUpdates });
@@ -399,7 +446,19 @@ export const adminUpdateVariant = async (productId, variantId, updates) => {
       });
     }
 
-    return tx.productVariant.findUnique({ where: { id: variantId }, include: { attributes: true } });
+    if (priceTiers !== undefined) {
+      await tx.variantPriceTier.deleteMany({ where: { variantId } });
+      if (priceTiers.length) {
+        await tx.variantPriceTier.createMany({
+          data: priceTiers.map(({ moq, priceInr }) => ({ variantId, moq, priceInr })),
+        });
+      }
+    }
+
+    return tx.productVariant.findUnique({
+      where: { id: variantId },
+      include: { attributes: true, priceTiers: { orderBy: { moq: 'asc' } } },
+    });
   });
 };
 

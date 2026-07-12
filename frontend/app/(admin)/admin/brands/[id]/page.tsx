@@ -565,10 +565,10 @@ export default function AdminBrandDetailPage() {
           </InfoCard>
 
           {/* Shipping zones */}
-          {brand.enabledZones?.length > 0 && (
+          {brand.defaultShippingZones?.length > 0 && (
             <InfoCard title="Shipping Zones">
               <div className="flex flex-wrap gap-2">
-                {brand.enabledZones.map((z: string) => (
+                {brand.defaultShippingZones.map((z: string) => (
                   <span
                     key={z}
                     className="text-[12.5px] font-public-sans font-[500] text-muted-text bg-muted-bg border border-border-warm px-3 py-1.5 rounded-lg"
