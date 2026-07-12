@@ -120,7 +120,10 @@ export const updateCategory = async (id, updates) => {
   if (!category) throw createError('Category not found', 404);
 
   const data = { ...updates };
-  if (updates.name && updates.name !== category.name) {
+  const oldName = category.name;
+  const isRename = !!updates.name && updates.name !== oldName;
+
+  if (isRename) {
     // Regenerate slug only when name changes
     data.slug = toSlug(updates.name);
     const conflict = await prisma.category.findFirst({
@@ -129,7 +132,20 @@ export const updateCategory = async (id, updates) => {
     if (conflict) throw createError(`Category "${updates.name}" already exists`, 409);
   }
 
-  return prisma.category.update({ where: { id }, data });
+  // Product.categories and BrandProfile.category are plain string arrays, not
+  // foreign keys — renaming a category here would otherwise leave every
+  // product/brand still tagged with the old name string, silently falling
+  // out of "browse by category" for the new name. Cascade the rename into
+  // both tables in the same transaction so nothing is left stale.
+  const [updated] = await prisma.$transaction([
+    prisma.category.update({ where: { id }, data }),
+    ...(isRename ? [
+      prisma.$executeRaw`UPDATE "Product" SET categories = array_replace(categories, ${oldName}, ${updates.name}) WHERE ${oldName} = ANY(categories)`,
+      prisma.$executeRaw`UPDATE "BrandProfile" SET category = array_replace(category, ${oldName}, ${updates.name}) WHERE ${oldName} = ANY(category)`,
+    ] : []),
+  ]);
+
+  return updated;
 };
 
 // ── Delete / deactivate ───────────────────────────────────────────────────────
