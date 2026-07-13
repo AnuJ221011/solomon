@@ -54,6 +54,15 @@ const safeDocUpload = (multerFn) => (req, res, next) =>
     next();
   });
 
+// Brand logo/banner are mandatory during onboarding — multer's `.fields()`
+// doesn't enforce a field being present (only its maxCount if it is), so
+// check explicitly here rather than relying on the frontend wizard alone.
+const requireBrandImages = (req, _res, next) => {
+  if (!req.files?.brandLogo?.[0]) return next(createError('Brand logo is required', 400));
+  if (!req.files?.brandBanner?.[0]) return next(createError('Brand banner is required', 400));
+  next();
+};
+
 // Parses the stringified JSON `data` field that the client sends alongside files
 const parseFormDataBody = (req, _res, next) => {
   if (req.body?.data) {
@@ -75,6 +84,7 @@ router.post(
   '/brand/signup',
   authLimiter,
   safeDocUpload(docUpload.fields(DOC_FIELDS)),
+  requireBrandImages,
   parseFormDataBody,
   validate(brandSignupSchema),
   ctrl.brandSignup,
