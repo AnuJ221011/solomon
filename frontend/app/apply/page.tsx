@@ -848,6 +848,8 @@ export default function ApplyPage() {
       case 2:
         if (!form.brandName.trim()) return 'Please enter your brand name.'
         if (!form.primaryCategory) return 'Please select a primary category.'
+        if (!form.brandLogoFile) return 'Please upload your brand logo.'
+        if (!form.brandBannerFile) return 'Please upload your brand banner.'
         if (!form.city.trim()) return 'Please enter your city.'
         if (!form.state.trim()) return 'Please enter your state.'
         if (form.yearFounded) {
@@ -1184,6 +1186,7 @@ export default function ApplyPage() {
                   hint="Square image — shown on your shop page and search results. JPG or PNG, max 5 MB."
                   file={form.brandLogoFile}
                   onChange={(f) => set('brandLogoFile', f)}
+                  required
                   disabled={loading}
                 />
                 <FileUploadBox
@@ -1191,6 +1194,7 @@ export default function ApplyPage() {
                   hint="Wide banner image — displayed at the top of your shop page. JPG or PNG, max 5 MB."
                   file={form.brandBannerFile}
                   onChange={(f) => set('brandBannerFile', f)}
+                  required
                   disabled={loading}
                 />
               </div>
