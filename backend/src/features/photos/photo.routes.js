@@ -35,11 +35,14 @@ const upload = multer({
   },
 });
 
-function uploadToCloudinary(buffer, folder, isVideo) {
+// public_id + tags make the asset identifiable/searchable directly in the
+// Cloudinary dashboard, instead of a random filename with no indication of
+// which brand/product it belongs to or what kind of image it is.
+function uploadToCloudinary(buffer, folder, isVideo, publicId, tags) {
   return new Promise((resolve, reject) => {
     const opts = isVideo
-      ? { folder, resource_type: 'video' }
-      : { folder, resource_type: 'image', transformation: [{ width: 1200, height: 1200, crop: 'limit' }, { quality: 'auto' }] };
+      ? { folder, resource_type: 'video', public_id: publicId, tags }
+      : { folder, resource_type: 'image', transformation: [{ width: 1200, height: 1200, crop: 'limit' }, { quality: 'auto' }], public_id: publicId, tags };
 
     const stream = cloudinary.uploader.upload_stream(opts, (err, result) =>
       err ? reject(err) : resolve(result)
@@ -81,15 +84,16 @@ router.post(
       throw createError(`Can only upload ${remaining} more file(s) — max ${MAX_MEDIA_PER_PRODUCT} per product`, 400);
     }
 
+    const existingMax = product.photos.reduce((max, p) => Math.max(max, p.position), -1);
+
     const uploaded = await Promise.all(
-      files.map((file) => {
+      files.map((file, i) => {
         const isVideo = file.mimetype.startsWith('video/');
-        return uploadToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo)
+        const publicId = `${product.slug}-${existingMax + 1 + i}-${Date.now()}`;
+        return uploadToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo, publicId, ['product-media', brand.slug, product.slug])
           .then((result) => ({ result, isVideo }));
       })
     );
-
-    const existingMax = product.photos.reduce((max, p) => Math.max(max, p.position), -1);
 
     const media = await prisma.$transaction(
       uploaded.map(({ result, isVideo }, i) =>
@@ -163,7 +167,10 @@ router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRA
 // Upload brand logo
 router.post('/brand/logo', authenticate, authorize('BRAND'), safeUpload(upload.single('logo')), async (req, res) => {
   if (!req.file) throw createError('No file uploaded', 400);
-  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.logos, false);
+  const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+  if (!brand) throw createError('Brand profile not found', 404);
+  const publicId = `${brand.slug}-logo-${Date.now()}`;
+  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.logos, false, publicId, ['brand-logo', brand.slug]);
   await prisma.brandProfile.update({
     where: { userId: req.user.id },
     data: { logoUrl: result.secure_url },
@@ -174,7 +181,10 @@ router.post('/brand/logo', authenticate, authorize('BRAND'), safeUpload(upload.s
 // Upload brand banner
 router.post('/brand/banner', authenticate, authorize('BRAND'), safeUpload(upload.single('banner')), async (req, res) => {
   if (!req.file) throw createError('No file uploaded', 400);
-  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.banners, false);
+  const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+  if (!brand) throw createError('Brand profile not found', 404);
+  const publicId = `${brand.slug}-banner-${Date.now()}`;
+  const result = await uploadToCloudinary(req.file.buffer, cloudinaryFolders.banners, false, publicId, ['brand-banner', brand.slug]);
   await prisma.brandProfile.update({
     where: { userId: req.user.id },
     data: { bannerUrl: result.secure_url },

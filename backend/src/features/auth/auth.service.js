@@ -24,36 +24,44 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-// Upload a single file buffer to Cloudinary and return the secure URL
-function uploadDoc(buffer, folder) {
+// Upload a single file buffer to Cloudinary and return the secure URL.
+// public_id + tags make the asset identifiable/searchable directly in the
+// Cloudinary dashboard — without them every upload gets a random filename
+// with no indication of which brand or document type it belongs to.
+function uploadDoc(buffer, folder, publicId, tags) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'auto', type: 'upload', access_mode: 'public' },
+      { folder, resource_type: 'auto', type: 'upload', access_mode: 'public', public_id: publicId, tags },
       (err, result) => (err ? reject(err) : resolve(result.secure_url)),
     );
     stream.end(buffer);
   });
 }
 
-// Upload all document files (req.files map) and return a URL map
-async function uploadDocs(files = {}) {
+// Upload all document files (req.files map) and return a URL map.
+// brandNameHint is the brand name submitted at signup — the real BrandProfile
+// row (and its slug) doesn't exist yet at this point in the flow, so we build
+// a throwaway slug just for naming these uploads.
+async function uploadDocs(files = {}, brandNameHint = 'brand') {
+  const slugHint = brandNameHint.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'brand';
   const uploads = {};
   const map = {
-    brandLogo: 'logoUrl',
-    brandBanner: 'bannerUrl',
-    aadhar: 'aadharUrl',
-    pan: 'panUrl',
-    gstCert: 'gstCertUrl',
-    incorporateCert: 'incorporateCertUrl',
-    msmeCert: 'msmeCertUrl',
-    isoCert: 'isoCertUrl',
-    iecCert: 'iecCertUrl',
+    brandLogo: { urlKey: 'logoUrl', tag: 'brand-logo' },
+    brandBanner: { urlKey: 'bannerUrl', tag: 'brand-banner' },
+    aadhar: { urlKey: 'aadharUrl', tag: 'aadhar-card' },
+    pan: { urlKey: 'panUrl', tag: 'pan-card' },
+    gstCert: { urlKey: 'gstCertUrl', tag: 'gst-certificate' },
+    incorporateCert: { urlKey: 'incorporateCertUrl', tag: 'incorporation-certificate' },
+    msmeCert: { urlKey: 'msmeCertUrl', tag: 'msme-certificate' },
+    isoCert: { urlKey: 'isoCertUrl', tag: 'iso-certificate' },
+    iecCert: { urlKey: 'iecCertUrl', tag: 'iec-certificate' },
   };
   await Promise.all(
-    Object.entries(map).map(async ([field, urlKey]) => {
+    Object.entries(map).map(async ([field, { urlKey, tag }]) => {
       const file = files[field]?.[0];
       if (file) {
-        uploads[urlKey] = await uploadDoc(file.buffer, cloudinaryFolders.docs);
+        const publicId = `${slugHint}-${tag}-${Date.now()}`;
+        uploads[urlKey] = await uploadDoc(file.buffer, cloudinaryFolders.docs, publicId, ['brand-onboarding', tag, slugHint]);
       }
     }),
   );
@@ -182,7 +190,7 @@ export const registerBrand = async ({
 }) => {
   // Upload documents to Cloudinary (gracefully skip if Cloudinary is unconfigured)
   const [docUrls, aiDescription] = await Promise.all([
-    env.CLOUDINARY_CLOUD_NAME ? uploadDocs(files).catch(() => ({})) : Promise.resolve({}),
+    env.CLOUDINARY_CLOUD_NAME ? uploadDocs(files, brandName).catch(() => ({})) : Promise.resolve({}),
     brandStory ? generateBrandDescription(brandStory) : Promise.resolve(null),
   ]);
 

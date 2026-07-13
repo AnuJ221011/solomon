@@ -226,7 +226,10 @@ const safeMediaUpload = (req, res, next) => {
   );
 };
 
-function uploadMediaToCloudinary(buffer, folder, isVideo) {
+// public_id + tags make the asset identifiable/searchable directly in the
+// Cloudinary dashboard, instead of a random filename with no indication of
+// which product it belongs to.
+function uploadMediaToCloudinary(buffer, folder, isVideo, publicId, tags) {
   cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
     api_key: env.CLOUDINARY_API_KEY,
@@ -234,14 +237,17 @@ function uploadMediaToCloudinary(buffer, folder, isVideo) {
   });
   return new Promise((resolve, reject) => {
     const opts = isVideo
-      ? { folder, resource_type: 'video' }
-      : { folder, resource_type: 'image', transformation: [{ width: 1200, height: 1200, crop: 'limit' }, { quality: 'auto' }] };
+      ? { folder, resource_type: 'video', public_id: publicId, tags }
+      : { folder, resource_type: 'image', transformation: [{ width: 1200, height: 1200, crop: 'limit' }, { quality: 'auto' }], public_id: publicId, tags };
     cloudinary.uploader.upload_stream(opts, (err, result) => (err ? reject(err) : resolve(result))).end(buffer);
   });
 }
 
 router.post('/products/:id/photos', safeMediaUpload, async (req, res) => {
-  const product = await prisma.product.findUnique({ where: { id: req.params.id }, include: { photos: true } });
+  const product = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: { photos: true, brandProfile: { select: { slug: true } } },
+  });
   if (!product) throw createError('Product not found', 404);
 
   const files = req.files;
@@ -252,15 +258,16 @@ router.post('/products/:id/photos', safeMediaUpload, async (req, res) => {
     throw createError(`Can only upload ${remaining} more file(s) — max ${MAX_MEDIA_PER_PRODUCT} per product`, 400);
   }
 
+  const existingMax = product.photos.reduce((max, p) => Math.max(max, p.position), -1);
+
   const uploaded = await Promise.all(
-    files.map((file) => {
+    files.map((file, i) => {
       const isVideo = file.mimetype.startsWith('video/');
-      return uploadMediaToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo)
+      const publicId = `${product.slug}-${existingMax + 1 + i}-${Date.now()}`;
+      return uploadMediaToCloudinary(file.buffer, cloudinaryFolders.productMedia(product.id), isVideo, publicId, ['product-media', product.brandProfile.slug, product.slug])
         .then((result) => ({ result, isVideo }));
     })
   );
-
-  const existingMax = product.photos.reduce((max, p) => Math.max(max, p.position), -1);
   const media = await prisma.$transaction(
     uploaded.map(({ result, isVideo }, i) =>
       prisma.productPhoto.create({

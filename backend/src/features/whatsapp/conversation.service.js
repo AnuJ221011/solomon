@@ -41,10 +41,14 @@ const ZONE_LABEL = {
 
 // ── Cloudinary upload ─────────────────────────────────────────────────────────
 
-function uploadBuffer(buffer, folder) {
+// public_id + tags make the asset identifiable/searchable directly in the
+// Cloudinary dashboard — the product this belongs to doesn't exist yet at
+// upload time (it's still being built via chat), so we tag by phone number
+// instead.
+function uploadBuffer(buffer, folder, publicId, tags) {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
+      { folder, resource_type: 'image', public_id: publicId, tags },
       (err, result) => (err ? reject(err) : resolve({ url: result.secure_url, publicId: result.public_id })),
     ).end(buffer);
   });
@@ -261,7 +265,9 @@ export async function handleInboundMessage(from, message) {
           const buffer = await downloadMediaBuffer(mediaId);
           let photoData;
           if (buffer) {
-            photoData = await uploadBuffer(buffer, cloudinaryFolders.products);
+            const phoneHint = from.replace(/[^0-9]/g, '');
+            const publicId = `whatsapp-${phoneHint}-${data.photos.length}-${Date.now()}`;
+            photoData = await uploadBuffer(buffer, cloudinaryFolders.products, publicId, ['whatsapp-upload', phoneHint]);
           } else {
             // Mock mode
             photoData = { url: `https://picsum.photos/seed/${Date.now()}/800/800`, publicId: `mock-${Date.now()}` };
