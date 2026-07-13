@@ -21,6 +21,16 @@ export const verifyBuyerSignup = async (req, res) => {
   sendSuccess(res, { accessToken, user: sanitizeUser(user) }, 'Welcome! Your account is ready.', 201);
 };
 
+export const requestBrandEmailOtp = async (req, res) => {
+  await authService.requestBrandEmailOtp(req.body.email);
+  sendSuccess(res, null, 'Verification code sent to your email.');
+};
+
+export const verifyBrandEmailOtp = async (req, res) => {
+  await authService.verifyBrandEmailOtp(req.body);
+  sendSuccess(res, null, 'Email verified.');
+};
+
 export const brandSignup = async (req, res) => {
   const { user, accessToken, refreshToken } = await authService.registerBrand({
     ...req.body,

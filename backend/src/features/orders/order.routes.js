@@ -3,6 +3,7 @@ import * as ctrl from './order.controller.js';
 import { authenticate, requireVerified } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import {
   createOrdersFromCartSchema,
   updateOrderStatusSchema,
@@ -18,8 +19,8 @@ router.get('/my', authenticate, authorize('BUYER'), validateQuery(orderQuerySche
 
 // Brand — manage incoming orders
 router.get('/brand', authenticate, authorize('BRAND'), validateQuery(orderQuerySchema), ctrl.listMyBrandOrders);
-router.post('/brand/manual', authenticate, authorize('BRAND'), validate(createManualOrderSchema), ctrl.createManualOrder);
-router.patch('/brand/:id/status', authenticate, authorize('BRAND'), validate(updateOrderStatusSchema), ctrl.updateStatus);
+router.post('/brand/manual', authenticate, authorize('BRAND'), requireApprovedBrand, validate(createManualOrderSchema), ctrl.createManualOrder);
+router.patch('/brand/:id/status', authenticate, authorize('BRAND'), requireApprovedBrand, validate(updateOrderStatusSchema), ctrl.updateStatus);
 
 // Shared — both buyer and brand can view an order
 router.get('/:id', authenticate, ctrl.getOrder);

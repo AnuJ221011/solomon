@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import * as variantService from './variant.service.js';
 
@@ -74,7 +75,7 @@ router.get('/:variantId', async (req, res) => {
 
 // Create a single variant
 router.post('/',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   validate(createVariantSchema),
   async (req, res) => {
     const variant = await variantService.createVariant(
@@ -86,7 +87,7 @@ router.post('/',
 
 // Bulk-create variants (combination generator)
 router.post('/bulk',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   validate(bulkCreateSchema),
   async (req, res) => {
     const variants = await variantService.createVariantsBulk(
@@ -100,7 +101,7 @@ router.post('/bulk',
 // atomic transaction — used by the product edit form's variant grid so a
 // mid-way failure can't leave the product with a half-applied variant set.
 router.put('/reconcile',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   validate(reconcileSchema),
   async (req, res) => {
     const variants = await variantService.reconcileVariants(
@@ -112,7 +113,7 @@ router.put('/reconcile',
 
 // Update a variant
 router.patch('/:variantId',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   validate(updateVariantSchema),
   async (req, res) => {
     const variant = await variantService.updateVariant(
@@ -124,7 +125,7 @@ router.patch('/:variantId',
 
 // Update stock (dedicated endpoint for inventory management)
 router.patch('/:variantId/stock',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   validate(stockSchema),
   async (req, res) => {
     const variant = await variantService.updateStock(
@@ -136,7 +137,7 @@ router.patch('/:variantId/stock',
 
 // Delete a variant
 router.delete('/:variantId',
-  authenticate, authorize('BRAND'),
+  authenticate, authorize('BRAND'), requireApprovedBrand,
   async (req, res) => {
     await variantService.deleteVariant(
       req.user.id, req.params.productId, req.params.variantId

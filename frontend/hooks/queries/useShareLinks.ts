@@ -7,13 +7,16 @@ import { getApiError } from '@/lib/getApiError'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type ShareLinkTarget = 'PRODUCT' | 'COLLECTION' | 'STOREFRONT'
+
 export interface ShareLink {
   id: string
   slug: string
+  token: string
   name?: string
-  linkType: 'BRAND' | 'PRODUCT' | 'COLLECTION'
-  target: string
-  targetId?: string
+  target: ShareLinkTarget
+  productId?: string | null
+  collectionId?: string | null
   views: number
   orders: number
   revenue: number
@@ -21,25 +24,54 @@ export interface ShareLink {
   active: boolean
   createdAt: string
   expiresAt?: string
-  password?: string
-  currency?: string
-  welcomeMessage?: string
+  lockedCurrency?: string
+  customMessage?: string
 }
 
 export interface CreateShareLinkInput {
-  name: string
-  target: string
-  targetId?: string
-  customSlug?: string
+  name?: string
+  target: ShareLinkTarget
+  productId?: string
+  collectionId?: string
+  slug?: string
   expiresAt?: string
   password?: string
-  currency?: string
-  welcomeMessage?: string
+  lockedCurrency?: string
+  customMessage?: string
 }
 
-export interface UpdateShareLinkInput extends Partial<CreateShareLinkInput> {
+export interface UpdateShareLinkInput {
   id: string
   active?: boolean
+  name?: string
+  password?: string
+  lockedCurrency?: string
+  customMessage?: string
+  expiresAt?: string
+}
+
+// ─── Raw API → ShareLink ──────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapShareLink(raw: any): ShareLink {
+  return {
+    id: raw.id,
+    slug: raw.slug ?? raw.token,
+    token: raw.token,
+    name: raw.name ?? undefined,
+    target: raw.target,
+    productId: raw.productId ?? null,
+    collectionId: raw.collectionId ?? null,
+    views: raw.viewCount ?? 0,
+    orders: raw.orderCount ?? 0,
+    revenue: Number(raw.revenueInr ?? 0),
+    commissionSaved: Number(raw.commissionSavedInr ?? 0),
+    active: raw.isActive ?? false,
+    createdAt: raw.createdAt,
+    expiresAt: raw.expiresAt ?? undefined,
+    lockedCurrency: raw.lockedCurrency ?? undefined,
+    customMessage: raw.customMessage ?? undefined,
+  }
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -53,7 +85,8 @@ export function useShareLinks() {
     queryFn: async () => {
       const response = await api.get('/share-links')
       const payload = response.data.data
-      return Array.isArray(payload) ? payload : (payload.shareLinks ?? [])
+      const rows = Array.isArray(payload) ? payload : (payload.shareLinks ?? [])
+      return rows.map(mapShareLink)
     },
     staleTime: 2 * 60 * 1000,
   })
@@ -69,7 +102,7 @@ export function useCreateShareLink() {
   return useMutation<ShareLink, Error, CreateShareLinkInput>({
     mutationFn: async (body) => {
       const response = await api.post('/share-links', body)
-      return response.data.data
+      return mapShareLink(response.data.data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['share-links'] })
@@ -86,9 +119,10 @@ export function useUpdateShareLink() {
   const queryClient = useQueryClient()
 
   return useMutation<ShareLink, Error, UpdateShareLinkInput>({
-    mutationFn: async ({ id, ...body }) => {
+    mutationFn: async ({ id, active, ...rest }) => {
+      const body = { ...rest, ...(active !== undefined && { isActive: active }) }
       const response = await api.patch(`/share-links/${id}`, body)
-      return response.data.data
+      return mapShareLink(response.data.data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['share-links'] })

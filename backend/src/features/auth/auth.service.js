@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import prisma from '../../config/db.js';
+import redis from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import {
   generateAccessToken,
@@ -177,6 +178,41 @@ async function generateBrandDescription(brandStory) {
   }
 }
 
+const BRAND_EMAIL_VERIFIED_PREFIX = 'brand_email_verified:';
+// Long enough to cover the rest of the onboarding wizard (brand info,
+// documents, bank details) after the email is confirmed up front.
+const BRAND_EMAIL_VERIFIED_TTL_SECONDS = 60 * 60;
+
+// Step 1 of brand onboarding — sent right after "Create your account"
+// (email/password/phone), before any brand or business details are
+// collected. No account or pending signup data exists yet; this only
+// proves the brand owns the email address before they continue the wizard.
+export const requestBrandEmailOtp = async (email) => {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) throw createError('Email already registered', 409);
+
+  const otp = generateOtp();
+  await storeOtp(email, otp);
+  await sendOtpEmail(email, otp);
+};
+
+// Step 2 — confirms the code and marks the email verified for the rest of
+// the wizard. registerBrand() below checks this marker instead of asking
+// for a second code once the full application is submitted.
+export const verifyBrandEmailOtp = async ({ email, otp }) => {
+  const result = await verifyOtp(email, otp);
+  if (!result.success) {
+    if (result.reason === 'locked_out') throw createError('Account locked. Try again in 15 minutes.', 429);
+    if (result.reason === 'expired') throw createError('Code expired. Please request a new one.', 410);
+    throw createError(`Invalid code. ${result.attemptsLeft} attempt(s) remaining.`, 400);
+  }
+  await redis.setex(`${BRAND_EMAIL_VERIFIED_PREFIX}${email}`, BRAND_EMAIL_VERIFIED_TTL_SECONDS, '1');
+};
+
+// Final step — the full brand application (documents, business info, bank
+// details). Requires the email to have already been verified via
+// requestBrandEmailOtp/verifyBrandEmailOtp earlier in the wizard, so no
+// further OTP prompt is needed here; the account is created verified.
 export const registerBrand = async ({
   email, password, brandName, category, countryOfOrigin,
   registrationType, phone, tagline,
@@ -188,7 +224,13 @@ export const registerBrand = async ({
   referralToken,
   files, // multer req.files — uploaded document buffers
 }) => {
-  // Upload documents to Cloudinary (gracefully skip if Cloudinary is unconfigured)
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) throw createError('Email already registered', 409);
+
+  const verifiedKey = `${BRAND_EMAIL_VERIFIED_PREFIX}${email}`;
+  const emailVerified = await redis.get(verifiedKey);
+  if (!emailVerified) throw createError('Please verify your email before completing your application.', 400);
+
   const [docUrls, aiDescription] = await Promise.all([
     env.CLOUDINARY_CLOUD_NAME ? uploadDocs(files, brandName).catch(() => ({})) : Promise.resolve({}),
     brandStory ? generateBrandDescription(brandStory) : Promise.resolve(null),
@@ -227,42 +269,6 @@ export const registerBrand = async ({
       }
     : null;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-
-  if (existing) {
-    if (existing.isEmailVerified) throw createError('Email already registered', 409);
-
-    // Unverified account from a previous attempt — refresh fields and resend OTP
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
-
-    const updatedUser = await prisma.user.update({
-      where: { email },
-      data: {
-        passwordHash,
-        name: brandName,
-        brandProfile: { update: { ...profileData, slug } },
-      },
-      include: { brandProfile: { select: { id: true } } },
-    });
-
-    if (bankData && updatedUser.brandProfile?.id) {
-      await prisma.bankAccount.upsert({
-        where: { brandProfileId: updatedUser.brandProfile.id },
-        update: bankData,
-        create: { brandProfileId: updatedUser.brandProfile.id, ...bankData },
-      });
-    }
-
-    const otp = generateOtp();
-    await storeOtp(email, otp);
-    sendOtpEmail(email, otp).catch(() => {});
-
-    const accessToken = generateAccessToken(existing.id, existing.role);
-    const refreshToken = await generateRefreshToken(existing.id);
-    return { user: existing, accessToken, refreshToken };
-  }
-
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const slug = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
@@ -272,6 +278,7 @@ export const registerBrand = async ({
       passwordHash,
       name: brandName,
       role: 'BRAND',
+      isEmailVerified: true,
       brandProfile: {
         create: {
           ...profileData,
@@ -282,13 +289,11 @@ export const registerBrand = async ({
     },
   });
 
+  await redis.del(verifiedKey);
+
   if (referralToken) {
     await recordReferralSignup(referralToken, user.id).catch(() => {});
   }
-
-  const otp = generateOtp();
-  await storeOtp(email, otp);
-  sendOtpEmail(email, otp).catch(() => {});
 
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = await generateRefreshToken(user.id);

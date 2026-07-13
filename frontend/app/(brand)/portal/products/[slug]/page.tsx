@@ -2,6 +2,7 @@
 
 import { use, useState, useRef, useEffect, useMemo } from 'react'
 import { ArrowLeft, Upload, X, Plus, Loader2, Trash2, Check, Search, Sparkles, RotateCcw, Video, AlertCircle, Pencil, Power, ImageIcon } from 'lucide-react'
+import { useImageLightbox } from '@/components/shared/ImageLightbox'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -67,7 +68,9 @@ interface Media {
 
 interface ProductAttrs {
   material: string
-  dimensions: string
+  lengthCm: string
+  breadthCm: string
+  heightCm: string
   isHandmade: boolean
   placeOfOrigin: string
   isGITagged: boolean
@@ -349,6 +352,7 @@ function MediaSection({ productId, initialMedia }: { productId: string; initialM
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { openLightbox, lightboxNode } = useImageLightbox()
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
@@ -426,8 +430,15 @@ function MediaSection({ productId, initialMedia }: { productId: string; initialM
                   </div>
                 </>
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => openLightbox(m.url, '')}
+                  className="w-full h-full cursor-zoom-in"
+                  aria-label="View full-size image"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={m.url} alt="" className="w-full h-full object-cover" />
+                </button>
               )}
               <button type="button" onClick={() => handleDelete(m.id)} disabled={deletingId === m.id}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
@@ -445,6 +456,7 @@ function MediaSection({ productId, initialMedia }: { productId: string; initialM
         {media.length}/{MAX_MEDIA} selected
         {videoCount > 0 && <span className="ml-2 text-muted-text">({imageCount} image{imageCount !== 1 ? 's' : ''}, {videoCount} video{videoCount !== 1 ? 's' : ''})</span>}
       </p>
+      {lightboxNode}
     </div>
   )
 }
@@ -475,6 +487,7 @@ function ProductView({ product }: { product: any }) {
   const variants = product.variants ?? []
   const tiers = product.priceTiers ?? []
   const hasVariants = variants.length > 0
+  const { openLightbox, lightboxNode } = useImageLightbox()
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -498,8 +511,15 @@ function ProductView({ product }: { product: any }) {
                     </div>
                   </>
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(p.url, '')}
+                    className="w-full h-full cursor-zoom-in"
+                    aria-label="View full-size image"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </button>
                 )}
                 {i === 0 && (
                   <span className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-[600] font-public-sans px-1.5 py-0.5 rounded">Cover</span>
@@ -509,6 +529,7 @@ function ProductView({ product }: { product: any }) {
           </div>
         )}
       </ViewSection>
+      {lightboxNode}
 
       <ViewSection title="Core Details">
         <ViewRow label="Categories" value={
@@ -609,11 +630,16 @@ function ProductView({ product }: { product: any }) {
         />
       </ViewSection>
 
-      {(product.material || product.dimensions || product.placeOfOrigin || product.isHandmade || product.isGITagged) && (
+      {(product.material || product.lengthCm || product.breadthCm || product.heightCm || product.placeOfOrigin || product.isHandmade || product.isGITagged) && (
         <ViewSection title="Product Attributes">
           <div className="grid grid-cols-2 gap-4">
             <ViewRow label="Material" value={product.material} />
-            <ViewRow label="Dimensions" value={product.dimensions} />
+            <ViewRow
+              label="Dimensions (L × B × H)"
+              value={(product.lengthCm || product.breadthCm || product.heightCm)
+                ? [product.lengthCm, product.breadthCm, product.heightCm].map((v) => v ?? '—').join(' × ') + ' cm'
+                : undefined}
+            />
             <ViewRow label="Place of Origin" value={product.placeOfOrigin} />
           </div>
           <div className="flex gap-2 pt-1">
@@ -661,7 +687,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     weightKg: '', tags: '', availability: 'ACTIVE',
   })
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([{ id: uid(), moq: '', priceInr: '' }])
-  const [attrs, setAttrs] = useState<ProductAttrs>({ material: '', dimensions: '', isHandmade: false, placeOfOrigin: '', isGITagged: false })
+  const [attrs, setAttrs] = useState<ProductAttrs>({ material: '', lengthCm: '', breadthCm: '', heightCm: '', isHandmade: false, placeOfOrigin: '', isGITagged: false })
   const [craft, setCraft] = useState<CraftStory>({ howItIsMade: '', artisanName: '' })
   const [submitting, setSubmitting] = useState(false)
 
@@ -704,7 +730,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
     setAttrs({
       material: product.material ?? '',
-      dimensions: product.dimensions ?? '',
+      lengthCm: product.lengthCm != null ? String(product.lengthCm) : '',
+      breadthCm: product.breadthCm != null ? String(product.breadthCm) : '',
+      heightCm: product.heightCm != null ? String(product.heightCm) : '',
       isHandmade: !!product.isHandmade,
       placeOfOrigin: product.placeOfOrigin ?? '',
       isGITagged: !!product.isGITagged,
@@ -967,7 +995,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         availability:      form.availability,
         ...(!variantsEnabled && { priceTiers: sortedTiers.map((t) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })) }),
         material:          attrs.material.trim() || undefined,
-        dimensions:        attrs.dimensions.trim() || undefined,
+        lengthCm:          attrs.lengthCm ? Number(attrs.lengthCm) : undefined,
+        breadthCm:         attrs.breadthCm ? Number(attrs.breadthCm) : undefined,
+        heightCm:          attrs.heightCm ? Number(attrs.heightCm) : undefined,
         isHandmade:        attrs.isHandmade,
         placeOfOrigin:     attrs.placeOfOrigin.trim() || undefined,
         isGITagged:        attrs.isGITagged,
@@ -1452,14 +1482,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <Field label="Material" hint="e.g. 100% cotton, brass, terracotta">
               <TextInput value={attrs.material} onChange={(v) => setAttr('material')(v)} placeholder="e.g. Handwoven cotton" />
             </Field>
-            <Field label="Dimensions" hint="e.g. 30×20×10 cm or 5.5 ft">
-              <TextInput value={attrs.dimensions} onChange={(v) => setAttr('dimensions')(v)} placeholder="e.g. 45 × 35 cm" />
-            </Field>
             <Field label="Place of Origin" hint="State or region">
               <TextInput value={attrs.placeOfOrigin} onChange={(v) => setAttr('placeOfOrigin')(v)} placeholder="e.g. Jaipur, Rajasthan" />
             </Field>
             <Field label="Weight per unit (kg)" required hint="e.g. 0.5 for 500 g">
               <TextInput value={form.weightKg} onChange={set('weightKg')} type="number" placeholder="e.g. 0.5" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <Field label="Length (cm)">
+              <TextInput value={attrs.lengthCm} onChange={(v) => setAttr('lengthCm')(v)} type="number" placeholder="e.g. 30" />
+            </Field>
+            <Field label="Breadth (cm)">
+              <TextInput value={attrs.breadthCm} onChange={(v) => setAttr('breadthCm')(v)} type="number" placeholder="e.g. 20" />
+            </Field>
+            <Field label="Height (cm)">
+              <TextInput value={attrs.heightCm} onChange={(v) => setAttr('heightCm')(v)} type="number" placeholder="e.g. 10" />
             </Field>
           </div>
           <div className="flex flex-col gap-4 pt-1">

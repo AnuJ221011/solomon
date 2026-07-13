@@ -181,7 +181,7 @@ export const createOrdersFromCart = async (buyerUserId, { shippingAddress, paypa
           netInr,
           payoutSpeed: brand.payoutSpeed,
           scheduledAt: brand.payoutSpeed === 'NET_30'
-            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            ? new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
             : null,
         },
       });

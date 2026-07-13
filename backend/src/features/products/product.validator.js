@@ -28,7 +28,9 @@ export const createProductSchema = z.object({
   priceTiers: z.array(priceTierSchema).min(1).optional(),
   // Product attributes
   material: z.string().max(200).optional(),
-  dimensions: z.string().max(200).optional(),
+  lengthCm: z.number().positive().optional(),
+  breadthCm: z.number().positive().optional(),
+  heightCm: z.number().positive().optional(),
   isHandmade: z.boolean().default(false),
   placeOfOrigin: z.string().max(200).optional(),
   isGITagged: z.boolean().default(false),

@@ -1,8 +1,9 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { MapPin, Lock, X } from 'lucide-react'
+import { MapPin, CalendarDays, Lock, X } from 'lucide-react'
 import { NavBar } from '@/components/shared/NavBar'
 import { Footer } from '@/components/shared/Footer'
 import { AchievementBadge } from '@/components/shared/AchievementBadge'
@@ -10,80 +11,40 @@ import { BrandStorefrontClient } from '@/app/(shop)/brands/[slug]/BrandStorefron
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/lib/store/useAuthStore'
+import { useBrand } from '@/hooks/queries/useBrands'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { Product } from '@/types'
+import { useImageLightbox } from '@/components/shared/ImageLightbox'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ShareLinkData {
+interface ShareLinkView {
   id: string
-  slug: string
   name?: string
-  linkType: 'BRAND' | 'PRODUCT' | 'COLLECTION'
+  target: 'PRODUCT' | 'COLLECTION' | 'STOREFRONT'
   active: boolean
   passwordRequired: boolean
-  welcomeMessage?: string
-  currency?: string
-  brand?: {
-    id: string
-    name: string
-    slug: string
-    logo?: string
-    banner?: string
-    description: string
-    location: string
-    yearFounded?: number
-    achievementLevel: number
-    tagline?: string
-    productCount: number
-    collections?: Array<{ id: string; name: string; slug: string; productCount: number }>
-  }
-  products?: Array<Record<string, unknown>>
-  product?: Record<string, unknown>
+  customMessage?: string
+  lockedCurrency?: string
+  brandSlug: string | null
+  productSlug: string | null
 }
 
-const ACHIEVEMENT_LEVEL: Record<string, number> = {
-  L1_SPROUT: 1, L2_RISING: 2, L3_TRUSTED: 3, L4_ELITE: 4, L5_LEGEND: 5,
-}
-const LEAD_TIME_LABEL: Record<string, string> = {
-  ONE_TO_THREE_DAYS: '1-3 days', ONE_TO_TWO_WEEKS: '1-2 weeks', TWO_TO_FOUR_WEEKS: '2-4 weeks',
-}
+// ─── Attribution + view tracking ──────────────────────────────────────────────
+// Stores the share link identifier (slug) in sessionStorage so it survives
+// page navigation — read at signup to attribute the 0% commission window to
+// this buyer, and fires a one-time-per-session view count against the link.
 
-function toTypedProduct(p: Record<string, unknown>): Product {
-  const bp = (p.brandProfile as Record<string, unknown>) ?? {}
-  const photos = (p.photos as Array<{ id: string; url: string; position: number }>) ?? []
-  const categories = (p.categories as string[]) ?? []
-  return {
-    id: p.id as string,
-    name: p.name as string,
-    slug: p.slug as string,
-    brandId: (p.brandProfileId as string) ?? (p.brandId as string) ?? '',
-    brandName: (bp.brandName as string) ?? (p.brandName as string) ?? '',
-    brandSlug: (bp.slug as string) ?? (p.brandSlug as string) ?? '',
-    description: (p.description as string) ?? '',
-    images: photos.sort((a, b) => a.position - b.position).map((ph) => ph.url),
-    wholesalePrice: Number(p.wholesalePriceInr ?? p.wholesalePrice ?? 0),
-    moq: p.moq as number,
-    leadTime: (LEAD_TIME_LABEL[p.leadTime as string] ?? p.leadTime ?? '1-2 weeks') as Product['leadTime'],
-    weight: (p.weightGrams as number) ?? (p.weight as number) ?? 0,
-    category: categories[0] ?? (p.category as string) ?? '',
-    tags: (p.tags as string[]) ?? [],
-    achievementLevel: (ACHIEVEMENT_LEVEL[bp.achievementLevel as string] ?? undefined) as Product['achievementLevel'],
-    inStock: (p.availability as string) === 'ACTIVE',
-  }
-}
-
-// ─── Share link attribution ───────────────────────────────────────────────────
-// Stores the share link slug in sessionStorage so it survives page navigation.
-// Read at signup to attribute the 0% commission window to this buyer.
-
-function useShareLinkAttribution(slug: string) {
+function useShareLinkTracking(slug: string, resolved: boolean) {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('sb_share_slug', slug)
-    }
-  }, [slug])
+    if (typeof window === 'undefined' || !resolved) return
+    sessionStorage.setItem('sb_share_slug', slug)
+
+    const visitedKey = `sb_share_visited_${slug}`
+    const isUnique = !localStorage.getItem(visitedKey)
+    localStorage.setItem(visitedKey, '1')
+    api.post('/share-links/visit', { identifier: slug, isUnique }).catch(() => {})
+  }, [slug, resolved])
 }
 
 // ─── Sticky invite banner ─────────────────────────────────────────────────────
@@ -125,12 +86,10 @@ function ShareLinkBanner({ brandName }: { brandName: string }) {
 
 function PasswordGate({ onUnlock }: { onUnlock: (password: string) => void }) {
   const [value, setValue] = useState('')
-  const [error, setError] = useState('')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!value.trim()) return
-    setError('')
     onUnlock(value.trim())
   }
 
@@ -156,9 +115,6 @@ function PasswordGate({ onUnlock }: { onUnlock: (password: string) => void }) {
               placeholder="Enter password"
               className="w-full h-10 px-3 rounded border border-border-warm bg-muted-bg/30 text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
             />
-            {error && (
-              <p className="text-[13px] font-public-sans text-error">{error}</p>
-            )}
             <Button type="submit" variant="primary" size="md" disabled={!value.trim()}>
               View Catalogue
             </Button>
@@ -170,39 +126,86 @@ function PasswordGate({ onUnlock }: { onUnlock: (password: string) => void }) {
   )
 }
 
-// ─── Brand storefront view ────────────────────────────────────────────────────
+// ─── Brand storefront view (reuses the real /brands/:slug data + grid) ───────
 
-function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
-  const brand = data.brand!
-  const products: Product[] = (data.products ?? []).map(toTypedProduct)
-  const collections = ['All Products', ...(brand.collections?.map((c) => c.name) ?? [])]
+function ShareLinkBrandView({ link }: { link: ShareLinkView }) {
+  const { data: brand, isLoading, isError } = useBrand(link.brandSlug)
+  const { openLightbox, lightboxNode } = useImageLightbox()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="space-y-3 w-48">
+            <div className="h-4 bg-muted-bg rounded animate-pulse" />
+            <div className="h-4 bg-muted-bg rounded w-3/4 animate-pulse" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (isError || !brand) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <EmptyState title="Brand not found" description="This catalogue may have been removed." />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  const collectionNames = ['All Products', ...(brand.collections ?? []).map((c) => c.name)]
 
   return (
     <div className="bg-bg min-h-screen flex flex-col">
       <NavBar />
 
-      {/* Share link invite banner for unauthenticated visitors */}
       <ShareLinkBanner brandName={brand.name} />
 
-      {/* Welcome message banner */}
-      {data.welcomeMessage && (
+      {link.customMessage && (
         <div className="bg-accent/10 border-b border-accent/20 px-6 py-3 text-center">
-          <p className="text-[14px] font-public-sans text-primary">{data.welcomeMessage}</p>
+          <p className="text-[14px] font-public-sans text-primary">{link.customMessage}</p>
         </div>
       )}
 
       {/* Hero banner */}
-      <div className="w-full h-72 md:h-80 bg-muted-bg overflow-hidden relative">
+      <div className="w-full h-88 bg-muted-bg overflow-hidden relative">
         {brand.banner ? (
-          <Image src={brand.banner} alt="" fill className="object-cover" unoptimized />
+          <button
+            type="button"
+            onClick={() => openLightbox(brand.banner, `${brand.name} banner`)}
+            className="absolute inset-0 cursor-zoom-in"
+            aria-label="View full-size banner"
+          >
+            <Image src={brand.banner} alt="" fill className="object-cover" unoptimized />
+          </button>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-muted-bg to-border-warm" />
         )}
-        {/* Logo */}
-        <div className="absolute bottom-0 left-6 lg:left-16 translate-y-1/2 z-10">
+      </div>
+
+      {/* Brand header */}
+      <div className="relative bg-surface border-b border-border-warm px-6 lg:px-16 pt-14 pb-6">
+        {/* Brand logo — overlaps the hero/header seam. Lives here (not inside
+            the hero div above) since that div's overflow-hidden — needed to
+            crop the banner image — would otherwise clip the half of the
+            logo that's meant to hang above it. */}
+        <div className="absolute -top-10 left-6 lg:left-16 z-10">
           <div className="w-20 h-20 rounded-full bg-surface border-4 border-surface overflow-hidden shadow-md">
             {brand.logo ? (
-              <Image src={brand.logo} alt={brand.name} width={80} height={80} className="object-cover w-full h-full" unoptimized />
+              <button
+                type="button"
+                onClick={() => openLightbox(brand.logo, `${brand.name} logo`)}
+                className="w-full h-full cursor-zoom-in"
+                aria-label="View full-size logo"
+              >
+                <Image src={brand.logo} alt={brand.name} width={80} height={80} className="object-cover w-full h-full" unoptimized />
+              </button>
             ) : (
               <div className="w-full h-full bg-muted-bg flex items-center justify-center">
                 <span className="text-[28px] font-[600] font-playfair text-muted-text">
@@ -212,10 +215,6 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Brand header */}
-      <div className="bg-surface border-b border-border-warm px-6 lg:px-16 pt-14 pb-6">
         <div className="max-w-[1280px] mx-auto flex flex-col gap-2">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-[28px] md:text-[32px] font-[500] font-playfair text-primary leading-tight">
@@ -233,8 +232,13 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
                 {brand.location}
               </span>
             )}
-            {brand.yearFounded && <span>Est. {brand.yearFounded}</span>}
-            <span>{brand.productCount ?? products.length} products</span>
+            {brand.yearFounded && (
+              <span className="flex items-center gap-1">
+                <CalendarDays size={13} aria-hidden="true" />
+                Est. {brand.yearFounded}
+              </span>
+            )}
+            <span>{brand.productCount} products</span>
           </div>
           {brand.description && (
             <p className="text-[14px] font-public-sans text-primary/80 mt-2 max-w-2xl leading-relaxed">
@@ -246,14 +250,15 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
 
       {/* Products */}
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-6 lg:px-16 py-10">
-        {products.length === 0 ? (
+        {brand.productCount === 0 ? (
           <EmptyState title="No products yet" description="This brand hasn't added products to this catalogue." />
         ) : (
-          <BrandStorefrontClient brandSlug={brand.slug} collections={collections} />
+          <BrandStorefrontClient brandSlug={brand.slug} collections={collectionNames} />
         )}
       </main>
 
       <Footer />
+      {lightboxNode}
     </div>
   )
 }
@@ -262,12 +267,10 @@ function ShareLinkBrandView({ data }: { data: ShareLinkData }) {
 
 export default function ShareLinkPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
+  const router = useRouter()
   const [password, setPassword] = useState<string | undefined>(undefined)
 
-  // Record attribution in sessionStorage for 0% commission at signup
-  useShareLinkAttribution(slug)
-
-  const { data, isLoading, error } = useQuery<ShareLinkData>({
+  const { data, isLoading, error } = useQuery<ShareLinkView>({
     queryKey: ['share-link', slug, password],
     queryFn: async () => {
       const response = await api.get(`/share-links/view/${slug}`, {
@@ -277,6 +280,15 @@ export default function ShareLinkPage({ params }: { params: Promise<{ slug: stri
     },
     retry: false,
   })
+
+  const resolved = !!data && data.active && !(data.passwordRequired && !password)
+  useShareLinkTracking(slug, resolved)
+
+  useEffect(() => {
+    if (resolved && data?.target === 'PRODUCT' && data.productSlug) {
+      router.replace(`/products/${data.productSlug}`)
+    }
+  }, [resolved, data, router])
 
   if (isLoading) {
     return (
@@ -293,11 +305,9 @@ export default function ShareLinkPage({ params }: { params: Promise<{ slug: stri
     )
   }
 
-  // Link requires password and none entered yet (or wrong password)
+  // Link requires a password and none has been entered yet (or it was wrong)
   if (!data && (error as { response?: { status?: number } })?.response?.status === 401) {
-    return (
-      <PasswordGate onUnlock={(pw) => setPassword(pw)} />
-    )
+    return <PasswordGate onUnlock={(pw) => setPassword(pw)} />
   }
 
   if (!data || error) {
@@ -334,5 +344,18 @@ export default function ShareLinkPage({ params }: { params: Promise<{ slug: stri
     return <PasswordGate onUnlock={(pw) => setPassword(pw)} />
   }
 
-  return <ShareLinkBrandView data={data} />
+  // PRODUCT-target links redirect straight to the real product page (above effect)
+  if (data.target === 'PRODUCT') {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="h-4 w-32 bg-muted-bg rounded animate-pulse" />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  return <ShareLinkBrandView link={data} />
 }

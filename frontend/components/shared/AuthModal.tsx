@@ -191,12 +191,16 @@ export function AuthModal() {
 
     setLoading(true)
     try {
+      const shareLinkToken = typeof window !== 'undefined'
+        ? sessionStorage.getItem('sb_share_slug') ?? undefined
+        : undefined
       await api.post('/auth/buyer/signup', {
         businessName: signupForm.businessName,
         email: signupForm.email,
         password: signupForm.password,
         phone: signupForm.phone.trim(),
         countryCode: signupForm.countryCode,
+        shareLinkToken,
       })
       setSignupStep('verify')
     } catch (err: unknown) {

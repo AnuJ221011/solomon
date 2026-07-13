@@ -9,6 +9,7 @@ import { AchievementBadge } from '@/components/shared/AchievementBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { BrandStorefrontClient } from './BrandStorefrontClient'
 import { useBrand } from '@/hooks/queries/useBrands'
+import { useImageLightbox } from '@/components/shared/ImageLightbox'
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -18,15 +19,14 @@ function BrandStorefrontSkeleton() {
       <NavBar />
 
       {/* Hero skeleton */}
-      <div className="w-full h-80 bg-muted-bg animate-pulse relative">
-        {/* Logo circle */}
-        <div className="absolute bottom-0 left-6 lg:left-16 translate-y-1/2 z-10">
-          <div className="w-20 h-20 rounded-full bg-border-warm border-4 border-surface animate-pulse" />
-        </div>
-      </div>
+      <div className="w-full h-88 bg-muted-bg animate-pulse" />
 
       {/* Brand header skeleton */}
-      <div className="bg-surface border-b border-border-warm px-6 lg:px-16 pt-12 pb-6">
+      <div className="relative bg-surface border-b border-border-warm px-6 lg:px-16 pt-12 pb-6">
+        {/* Logo circle — overlaps the hero/header seam */}
+        <div className="absolute -top-10 left-6 lg:left-16 z-10">
+          <div className="w-20 h-20 rounded-full bg-border-warm border-4 border-surface animate-pulse" />
+        </div>
         <div className="max-w-[1280px] mx-auto flex flex-col gap-3">
           <div className="h-8 bg-muted-bg rounded w-56 animate-pulse" />
           <div className="flex gap-3">
@@ -68,6 +68,7 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
     isError: brandError,
     error,
   } = useBrand(slug)
+  const { openLightbox, lightboxNode } = useImageLightbox()
 
   if (brandLoading) {
     return <BrandStorefrontSkeleton />
@@ -109,32 +110,52 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
       <NavBar />
 
       {/* ── Hero banner ────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-80 overflow-hidden">
+      <div className="relative w-full h-88 overflow-hidden">
         {brand.banner ? (
-          <Image
-            src={brand.banner}
-            alt={`${brand.name} banner`}
-            fill
-            className="object-cover"
-            priority
-          />
+          <button
+            type="button"
+            onClick={() => openLightbox(brand.banner, `${brand.name} banner`)}
+            className="absolute inset-0 cursor-zoom-in"
+            aria-label="View full-size banner"
+          >
+            <Image
+              src={brand.banner}
+              alt={`${brand.name} banner`}
+              fill
+              className="object-cover"
+              priority
+            />
+          </button>
         ) : (
           <div className="w-full h-full bg-muted-bg" />
         )}
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent pointer-events-none" />
+      </div>
 
-        {/* Brand logo — overlapping the header below */}
-        <div className="absolute bottom-0 left-6 lg:left-16 translate-y-1/2 z-10">
+      {/* ── Brand header ───────────────────────────────────────────────────── */}
+      <div className="relative bg-surface border-b border-border-warm px-6 lg:px-16 pt-12 pb-6">
+        {/* Brand logo — overlaps the hero/header seam. Lives here (not inside
+            the hero div above) since that div's overflow-hidden — needed to
+            crop the banner image — would otherwise clip the half of the
+            logo that's meant to hang above it. */}
+        <div className="absolute -top-10 left-6 lg:left-16 z-10">
           <div className="w-20 h-20 rounded-full border-4 border-surface overflow-hidden bg-muted-bg shadow-[0_4px_20px_rgba(26,26,26,0.04)]">
             {brand.logo ? (
-              <Image
-                src={brand.logo}
-                alt={`${brand.name} logo`}
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-              />
+              <button
+                type="button"
+                onClick={() => openLightbox(brand.logo, `${brand.name} logo`)}
+                className="w-full h-full cursor-zoom-in"
+                aria-label="View full-size logo"
+              >
+                <Image
+                  src={brand.logo}
+                  alt={`${brand.name} logo`}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              </button>
             ) : (
               <div className="w-full h-full bg-muted-bg flex items-center justify-center">
                 <span className="text-[24px] font-[600] font-playfair text-muted-text">
@@ -144,10 +165,6 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
             )}
           </div>
         </div>
-      </div>
-
-      {/* ── Brand header ───────────────────────────────────────────────────── */}
-      <div className="bg-surface border-b border-border-warm px-6 lg:px-16 pt-12 pb-6">
         <div className="max-w-[1280px] mx-auto">
           {/* Brand name */}
           <h1 className="text-[32px] leading-[1.2] font-[500] font-playfair text-primary">
@@ -213,6 +230,7 @@ function BrandStorefrontInner({ slug }: { slug: string }) {
       />
 
       <Footer />
+      {lightboxNode}
     </div>
   )
 }

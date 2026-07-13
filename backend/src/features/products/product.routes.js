@@ -4,6 +4,7 @@ import * as ctrl from './product.controller.js';
 import { authenticate, optionalAuthenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createProductSchema, updateProductSchema, productQuerySchema } from './product.validator.js';
 import { importProductsFromCsv, importProductsFromJson } from './product.import.js';
 import variantRouter from './variant.routes.js';
@@ -67,9 +68,9 @@ router.get('/me/export-csv', authenticate, authorize('BRAND'), async (req, res) 
   res.send(header + '\n' + rows.join('\n'));
 });
 
-router.post('/', authenticate, authorize('BRAND'), validate(createProductSchema), ctrl.createProduct);
-router.patch('/:id', authenticate, authorize('BRAND'), validate(updateProductSchema), ctrl.updateProduct);
-router.delete('/:id', authenticate, authorize('BRAND'), ctrl.deleteProduct);
+router.post('/', authenticate, authorize('BRAND'), requireApprovedBrand, validate(createProductSchema), ctrl.createProduct);
+router.patch('/:id', authenticate, authorize('BRAND'), requireApprovedBrand, validate(updateProductSchema), ctrl.updateProduct);
+router.delete('/:id', authenticate, authorize('BRAND'), requireApprovedBrand, ctrl.deleteProduct);
 
 // CSV bulk import (L3 Trusted+ only — enforced by achievement level check in service)
 const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -77,6 +78,7 @@ router.post(
   '/bulk-import',
   authenticate,
   authorize('BRAND'),
+  requireApprovedBrand,
   (req, res, next) => csvUpload.single('file')(req, res, (err) => err ? next(err) : next()),
   async (req, res) => {
     if (!req.file) throw new Error('No CSV file uploaded');
@@ -105,53 +107,66 @@ router.post('/ai/polish', authenticate, async (req, res) => {
   if (!env.GEMINI_API_KEY) throw createError('AI polishing is not configured', 503);
 
   const PROMPTS = {
-    name: `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
-Clean up this product name:
-- Use Title Case capitalisation
-- Remove emojis and special characters (keep hyphens if part of the name)
+    name: `You are a proofreader for a B2B wholesale marketplace selling Indian artisan goods.
+Correct this product name — fix it, don't rewrite it:
+- Fix spelling, grammar, and capitalisation mistakes only
+- Use Title Case
+- Strip all HTML tags and markup (e.g. <h1>, <p>, <div>, <b>) — return plain text only, no tags of any kind
+- Remove emojis, stray symbols, and repeated punctuation (keep hyphens if part of the name)
 - Collapse extra whitespace
-- Max 80 characters — truncate at a natural word boundary if needed
-- Do NOT add words or invent details
+- Keep the author's own words and word order — do NOT rephrase, reword, or substitute synonyms for anything that is already correct
+- Do NOT add or invent any words, materials, or details that aren't in the original
+- Max 80 characters — only shorten if it's already over, cutting at a natural word boundary
 
-Return ONLY the cleaned name, no explanation.
+Return ONLY the corrected name, no explanation.
 
 Input: "${value}"`,
 
-    description: `You are a product content editor for a B2B wholesale marketplace selling Indian artisan goods.
-Polish this product description for wholesale buyers:
-- Remove excessive emojis (keep at most 1–2 if they genuinely help)
-- Fix irregular spacing: collapse multiple blank lines to one, remove trailing spaces
-- Standardise bullet points to a single style (use "-" if mixed)
-- Do NOT add, remove, or change any factual information
-- Keep the tone professional and easy to scan
+    description: `You are a proofreader for a B2B wholesale marketplace selling Indian artisan goods.
+Correct this product description — fix it, don't rewrite it:
+- Fix every spelling, grammar, and punctuation mistake so each sentence is grammatically correct
+- Strip all HTML tags and markup (e.g. <h1>, <p>, <div>, <b>) — return plain text only, no tags of any kind
+- Remove emojis, stray symbols, and repeated punctuation
+- Fix spacing: collapse multiple blank lines to one, remove trailing spaces
+- Standardise bullet points to a single style ("-") if any are used
+- Keep the author's own words, sentence order, and level of detail — do NOT rephrase sentences that are already correct, do NOT add adjectives or marketing language that isn't there, do NOT remove or reorganise content
+- Do NOT add, remove, or invent any factual claims (materials, dimensions, origin, etc.)
+- The result should read as the same description, just correctly written
 
-Return ONLY the cleaned description, no explanation.
+Return ONLY the corrected description, no explanation.
 
 Input:
 ${value}`,
 
-    tags: `Clean up these product tags for a wholesale marketplace:
+    tags: `You are cleaning up product tags for a B2B wholesale marketplace.
+Correct this list of tags — fix each one, don't replace it with a different word:
+- Fix spelling mistakes in each tag
 - Lowercase everything
+- Strip any HTML tags or markup from each tag — return plain text only
 - Remove emojis and special characters from each tag
 - Trim whitespace around each tag
-- Remove exact duplicates (case-insensitive)
-- Keep at most 10 tags (drop extras from the end)
+- Split any tag that's really multiple keywords crammed together
+- Remove exact and near-duplicate tags (case-insensitive, singular/plural)
+- Keep at most 10 tags — keep the most relevant/specific ones if trimming
+- Do NOT add new tags that aren't implied by the input
 - Return as comma-separated values only
 
 Return ONLY the comma-separated tags, no explanation.
 
 Input: "${value}"`,
 
-    brandStory: `You are a brand content editor for a B2B wholesale marketplace selling Indian artisan goods.
-Polish this brand story:
-- Remove excessive emojis (keep at most 1–2 if they add warmth)
-- Fix irregular spacing: collapse multiple blank lines to one, remove trailing spaces
-- Fix inconsistent punctuation
-- Preserve the authentic, personal voice — do NOT make it sound corporate or generic
-- Do NOT add, remove, or change any factual information
-- Max 1000 characters — trim at a natural sentence boundary only if over the limit
+    brandStory: `You are a proofreader for a B2B wholesale marketplace selling Indian artisan goods.
+Correct this brand story — fix it, don't rewrite it:
+- Fix every spelling, grammar, and punctuation mistake so each sentence is grammatically correct
+- Strip all HTML tags and markup (e.g. <h1>, <p>, <div>, <b>) — return plain text only, no tags of any kind
+- Remove emojis, stray symbols, and repeated punctuation
+- Fix spacing: collapse multiple blank lines to one, remove trailing spaces
+- Keep the author's own words, sentence order, and personal voice — do NOT rephrase sentences that are already correct, do NOT add flourishes or "polish" the tone, do NOT remove or reorganise content
+- Do NOT add, remove, or invent any factual claims that aren't already present
+- The result should read as the same story, just correctly written
+- Max 1000 characters — only shorten if it's already over, cutting at a natural sentence boundary
 
-Return ONLY the cleaned brand story, no explanation.
+Return ONLY the corrected brand story, no explanation.
 
 Input:
 ${value}`,
@@ -160,7 +175,9 @@ ${value}`,
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
   const result = await model.generateContent(PROMPTS[field]);
-  const cleaned = result.response.text().trim();
+  // Belt-and-braces: strip any HTML tags the model leaves behind despite the
+  // prompt instruction, so markup can never make it into stored content.
+  const cleaned = result.response.text().trim().replace(/<[^>]*>/g, '').trim();
 
   sendSuccess(res, { cleaned });
 });

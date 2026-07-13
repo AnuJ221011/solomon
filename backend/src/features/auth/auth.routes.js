@@ -13,6 +13,7 @@ import {
   requestLoginOtpSchema,
   loginOtpSchema,
   verifyOtpSchema,
+  requestEmailOtpSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   storeTypeQuizSchema,
@@ -54,11 +55,11 @@ const safeDocUpload = (multerFn) => (req, res, next) =>
     next();
   });
 
-// Brand logo/banner are mandatory during onboarding — multer's `.fields()`
-// doesn't enforce a field being present (only its maxCount if it is), so
-// check explicitly here rather than relying on the frontend wizard alone.
+// Brand banner is mandatory during onboarding — multer's `.fields()` doesn't
+// enforce a field being present (only its maxCount if it is), so check
+// explicitly here rather than relying on the frontend wizard alone. Brand
+// logo is optional — brands can add one later from their portal settings.
 const requireBrandImages = (req, _res, next) => {
-  if (!req.files?.brandLogo?.[0]) return next(createError('Brand logo is required', 400));
   if (!req.files?.brandBanner?.[0]) return next(createError('Brand banner is required', 400));
   next();
 };
@@ -75,17 +76,33 @@ const parseFormDataBody = (req, _res, next) => {
   next();
 };
 
+// GST and IEC certificates are mandatory for business registrations (runs
+// after parseFormDataBody so registrationType is available on req.body).
+const requireBusinessDocs = (req, _res, next) => {
+  if (req.body?.registrationType === 'business') {
+    if (!req.files?.gstCert?.[0]) return next(createError('GST certificate is required for business registration', 400));
+    if (!req.files?.iecCert?.[0]) return next(createError('IEC certificate is required for business registration', 400));
+  }
+  next();
+};
+
 // Email / password flows
 // Buyer signup is two-step: initiate stashes the form + sends a code, verify
 // creates the account only once that code is confirmed.
 router.post('/buyer/signup', authLimiter, validate(buyerSignupSchema), ctrl.buyerSignup);
 router.post('/buyer/signup/verify', otpLimiter, validate(verifyOtpSchema), ctrl.verifyBuyerSignup);
+// Brand email verification happens up front, right after "Create your
+// account" and before the rest of the onboarding wizard — mirrors buyer
+// signup's OTP step but doesn't require the full application yet.
+router.post('/brand/signup/request-otp', otpLimiter, validate(requestEmailOtpSchema), ctrl.requestBrandEmailOtp);
+router.post('/brand/signup/verify-otp', otpLimiter, validate(verifyOtpSchema), ctrl.verifyBrandEmailOtp);
 router.post(
   '/brand/signup',
   authLimiter,
   safeDocUpload(docUpload.fields(DOC_FIELDS)),
   requireBrandImages,
   parseFormDataBody,
+  requireBusinessDocs,
   validate(brandSignupSchema),
   ctrl.brandSignup,
 );

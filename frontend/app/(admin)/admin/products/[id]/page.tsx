@@ -50,7 +50,9 @@ interface Media {
 
 interface ProductAttrs {
   material: string
-  dimensions: string
+  lengthCm: string
+  breadthCm: string
+  heightCm: string
   isHandmade: boolean
   placeOfOrigin: string
   isGITagged: boolean
@@ -614,7 +616,12 @@ function ProductView({ product }: { product: any }) {
       <ViewSection title="Product Attributes">
         <div className="grid grid-cols-2 gap-4">
           <ViewRow label="Material" value={product.material} />
-          <ViewRow label="Dimensions" value={product.dimensions} />
+          <ViewRow
+            label="Dimensions (L × B × H)"
+            value={(product.lengthCm || product.breadthCm || product.heightCm)
+              ? [product.lengthCm, product.breadthCm, product.heightCm].map((v) => v ?? '—').join(' × ') + ' cm'
+              : undefined}
+          />
           <ViewRow label="Place of Origin" value={product.placeOfOrigin} />
           <ViewRow label="Weight" value={product.weightGrams != null ? `${(product.weightGrams / 1000).toString().replace(/\.?0+$/, '')} kg` : undefined} />
         </div>
@@ -665,7 +672,7 @@ export default function AdminProductDetailPage() {
     weightKg: '', tags: '', availability: 'ACTIVE',
   })
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([{ id: uid(), moq: '', priceInr: '' }])
-  const [attrs, setAttrs] = useState<ProductAttrs>({ material: '', dimensions: '', isHandmade: false, placeOfOrigin: '', isGITagged: false })
+  const [attrs, setAttrs] = useState<ProductAttrs>({ material: '', lengthCm: '', breadthCm: '', heightCm: '', isHandmade: false, placeOfOrigin: '', isGITagged: false })
   const [craft, setCraft] = useState<CraftStory>({ howItIsMade: '', artisanName: '' })
   const [submitting, setSubmitting] = useState(false)
 
@@ -711,7 +718,9 @@ export default function AdminProductDetailPage() {
 
     setAttrs({
       material: product.material ?? '',
-      dimensions: product.dimensions ?? '',
+      lengthCm: product.lengthCm != null ? String(product.lengthCm) : '',
+      breadthCm: product.breadthCm != null ? String(product.breadthCm) : '',
+      heightCm: product.heightCm != null ? String(product.heightCm) : '',
       isHandmade: !!product.isHandmade,
       placeOfOrigin: product.placeOfOrigin ?? '',
       isGITagged: !!product.isGITagged,
@@ -960,7 +969,9 @@ export default function AdminProductDetailPage() {
         availability:      form.availability,
         ...(!variantsEnabled && { priceTiers: sortedTiers.map((t) => ({ moq: Number(t.moq), priceInr: Number(t.priceInr) })) }),
         material:          attrs.material.trim() || undefined,
-        dimensions:        attrs.dimensions.trim() || undefined,
+        lengthCm:          attrs.lengthCm ? Number(attrs.lengthCm) : undefined,
+        breadthCm:         attrs.breadthCm ? Number(attrs.breadthCm) : undefined,
+        heightCm:          attrs.heightCm ? Number(attrs.heightCm) : undefined,
         isHandmade:        attrs.isHandmade,
         placeOfOrigin:     attrs.placeOfOrigin.trim() || undefined,
         isGITagged:        attrs.isGITagged,
@@ -1448,14 +1459,22 @@ export default function AdminProductDetailPage() {
             <Field label="Material" hint="e.g. 100% cotton, brass, terracotta">
               <TextInput value={attrs.material} onChange={(v) => setAttr('material')(v)} placeholder="e.g. Handwoven cotton" />
             </Field>
-            <Field label="Dimensions" hint="e.g. 30×20×10 cm or 5.5 ft">
-              <TextInput value={attrs.dimensions} onChange={(v) => setAttr('dimensions')(v)} placeholder="e.g. 45 × 35 cm" />
-            </Field>
             <Field label="Place of Origin" hint="State or region">
               <TextInput value={attrs.placeOfOrigin} onChange={(v) => setAttr('placeOfOrigin')(v)} placeholder="e.g. Jaipur, Rajasthan" />
             </Field>
             <Field label="Weight per unit (kg)" required hint="e.g. 0.5 for 500 g">
               <TextInput value={form.weightKg} onChange={set('weightKg')} type="number" placeholder="e.g. 0.5" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <Field label="Length (cm)">
+              <TextInput value={attrs.lengthCm} onChange={(v) => setAttr('lengthCm')(v)} type="number" placeholder="e.g. 30" />
+            </Field>
+            <Field label="Breadth (cm)">
+              <TextInput value={attrs.breadthCm} onChange={(v) => setAttr('breadthCm')(v)} type="number" placeholder="e.g. 20" />
+            </Field>
+            <Field label="Height (cm)">
+              <TextInput value={attrs.heightCm} onChange={(v) => setAttr('heightCm')(v)} type="number" placeholder="e.g. 10" />
             </Field>
           </div>
           <div className="flex flex-col gap-4 pt-1">

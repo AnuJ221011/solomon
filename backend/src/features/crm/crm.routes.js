@@ -5,6 +5,7 @@ import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { parseCsv } from '../products/product.import.js';
@@ -33,7 +34,7 @@ router.get('/contacts', async (req, res) => {
 });
 
 // Add a single contact
-router.post('/contacts', validate(z.object({
+router.post('/contacts', requireApprovedBrand, validate(z.object({
   name: z.string().optional(),
   email: z.string().email(),
   businessName: z.string().optional(),
@@ -49,7 +50,7 @@ router.post('/contacts', validate(z.object({
 });
 
 // Delete a contact
-router.delete('/contacts/:id', async (req, res) => {
+router.delete('/contacts/:id', requireApprovedBrand, async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const contact = await prisma.crmContact.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!contact) throw createError('Contact not found', 404);
@@ -58,7 +59,7 @@ router.delete('/contacts/:id', async (req, res) => {
 });
 
 // Upload contacts from CSV (columns: name, email, businessName, notes)
-router.post('/contacts/import', (req, res, next) => csvUpload.single('file')(req, res, (err) => err ? next(err) : next()), async (req, res) => {
+router.post('/contacts/import', requireApprovedBrand, (req, res, next) => csvUpload.single('file')(req, res, (err) => err ? next(err) : next()), async (req, res) => {
   if (!req.file) throw createError('No CSV file uploaded', 400);
   const brandProfileId = await getBrandId(req.user.id);
   const rows = parseCsv(req.file.buffer.toString('utf-8'));
@@ -78,7 +79,7 @@ router.post('/contacts/import', (req, res, next) => csvUpload.single('file')(req
 });
 
 // Send a share link campaign to contacts
-router.post('/campaigns/send-share-link', validate(z.object({
+router.post('/campaigns/send-share-link', requireApprovedBrand, validate(z.object({
   shareLinkId: z.string().min(1),
   subject: z.string().min(1).max(200),
   message: z.string().min(1).max(1000),

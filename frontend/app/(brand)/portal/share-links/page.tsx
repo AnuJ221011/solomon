@@ -20,8 +20,10 @@ import {
   useUpdateShareLink,
   useDeleteShareLink,
   ShareLink,
+  ShareLinkTarget,
   CreateShareLinkInput,
 } from '@/hooks/queries/useShareLinks'
+import { useMyProducts } from '@/hooks/queries/useProducts'
 
 // ─── Summary card ─────────────────────────────────────────────────────────────
 
@@ -50,32 +52,44 @@ function SummaryCardSkeleton() {
 function CreateLinkModal() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [target, setTarget] = useState('Storefront')
+  const [target, setTarget] = useState<ShareLinkTarget>('STOREFRONT')
+  const [productId, setProductId] = useState('')
   const [customSlug, setCustomSlug] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [currency, setCurrency] = useState('')
+  const [password, setPassword] = useState('')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
 
+  const { data: myProducts = [] } = useMyProducts()
   const createMutation = useCreateShareLink()
+
+  const reset = () => {
+    setOpen(false)
+    setName('')
+    setTarget('STOREFRONT')
+    setProductId('')
+    setCustomSlug('')
+    setExpiresAt('')
+    setCurrency('')
+    setPassword('')
+    setWelcomeMessage('')
+  }
 
   const handleSubmit = () => {
     const body: CreateShareLinkInput = {
-      name,
+      name: name || undefined,
       target,
-      customSlug: customSlug || undefined,
-      expiresAt: expiresAt || undefined,
-      currency: currency || undefined,
+      ...(target === 'PRODUCT' && { productId }),
+      slug: customSlug || undefined,
+      expiresAt: expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : undefined,
+      lockedCurrency: currency || undefined,
+      password: password || undefined,
+      customMessage: welcomeMessage || undefined,
     }
-    createMutation.mutate(body, {
-      onSuccess: () => {
-        setOpen(false)
-        setName('')
-        setTarget('Storefront')
-        setCustomSlug('')
-        setExpiresAt('')
-        setCurrency('')
-      },
-    })
+    createMutation.mutate(body, { onSuccess: reset })
   }
+
+  const canSubmit = !!name && (target !== 'PRODUCT' || !!productId) && !createMutation.isPending
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -109,14 +123,31 @@ function CreateLinkModal() {
             </label>
             <select
               value={target}
-              onChange={(e) => setTarget(e.target.value)}
+              onChange={(e) => { setTarget(e.target.value as ShareLinkTarget); setProductId('') }}
               className="w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
             >
-              <option>Storefront</option>
-              <option>Collection</option>
-              <option>Product</option>
+              <option value="STOREFRONT">Storefront</option>
+              <option value="PRODUCT">Product</option>
             </select>
           </div>
+
+          {target === 'PRODUCT' && (
+            <div>
+              <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
+                Product
+              </label>
+              <select
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                className="w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary focus:outline-none focus:border-accent transition-colors"
+              >
+                <option value="">Select a product…</option>
+                {myProducts.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
@@ -165,6 +196,33 @@ function CreateLinkModal() {
               <option value="AED">AED — UAE Dirham</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
+              Password (optional)
+            </label>
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Leave blank for no password"
+              className="w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-1.5">
+              Welcome Message (optional)
+            </label>
+            <textarea
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              placeholder="Shown to buyers when they open this link"
+              rows={2}
+              maxLength={300}
+              className="w-full px-3 py-2 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors resize-none"
+            />
+          </div>
         </div>
         <DialogFooter>
           <DialogClose className="inline-flex items-center justify-center h-10 px-4 rounded border border-border-warm text-[14px] font-[600] font-public-sans text-primary hover:bg-muted-bg transition-colors">
@@ -173,7 +231,7 @@ function CreateLinkModal() {
           <Button
             size="md"
             onClick={handleSubmit}
-            disabled={!name || createMutation.isPending}
+            disabled={!canSubmit}
           >
             {createMutation.isPending ? 'Creating...' : 'Create Link'}
           </Button>

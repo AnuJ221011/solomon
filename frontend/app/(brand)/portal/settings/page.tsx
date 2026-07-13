@@ -210,6 +210,65 @@ function DocumentLink({ label, field, url, onOpen }: { label: string; field: str
   )
 }
 
+// Shows the existing DocumentLink (view/download) once a document is on
+// file, otherwise a click-to-upload slot — lets brands fill these in from
+// their portal instead of only ever at onboarding.
+function DocumentUploadSlot({ label, uploadField, urlField, url, uploading, onUpload, onOpen }: {
+  label: string; uploadField: string; urlField: string; url?: string | null
+  uploading: boolean; onUpload: (field: string, file: File) => void
+  onOpen: (doc: { label: string; field: string }) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
+
+  if (url) {
+    return <DocumentLink label={label} field={urlField} url={url} onOpen={onOpen} />
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => !uploading && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragging(false)
+          if (uploading) return
+          const file = e.dataTransfer.files?.[0]
+          if (file) onUpload(uploadField, file)
+        }}
+        disabled={uploading}
+        className={cn(
+          'flex items-center gap-2.5 px-4 py-3 bg-muted-bg/40 border border-dashed rounded transition-all group w-full text-left disabled:opacity-50',
+          dragging ? 'border-accent bg-accent/5' : 'border-border-warm hover:border-accent'
+        )}
+      >
+        {uploading ? (
+          <Loader2 size={15} className="text-muted-text animate-spin shrink-0" />
+        ) : (
+          <Upload size={15} className="text-muted-text group-hover:text-accent shrink-0" />
+        )}
+        <span className="text-[13px] font-[500] font-public-sans text-muted-text group-hover:text-primary flex-1">
+          {uploading ? 'Uploading…' : dragging ? 'Drop file here' : `Upload or drag ${label} here`}
+        </span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) onUpload(uploadField, file)
+          e.target.value = ''
+        }}
+      />
+    </div>
+  )
+}
+
 const INPUT_CLS =
   'w-full h-9 px-3 rounded border border-border-warm bg-transparent text-[14px] font-public-sans text-primary placeholder:text-muted-text focus:outline-none focus:border-accent transition-colors'
 
@@ -326,10 +385,10 @@ export default function SettingsPage() {
   const [uploadingBanner, setUploadingBanner] = useState(false)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [draggingLogo, setDraggingLogo] = useState(false)
+  const [draggingBanner, setDraggingBanner] = useState(false)
 
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function uploadLogoFile(file: File) {
     setLogoPreview(URL.createObjectURL(file))
     setUploadingLogo(true)
     try {
@@ -348,9 +407,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function uploadBannerFile(file: File) {
     setBannerPreview(URL.createObjectURL(file))
     setUploadingBanner(true)
     try {
@@ -366,6 +423,50 @@ export default function SettingsPage() {
     } finally {
       setUploadingBanner(false)
       if (bannerInputRef.current) bannerInputRef.current.value = ''
+    }
+  }
+
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) uploadLogoFile(file)
+  }
+
+  function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) uploadBannerFile(file)
+  }
+
+  function handleLogoDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setDraggingLogo(false)
+    if (uploadingLogo) return
+    const file = e.dataTransfer.files?.[0]
+    if (file) uploadLogoFile(file)
+  }
+
+  function handleBannerDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setDraggingBanner(false)
+    if (uploadingBanner) return
+    const file = e.dataTransfer.files?.[0]
+    if (file) uploadBannerFile(file)
+  }
+
+  // ── Identity/business document upload ──────────────────────────────────────
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null)
+
+  async function handleDocUpload(field: string, file: File) {
+    setUploadingDoc(field)
+    try {
+      const fd = new FormData()
+      fd.append(field, file)
+      await api.post('/photos/brand/documents', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      queryClient.invalidateQueries({ queryKey: ['my-brand-profile'] })
+      toast.success('Document uploaded.')
+    } catch (err) {
+      toast.error(getApiError(err))
+    } finally {
+      setUploadingDoc(null)
     }
   }
 
@@ -455,7 +556,7 @@ export default function SettingsPage() {
     const extra = saved.filter((c: string) => !PRODUCT_CATEGORIES.includes(c))
     if (extra.length) setCategoryOptions([...PRODUCT_CATEGORIES, ...extra])
     setInstagramHandle(brandProfile.instagramHandle ?? '')
-    setWebsiteUrl(brandProfile.websiteUrl ?? '')
+    setWebsiteUrl((brandProfile.websiteUrl ?? '').replace(/^https?:\/\//i, ''))
     setGstNumber(brandProfile.gstNumber ?? '')
     setBusinessRegNumber(brandProfile.businessRegNumber ?? '')
     setMinimumOrderValue(brandProfile.minimumOrderValue != null ? String(brandProfile.minimumOrderValue) : '')
@@ -503,7 +604,7 @@ export default function SettingsPage() {
       existingRetailPartners: existingRetailPartners.trim() || undefined,
       category: categories.length ? categories : undefined,
       instagramHandle: instagramHandle.trim() || undefined,
-      websiteUrl: websiteUrl.trim() || undefined,
+      websiteUrl: websiteUrl.trim() ? `https://${websiteUrl.trim().replace(/^https?:\/\//i, '')}` : undefined,
       gstNumber: gstNumber.trim() || undefined,
       businessRegNumber: businessRegNumber.trim() || undefined,
       minimumOrderValue: minimumOrderValue !== '' ? Number(minimumOrderValue) : undefined,
@@ -627,8 +728,16 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <Field label="Logo" hint="Square image, max 8 MB. Shown on your storefront and product cards.">
-              <div className="flex items-center gap-3">
+            <Field label="Logo" hint="Square image, max 8 MB. Shown on your storefront and product cards. You can also drag a file onto this row.">
+              <div
+                onDragOver={(e) => { e.preventDefault(); if (!uploadingLogo) setDraggingLogo(true) }}
+                onDragLeave={() => setDraggingLogo(false)}
+                onDrop={handleLogoDrop}
+                className={cn(
+                  'flex items-center gap-3 rounded border-2 border-dashed p-2 -m-2 transition-colors',
+                  draggingLogo ? 'border-accent bg-accent/5' : 'border-transparent'
+                )}
+              >
                 {(logoPreview ?? brandProfile?.logoUrl) ? (
                   <img src={logoPreview ?? brandProfile.logoUrl} alt="Logo"
                     className="w-12 h-12 rounded border border-border-warm object-cover flex-shrink-0" />
@@ -649,8 +758,16 @@ export default function SettingsPage() {
                 </button>
               </div>
             </Field>
-            <Field label="Banner" hint="Wide image (1600×400 recommended), max 8 MB.">
-              <div className="flex items-center gap-3">
+            <Field label="Banner" hint="Wide image (1600×400 recommended), max 8 MB. You can also drag a file onto this row.">
+              <div
+                onDragOver={(e) => { e.preventDefault(); if (!uploadingBanner) setDraggingBanner(true) }}
+                onDragLeave={() => setDraggingBanner(false)}
+                onDrop={handleBannerDrop}
+                className={cn(
+                  'flex items-center gap-3 rounded border-2 border-dashed p-2 -m-2 transition-colors',
+                  draggingBanner ? 'border-accent bg-accent/5' : 'border-transparent'
+                )}
+              >
                 {(bannerPreview ?? brandProfile?.bannerUrl) ? (
                   <img src={bannerPreview ?? brandProfile.bannerUrl} alt="Banner"
                     className="w-24 h-12 rounded border border-border-warm object-cover flex-shrink-0" />
@@ -750,8 +867,12 @@ export default function SettingsPage() {
             </div>
           </Field>
           <Field label="Website URL">
-            <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)}
-              placeholder="https://yourbrand.com" className={INPUT_CLS} />
+            <div className="flex items-center rounded border border-border-warm focus-within:border-accent overflow-hidden transition-colors">
+              <span className="px-3 h-9 flex items-center text-[13px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">https://</span>
+              <input type="text" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="yourbrand.com"
+                className="flex-1 h-9 px-3 bg-transparent text-[14px] font-public-sans text-primary focus:outline-none" />
+            </div>
           </Field>
         </div>
       </Section>
@@ -801,30 +922,36 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Submitted Documents ─────────────────────────────────────────────── */}
+      {/* ── Identity & Business Documents ────────────────────────────────────── */}
       <Section
-        title="Submitted Documents"
-        description="Identity and business documents you submitted during onboarding. These are reviewed by our team and cannot be edited here — contact support if you need to update one."
+        title="Identity & Business Documents"
+        description="Upload the documents needed to verify your brand. Once submitted, they're reviewed by our team and can't be edited here — contact support if you need to update one."
       >
         {(() => {
           const docs = [
-            { label: 'Aadhar Card', field: 'aadharUrl', url: brandProfile?.aadharUrl },
-            { label: 'PAN Card', field: 'panUrl', url: brandProfile?.panUrl },
-            { label: 'GST Certificate', field: 'gstCertUrl', url: brandProfile?.gstCertUrl },
-            { label: 'Incorporation Certificate', field: 'incorporateCertUrl', url: brandProfile?.incorporateCertUrl },
-            { label: 'MSME Certificate', field: 'msmeCertUrl', url: brandProfile?.msmeCertUrl },
-            { label: 'ISO Certificate', field: 'isoCertUrl', url: brandProfile?.isoCertUrl },
-            { label: 'IEC Certificate', field: 'iecCertUrl', url: brandProfile?.iecCertUrl },
+            { label: 'Aadhar Card', uploadField: 'aadhar', urlField: 'aadharUrl', url: brandProfile?.aadharUrl },
+            { label: 'PAN Card', uploadField: 'pan', urlField: 'panUrl', url: brandProfile?.panUrl },
+            { label: 'GST Certificate', uploadField: 'gstCert', urlField: 'gstCertUrl', url: brandProfile?.gstCertUrl },
+            { label: 'Incorporation Certificate', uploadField: 'incorporateCert', urlField: 'incorporateCertUrl', url: brandProfile?.incorporateCertUrl },
+            { label: 'MSME Certificate', uploadField: 'msmeCert', urlField: 'msmeCertUrl', url: brandProfile?.msmeCertUrl },
+            { label: 'ISO Certificate', uploadField: 'isoCert', urlField: 'isoCertUrl', url: brandProfile?.isoCertUrl },
+            { label: 'IEC Certificate', uploadField: 'iecCert', urlField: 'iecCertUrl', url: brandProfile?.iecCertUrl },
           ]
-          const hasAny = docs.some((d) => d.url)
-          return hasAny ? (
+          return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {docs.map((d) => (
-                <DocumentLink key={d.field} label={d.label} field={d.field} url={d.url} onOpen={setDocViewer} />
+                <DocumentUploadSlot
+                  key={d.uploadField}
+                  label={d.label}
+                  uploadField={d.uploadField}
+                  urlField={d.urlField}
+                  url={d.url}
+                  uploading={uploadingDoc === d.uploadField}
+                  onUpload={handleDocUpload}
+                  onOpen={setDocViewer}
+                />
               ))}
             </div>
-          ) : (
-            <p className="text-[13px] font-public-sans text-muted-text">No documents on file.</p>
           )
         })()}
       </Section>

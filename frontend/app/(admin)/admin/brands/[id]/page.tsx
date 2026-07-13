@@ -436,7 +436,7 @@ export default function AdminBrandDetailPage() {
       <div className="bg-white border border-border-warm rounded-xl overflow-hidden mb-5">
         {/* Banner */}
         {brand.bannerUrl ? (
-          <div className="h-48 w-full overflow-hidden">
+          <div className="h-56 w-full overflow-hidden">
             <img src={brand.bannerUrl} alt="Brand banner" className="w-full h-full object-cover" />
           </div>
         ) : (

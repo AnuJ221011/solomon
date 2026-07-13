@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { Zap, Clock, Download, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Download, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/shared/DataTable'
@@ -43,50 +43,6 @@ function useMyPayouts() {
     queryKey: ['my-payouts'],
     queryFn: () => api.get('/brands/me/payouts').then((r) => r.data.data),
   })
-}
-
-// ─── Payout speed option ──────────────────────────────────────────────────────
-
-interface SpeedOptionProps {
-  icon: React.ReactNode
-  title: string
-  subtitle: string
-  selected: boolean
-  onSelect: () => void
-}
-
-function SpeedOption({ icon, title, subtitle, selected, onSelect }: SpeedOptionProps) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex-1 flex items-start gap-3 p-4 rounded border text-left transition-colors',
-        selected
-          ? 'border-accent bg-accent/[5%]'
-          : 'border-border-warm bg-surface hover:bg-muted-bg'
-      )}
-    >
-      <div className={cn('mt-0.5', selected ? 'text-accent' : 'text-muted-text')}>
-        {icon}
-      </div>
-      <div>
-        <p className={cn(
-          'text-[14px] font-[600] font-public-sans',
-          selected ? 'text-primary' : 'text-muted-text'
-        )}>
-          {title}
-        </p>
-        <p className="text-[12px] font-public-sans text-muted-text mt-0.5">{subtitle}</p>
-      </div>
-      <div className={cn(
-        'ml-auto w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
-        selected ? 'border-accent' : 'border-border-warm'
-      )}>
-        {selected && <div className="w-2 h-2 rounded-full bg-accent" />}
-      </div>
-    </button>
-  )
 }
 
 // ─── Summary card skeleton ────────────────────────────────────────────────────
@@ -391,8 +347,6 @@ function BankAccountSection() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PayoutsPage() {
-  const [speedMode, setSpeedMode] = useState<'standard' | 'express'>('standard')
-
   const { data, isLoading } = useMyPayouts()
   const payoutRows = data?.rows ?? []
   const summary = data?.summary
@@ -488,29 +442,6 @@ export default function PayoutsPage() {
 
       {/* Bank account details */}
       <BankAccountSection />
-
-      {/* Payout speed toggle */}
-      <div className="mb-8">
-        <p className="text-[12px] font-[600] font-public-sans text-muted-text uppercase tracking-[0.05em] mb-3">
-          Payout Speed
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-[600px]">
-          <SpeedOption
-            icon={<Clock size={16} />}
-            title="Standard — Net 30"
-            subtitle="No fee. Settle within 30 days of delivery."
-            selected={speedMode === 'standard'}
-            onSelect={() => setSpeedMode('standard')}
-          />
-          <SpeedOption
-            icon={<Zap size={16} />}
-            title="Express — Next Day"
-            subtitle="2.5% fee. Payout next business day."
-            selected={speedMode === 'express'}
-            onSelect={() => setSpeedMode('express')}
-          />
-        </div>
-      </div>
 
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

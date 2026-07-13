@@ -7,13 +7,13 @@ export const createShareLink = async (req, res) => {
 };
 
 export const getShareLink = async (req, res) => {
-  // Password can be passed as a query param: GET /:token?password=secret
-  const link = await shareLinkService.getShareLinkByToken(req.params.token, req.query.password);
+  // Password can be passed as a query param: GET /view/:identifier?password=secret
+  const link = await shareLinkService.getShareLinkForView(req.params.identifier, req.query.password);
   sendSuccess(res, link);
 };
 
 export const recordVisit = async (req, res) => {
-  await shareLinkService.recordVisit(req.body.token, req.body.isUnique);
+  await shareLinkService.recordVisit(req.body.identifier, req.body.isUnique);
   sendSuccess(res, null);
 };
 

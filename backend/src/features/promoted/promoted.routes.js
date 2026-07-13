@@ -4,6 +4,7 @@ import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 
@@ -23,7 +24,7 @@ const getBrandId = async (userId) => {
 };
 
 // Brand — submit a promoted listing bid
-router.post('/', authenticate, authorize('BRAND'), validate(submitSchema), async (req, res) => {
+router.post('/', authenticate, authorize('BRAND'), requireApprovedBrand, validate(submitSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const { productId, bidAmountInr, startsAt, endsAt } = req.body;
 
@@ -55,7 +56,7 @@ router.get('/', authenticate, authorize('BRAND'), async (req, res) => {
 });
 
 // Brand — cancel a promoted listing
-router.delete('/:id', authenticate, authorize('BRAND'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('BRAND'), requireApprovedBrand, async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const listing = await prisma.promotedListing.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!listing) throw createError('Promoted listing not found', 404);

@@ -3,6 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { env } from '../../config/env.js';
@@ -65,6 +66,7 @@ router.post(
   '/product/:productId',
   authenticate,
   authorize('BRAND'),
+  requireApprovedBrand,
   safeUpload(upload.array('photos', MAX_MEDIA_PER_PRODUCT)),
   async (req, res) => {
     const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
@@ -114,7 +116,7 @@ router.post(
 );
 
 // Reorder product photos/videos
-router.patch('/product/:productId/reorder', authenticate, authorize('BRAND'), async (req, res) => {
+router.patch('/product/:productId/reorder', authenticate, authorize('BRAND'), requireApprovedBrand, async (req, res) => {
   const { order } = req.body; // array of { id, position }
   if (!Array.isArray(order)) throw createError('order must be an array', 400);
 
@@ -143,7 +145,7 @@ router.patch('/product/:productId/reorder', authenticate, authorize('BRAND'), as
 });
 
 // Delete a product photo or video
-router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRAND'), async (req, res) => {
+router.delete('/product/:productId/photo/:photoId', authenticate, authorize('BRAND'), requireApprovedBrand, async (req, res) => {
   const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
   if (!brand) throw createError('Brand profile not found', 404);
 
@@ -191,5 +193,71 @@ router.post('/brand/banner', authenticate, authorize('BRAND'), safeUpload(upload
   });
   sendSuccess(res, { bannerUrl: result.secure_url }, 'Brand banner updated successfully.');
 });
+
+// Multer instance for identity/business document uploads (PDF + image, 5 MB
+// per file) — mirrors the config used at onboarding time in auth.routes.js,
+// for brands completing these details later from their portal instead.
+const docUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowed.includes(file.mimetype)) {
+      return cb(new Error('Only JPG, PNG, or PDF files are allowed'));
+    }
+    cb(null, true);
+  },
+});
+
+const DOC_UPLOAD_FIELDS = [
+  { name: 'aadhar', maxCount: 1 },
+  { name: 'pan', maxCount: 1 },
+  { name: 'gstCert', maxCount: 1 },
+  { name: 'incorporateCert', maxCount: 1 },
+  { name: 'msmeCert', maxCount: 1 },
+  { name: 'isoCert', maxCount: 1 },
+  { name: 'iecCert', maxCount: 1 },
+];
+
+const DOC_FIELD_MAP = {
+  aadhar: { urlField: 'aadharUrl', tag: 'aadhar-card' },
+  pan: { urlField: 'panUrl', tag: 'pan-card' },
+  gstCert: { urlField: 'gstCertUrl', tag: 'gst-certificate' },
+  incorporateCert: { urlField: 'incorporateCertUrl', tag: 'incorporation-certificate' },
+  msmeCert: { urlField: 'msmeCertUrl', tag: 'msme-certificate' },
+  isoCert: { urlField: 'isoCertUrl', tag: 'iso-certificate' },
+  iecCert: { urlField: 'iecCertUrl', tag: 'iec-certificate' },
+};
+
+// Upload/replace identity or business documents — lets a brand fill these
+// in from their portal after signup instead of during onboarding.
+router.post(
+  '/brand/documents',
+  authenticate,
+  authorize('BRAND'),
+  safeUpload(docUpload.fields(DOC_UPLOAD_FIELDS)),
+  async (req, res) => {
+    const brand = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+    if (!brand) throw createError('Brand profile not found', 404);
+
+    const files = req.files ?? {};
+    const providedFields = Object.keys(DOC_FIELD_MAP).filter((field) => files[field]?.[0]);
+    if (providedFields.length === 0) throw createError('No files uploaded', 400);
+
+    const updateData = {};
+    await Promise.all(
+      providedFields.map(async (field) => {
+        const { urlField, tag } = DOC_FIELD_MAP[field];
+        const file = files[field][0];
+        const publicId = `${brand.slug}-${tag}-${Date.now()}`;
+        const result = await uploadToCloudinary(file.buffer, cloudinaryFolders.docs, false, publicId, ['brand-document', tag, brand.slug]);
+        updateData[urlField] = result.secure_url;
+      })
+    );
+
+    const updated = await prisma.brandProfile.update({ where: { userId: req.user.id }, data: updateData });
+    sendSuccess(res, updated, 'Documents uploaded successfully.');
+  }
+);
 
 export default router;

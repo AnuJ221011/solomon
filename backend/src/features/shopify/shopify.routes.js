@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import * as shopifyService from './shopify.service.js';
 import prisma from '../../config/db.js';
 import { sendSuccess } from '../../shared/utils/response.js';
@@ -25,18 +26,18 @@ router.get('/store', authenticate, authorize('BRAND'), async (req, res) => {
   sendSuccess(res, store);
 });
 
-router.post('/store/connect', authenticate, authorize('BRAND'), validate(connectSchema), async (req, res) => {
+router.post('/store/connect', authenticate, authorize('BRAND'), requireApprovedBrand, validate(connectSchema), async (req, res) => {
   const store = await shopifyService.connectStore(req.user.id, req.body);
   sendSuccess(res, store, 'Shopify store connected');
 });
 
-router.delete('/store/disconnect', authenticate, authorize('BRAND'), async (req, res) => {
+router.delete('/store/disconnect', authenticate, authorize('BRAND'), requireApprovedBrand, async (req, res) => {
   await shopifyService.disconnectStore(req.user.id);
   sendSuccess(res, null, 'Shopify store disconnected');
 });
 
 // Import products from connected Shopify store
-router.post('/import-products', authenticate, authorize('BRAND'), async (req, res) => {
+router.post('/import-products', authenticate, authorize('BRAND'), requireApprovedBrand, async (req, res) => {
   const result = await shopifyService.importProductsFromShopify(req.user.id);
   sendSuccess(res, result, `Import complete: ${result.imported} products imported`);
 });

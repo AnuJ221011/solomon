@@ -6,7 +6,6 @@ import Link from 'next/link'
 import {
   ArrowLeft, Check, Eye, EyeOff,
   Upload, X, FileText, User, Building2,
-  Sparkles, RotateCcw, Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -22,7 +21,7 @@ import { useAuthStore } from '@/lib/store/useAuthStore'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PHASE_LABELS = ['Basic info', 'Products & shipping', 'Documents', 'Review & submit']
+const PHASE_LABELS = ['Basic info', 'Business details', 'Review & submit']
 
 // Faire-style two-level category tree: primary → subcategories shown as chips
 const CATEGORY_TREE: Record<string, string[]> = {
@@ -56,27 +55,27 @@ const PHASE_TRANSITIONS = [
     phase: 1,
     heading: 'Welcome to Solomon Bharat!',
     body: "Let's get your shop page set up so you can start selling. You'll be able to save your progress as you go.",
-    estimatedTime: '10 minutes',
+    estimatedTime: '5 minutes',
     cta: 'Get started',
   },
   {
     phase: 2,
-    heading: "Now let's set up your products & shipping",
+    heading: "Now let's set up your business details",
     body: "Tell buyers about your capacity, your minimum order size, and the regions you're able to ship products to.",
     estimatedTime: null,
     cta: 'Continue',
   },
   {
-    phase: 3,
-    heading: "Let's verify your identity",
-    body: "In this section you'll upload your identity and business documents. This keeps the marketplace safe for everyone.",
+    phase: 2,
+    heading: "Let's confirm your business documents",
+    body: 'This keeps the marketplace safe for everyone.',
     estimatedTime: null,
     cta: 'Continue',
   },
   {
-    phase: 4,
+    phase: 3,
     heading: 'Lastly, review your application',
-    body: "Check everything looks right before we submit your brand application. Our team reviews within 24–48 hours.",
+    body: "Check everything looks right before we submit your brand application. Once you're approved, you'll finish setting up your brand story, identity verification, and payout details right from your seller dashboard.",
     estimatedTime: null,
     cta: 'Continue',
   },
@@ -84,23 +83,20 @@ const PHASE_TRANSITIONS = [
 
 // Returns the transition id to show after completing `step`, or null if no transition
 function getTransitionId(step: number, type: RegistrationType): number | null {
-  if (step === 1) return 0                              // welcome
-  if (step === 3) return 1                              // Phase 1→2
-  if (step === 4) return 2                              // Phase 2→3
-  if (step === 5 && type === 'individual') return 3    // Phase 3→4 (individual skips step 6)
-  if (step === 6) return 3                             // Phase 3→4 (business)
+  if (step === 1) return 0                                // welcome, after account creation
+  if (step === 2) return 1                                // brand info → business info
+  if (step === 3 && type === 'business') return 2          // business info → business docs
+  if (step === 3 && type === 'individual') return 3        // business info → review (skips docs)
+  if (step === 4) return 3                                 // business docs → review
   return null
 }
 
 const STEP_HEADING: Record<number, { title: string; subtitle: string }> = {
   1: { title: 'Create your account', subtitle: "It's free to join — no setup fees or commitments." },
   2: { title: 'About your brand', subtitle: 'Tell us who you are and what makes your brand unique.' },
-  3: { title: 'Your brand story', subtitle: 'Your story will appear on your shop page and in marketing emails promoting your brand.' },
-  4: { title: 'About your business', subtitle: 'Help buyers understand your scale and capacity.' },
-  5: { title: 'Identity documents', subtitle: 'Both documents are required for identity verification. Files must be clear and legible.' },
-  6: { title: 'Business documents', subtitle: 'Upload at least one document. Providing more helps speed up your review.' },
-  7: { title: 'Payout bank details', subtitle: "We'll transfer your earnings to this account. You can update these details anytime from your seller portal." },
-  8: { title: 'Review & submit', subtitle: 'Check everything looks right before you send your application.' },
+  3: { title: 'About your business', subtitle: 'Help buyers understand your scale and capacity.' },
+  4: { title: 'Business documents', subtitle: 'GST and IEC certificates are required. Providing more helps speed up your review.' },
+  5: { title: 'Review & submit', subtitle: 'Check everything looks right before you send your application.' },
 }
 
 // Fixed, curated Unsplash photo IDs — one per step, always relevant, never random.
@@ -109,17 +105,14 @@ const STEP_IMAGES: Record<number, { id: string; credit: string }> = {
   0: { id: '1558618666-fcd25c85cd64', credit: 'Artisan Marketplace' },
   1: { id: '1497366216548-37526070297c', credit: 'Building your business' },
   2: { id: '1542744173-8e7e53415bb0', credit: 'Your brand identity' },
-  3: { id: '1452860606245-08befc0ff44b', credit: 'Artisan heritage' },
-  4: { id: '1523275335684-37898b6baf30', credit: 'Wholesale products' },
-  5: { id: '1560250097-0b93528c311a', credit: 'Trusted seller' },
-  6: { id: '1497366754035-f200968a6e72', credit: 'Business verified' },
-  7: { id: '1551836022-deb4988cc6c0', credit: 'Payout setup' },
-  8: { id: '1499750310107-5fef28a66643', credit: 'Review & submit' },
-  9: { id: '1499750310107-5fef28a66643', credit: 'Application complete' },
+  3: { id: '1523275335684-37898b6baf30', credit: 'Wholesale products' },
+  4: { id: '1497366754035-f200968a6e72', credit: 'Business verified' },
+  5: { id: '1499750310107-5fef28a66643', credit: 'Review & submit' },
+  6: { id: '1499750310107-5fef28a66643', credit: 'Application complete' },
 }
 
 function getStepImage(step: number): { src: string; credit: string } {
-  const cfg = STEP_IMAGES[step] ?? STEP_IMAGES[7]
+  const cfg = STEP_IMAGES[step] ?? STEP_IMAGES[5]
   return {
     src: `https://images.unsplash.com/photo-${cfg.id}?auto=format&fit=crop&w=900&h=1200&q=80`,
     credit: cfg.credit,
@@ -129,19 +122,18 @@ function getStepImage(step: number): { src: string; credit: string } {
 // ─── Phase routing ─────────────────────────────────────────────────────────────
 
 function getPhase(step: number): number {
-  if (step <= 3) return 1
-  if (step === 4) return 2
-  if (step <= 6) return 3
-  return 4
+  if (step <= 2) return 1
+  if (step <= 4) return 2
+  return 3
 }
 
 function nextStep(step: number, type: RegistrationType): number {
-  if (step === 5 && type === 'individual') return 7  // skip business docs
+  if (step === 3 && type === 'individual') return 5  // skip business docs
   return step + 1
 }
 
 function prevStep(step: number, type: RegistrationType): number {
-  if (step === 7 && type === 'individual') return 5  // bank → identity (skip business docs)
+  if (step === 5 && type === 'individual') return 3  // review → business info (skip business docs)
   return step - 1
 }
 
@@ -155,14 +147,9 @@ interface FormState {
   primaryCategory: string; subCategories: string[]
   city: string; state: string; websiteOrInstagram: string
   brandLogoFile: File | null; brandBannerFile: File | null
-  brandStory: string
-  wholesaleProductCount: string; minimumOrderValue: string; leadTime: string; returnsWindowDays: string
-  aadharFile: File | null; panFile: File | null
+  wholesaleProductCount: string; minimumOrderValue: string; leadTime: string
   gstCertFile: File | null; incorporateCertFile: File | null
   msmeCertFile: File | null; isoCertFile: File | null; iecCertFile: File | null
-  bankAccountHolderName: string; bankName: string
-  bankAccountNumber: string; bankConfirmAccountNumber: string
-  bankIfscCode: string; bankAccountType: 'SAVINGS' | 'CURRENT'; bankUpiId: string
 }
 
 const INITIAL_FORM: FormState = {
@@ -170,22 +157,17 @@ const INITIAL_FORM: FormState = {
   brandName: '', tagline: '', yearFounded: '', primaryCategory: '', subCategories: [],
   city: '', state: '', websiteOrInstagram: '',
   brandLogoFile: null, brandBannerFile: null,
-  brandStory: '',
-  wholesaleProductCount: '', minimumOrderValue: '', leadTime: '', returnsWindowDays: '',
-  aadharFile: null, panFile: null,
+  wholesaleProductCount: '', minimumOrderValue: '', leadTime: '',
   gstCertFile: null, incorporateCertFile: null,
   msmeCertFile: null, isoCertFile: null, iecCertFile: null,
-  bankAccountHolderName: '', bankName: '',
-  bankAccountNumber: '', bankConfirmAccountNumber: '',
-  bankIfscCode: '', bankAccountType: 'SAVINGS', bankUpiId: '',
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function parseWebPresence(value: string): { websiteUrl?: string } {
-  const v = value.trim()
+  const v = value.trim().replace(/^https?:\/\//i, '')
   if (!v) return {}
-  return { websiteUrl: v }
+  return { websiteUrl: `https://${v}` }
 }
 
 function toggle<T>(arr: T[], item: T): T[] {
@@ -430,31 +412,6 @@ function Chip({ label, selected, onClick, disabled }: {
   )
 }
 
-// ─── Textarea ──────────────────────────────────────────────────────────────────
-
-function Textarea({ id, value, onChange, placeholder, rows = 6, disabled, maxLength }: {
-  id: string; value: string; onChange: (v: string) => void
-  placeholder?: string; rows?: number; disabled?: boolean; maxLength?: number
-}) {
-  return (
-    <textarea
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={rows}
-      disabled={disabled}
-      maxLength={maxLength}
-      className={cn(
-        'w-full rounded border border-[#D4D0C8] bg-white px-4 py-3',
-        'text-[15px] text-primary placeholder:text-[#B0ACA3]',
-        'outline-none focus:border-primary focus:ring-0',
-        'transition-colors resize-none disabled:opacity-50',
-      )}
-    />
-  )
-}
-
 // ─── FileUploadBox ─────────────────────────────────────────────────────────────
 
 function FileUploadBox({ label, hint, file, onChange, required, disabled }: {
@@ -462,13 +419,24 @@ function FileUploadBox({ label, hint, file, onChange, required, disabled }: {
   onChange: (f: File | null) => void; required?: boolean; disabled?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]
+  function processFile(f: File | undefined | null) {
     if (!f) return
     if (f.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return }
     onChange(f)
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    processFile(e.target.files?.[0])
     e.target.value = ''
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    setDragging(false)
+    if (disabled) return
+    processFile(e.dataTransfer.files?.[0])
   }
 
   return (
@@ -481,10 +449,13 @@ function FileUploadBox({ label, hint, file, onChange, required, disabled }: {
       <button
         type="button"
         onClick={() => !disabled && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
         disabled={disabled}
         className={cn(
           'flex items-center gap-4 px-5 py-4 rounded border-2 border-dashed transition-colors text-left w-full',
-          file ? 'border-primary bg-[#F8F7F4]' : 'border-[#D4D0C8] hover:border-primary bg-white',
+          dragging ? 'border-primary bg-[#F8F7F4]' : file ? 'border-primary bg-[#F8F7F4]' : 'border-[#D4D0C8] hover:border-primary bg-white',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
       >
@@ -508,7 +479,7 @@ function FileUploadBox({ label, hint, file, onChange, required, disabled }: {
           <>
             <Upload size={20} className="text-[#B0ACA3] flex-shrink-0" />
             <div>
-              <p className="text-[14px] font-[500] text-[#555]">Click to upload</p>
+              <p className="text-[14px] font-[500] text-[#555]">{dragging ? 'Drop file here' : 'Click or drag file here to upload'}</p>
               <p className="text-[12px] text-[#B0ACA3]">PDF, JPG or PNG — max 5 MB</p>
             </div>
           </>
@@ -591,7 +562,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
     if (otp.length !== 6) { setError('Please enter the 6-digit code.'); return }
     setLoading(true)
     try {
-      await api.post('/auth/verify-email', { email, otp })
+      await api.post('/auth/brand/signup/verify-otp', { email, otp })
       onVerified()
     } catch (err) {
       setError(getApiError(err))
@@ -602,7 +573,7 @@ function OtpVerifyStep({ email, onVerified, onChangeEmail }: {
 
   async function handleResend() {
     try {
-      await api.post('/auth/resend-otp', { email })
+      await api.post('/auth/brand/signup/request-otp', { email })
       setResent(true)
     } catch (err) {
       toast.error(getApiError(err))
@@ -722,10 +693,10 @@ function SuccessContent() {
         <Check size={22} className="text-[#3D8B3D]" />
       </div>
       <h1 className="font-playfair text-[46px] font-[400] text-primary leading-[1.05] mb-5">
-        Your email is confirmed
+        Application submitted
       </h1>
       <p className="text-[15px] text-[#555] leading-[1.75] mb-10">
-        Thanks for confirming your email address. Your brand application is now under
+        Thanks for applying to sell on Solomon Bharat. Your brand application is now under
         review — our team will get back to you within 24–48 hours.
       </p>
       <Link
@@ -747,33 +718,15 @@ export default function ApplyPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [polishingStory, setPolishingStory] = useState(false)
-  const [prevStory, setPrevStory] = useState<string | null>(null)
-
-  async function polishStory() {
-    if (!form.brandStory.trim()) return
-    setPolishingStory(true)
-    try {
-      const res = await api.post('/products/ai/polish', { field: 'brandStory', value: form.brandStory })
-      setPrevStory(form.brandStory)
-      set('brandStory', res.data.data.cleaned)
-    } catch {
-      // silently fail — user's text is unchanged
-    } finally {
-      setPolishingStory(false)
-    }
-  }
-
-  function undoStory() {
-    if (!prevStory) return
-    set('brandStory', prevStory)
-    setPrevStory(null)
-  }
 
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  // Email verification happens right after "Create your account" (step 1),
+  // before the rest of the wizard — submittedEmail gates that early OTP
+  // screen. applicationSubmitted gates the final success screen, shown once
+  // the full application (step 8) is submitted with no further OTP needed.
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
-  const [verified, setVerified] = useState(false)
+  const [applicationSubmitted, setApplicationSubmitted] = useState(false)
   // Faire-style phase transition state: null = no transition, otherwise the transition to show
   const [phaseTransition, setPhaseTransition] = useState<{ id: number; targetStep: number } | null>(null)
 
@@ -784,7 +737,6 @@ export default function ApplyPage() {
     registrationType: RegistrationType | null
     form: Omit<FormState,
       'brandLogoFile' | 'brandBannerFile' |
-      'aadharFile' | 'panFile' |
       'gstCertFile' | 'incorporateCertFile' |
       'msmeCertFile' | 'isoCertFile' | 'iecCertFile'>
   }
@@ -803,14 +755,13 @@ export default function ApplyPage() {
   }, [])
 
   useEffect(() => {
-    // Don't save once the form has been successfully submitted
-    if (submittedEmail) return
+    // Don't save once the application has been successfully submitted
+    if (applicationSubmitted) return
     // Destructured only to exclude these non-serialisable File fields from
     // what gets persisted — the individual bindings are intentionally unused.
     /* eslint-disable @typescript-eslint/no-unused-vars */
     const {
       brandLogoFile, brandBannerFile,
-      aadharFile, panFile,
       gstCertFile, incorporateCertFile,
       msmeCertFile, isoCertFile, iecCertFile,
       ...serialisable
@@ -818,7 +769,7 @@ export default function ApplyPage() {
     /* eslint-enable @typescript-eslint/no-unused-vars */
     const payload: PersistedState = { step, registrationType, form: serialisable }
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload)) } catch { /* quota */ }
-  }, [step, registrationType, form, submittedEmail])
+  }, [step, registrationType, form, applicationSubmitted])
 
   // Category tree from backend (L1 → L2). Falls back to static list while loading.
   const { data: categoryTree = [] } = useCategoryTree()
@@ -848,7 +799,6 @@ export default function ApplyPage() {
       case 2:
         if (!form.brandName.trim()) return 'Please enter your brand name.'
         if (!form.primaryCategory) return 'Please select a primary category.'
-        if (!form.brandLogoFile) return 'Please upload your brand logo.'
         if (!form.brandBannerFile) return 'Please upload your brand banner.'
         if (!form.city.trim()) return 'Please enter your city.'
         if (!form.state.trim()) return 'Please enter your state.'
@@ -858,30 +808,15 @@ export default function ApplyPage() {
         }
         return null
       case 3:
-        if (form.brandStory.trim().length < 100)
-          return 'Brand story must be at least 100 characters.'
-        return null
-      case 4:
         if (!form.wholesaleProductCount || Number(form.wholesaleProductCount) < 1)
           return 'Please enter the number of wholesale styles.'
         if (!form.minimumOrderValue || Number(form.minimumOrderValue) < 1)
           return 'Please enter a minimum order value.'
         if (!form.leadTime) return 'Please select a typical lead time.'
         return null
-      case 5:
-        if (!form.aadharFile) return 'Please upload your Aadhar card.'
-        if (!form.panFile) return 'Please upload your PAN card.'
-        return null
-      case 6: {
-        const has = !!(form.gstCertFile || form.incorporateCertFile || form.msmeCertFile || form.isoCertFile || form.iecCertFile)
-        return has ? null : 'Please upload at least one business document.'
-      }
-      case 7:
-        if (!form.bankAccountHolderName.trim()) return 'Account holder name is required.'
-        if (!form.bankName.trim()) return 'Bank name is required.'
-        if (!form.bankAccountNumber.trim()) return 'Account number is required.'
-        if (form.bankAccountNumber !== form.bankConfirmAccountNumber) return 'Account numbers do not match.'
-        if (!form.bankIfscCode.trim()) return 'IFSC code is required.'
+      case 4:
+        if (!form.gstCertFile) return 'Please upload your GST certificate.'
+        if (!form.iecCertFile) return 'Please upload your IEC (Import Export Code) certificate.'
         return null
       default:
         return null
@@ -894,7 +829,24 @@ export default function ApplyPage() {
     const err = validateStep()
     if (err) { setError(err); return }
 
-    if (step === 8) {
+    if (step === 1) {
+      // Verify the email address right away, before collecting the rest of
+      // the application — the OTP screen below takes over from here.
+      setLoading(true)
+      try {
+        await api.post('/auth/brand/signup/request-otp', { email: form.email })
+        setSubmittedEmail(form.email)
+      } catch (err) {
+        const msg = getApiError(err)
+        toast.error(msg)
+        setError(msg)
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    if (step === 5) {
       if (!agreedToTerms) { setError('Please agree to the Seller Terms to continue.'); return }
       // Final submit
       setLoading(true)
@@ -908,26 +860,16 @@ export default function ApplyPage() {
           phone: form.phone.trim(),
           ...(form.tagline.trim() && { tagline: form.tagline.trim() }),
           ...(form.yearFounded && { yearFounded: Number(form.yearFounded) }),
-          ...(form.brandStory.trim() && { brandStory: form.brandStory.trim() }),
           ...(form.city.trim() && { city: form.city.trim() }),
           ...(form.state.trim() && { state: form.state.trim() }),
           ...(websiteUrl && { websiteUrl }),
           wholesaleProductCount: Number(form.wholesaleProductCount),
           minimumOrderValue: Number(form.minimumOrderValue),
           leadTime: form.leadTime,
-          ...(form.returnsWindowDays && { returnsWindowDays: Number(form.returnsWindowDays) }),
           shippingZones: ALL_SHIPPING_ZONES,
-          bankAccountHolderName: form.bankAccountHolderName.trim(),
-          bankName: form.bankName.trim(),
-          bankAccountNumber: form.bankAccountNumber.trim(),
-          bankIfscCode: form.bankIfscCode.trim().toUpperCase(),
-          bankAccountType: form.bankAccountType,
-          ...(form.bankUpiId.trim() && { bankUpiId: form.bankUpiId.trim() }),
         }))
         if (form.brandLogoFile) fd.append('brandLogo', form.brandLogoFile)
         if (form.brandBannerFile) fd.append('brandBanner', form.brandBannerFile)
-        if (form.aadharFile) fd.append('aadhar', form.aadharFile)
-        if (form.panFile) fd.append('pan', form.panFile)
         if (form.gstCertFile) fd.append('gstCert', form.gstCertFile)
         if (form.incorporateCertFile) fd.append('incorporateCert', form.incorporateCertFile)
         if (form.msmeCertFile) fd.append('msmeCert', form.msmeCertFile)
@@ -935,7 +877,7 @@ export default function ApplyPage() {
         if (form.iecCertFile) fd.append('iecCert', form.iecCertFile)
         await api.post('/auth/brand/signup', fd, { headers: { 'Content-Type': undefined } })
         sessionStorage.removeItem(STORAGE_KEY)
-        setSubmittedEmail(form.email)
+        setApplicationSubmitted(true)
       } catch (err) {
         const msg = getApiError(err)
         toast.error(msg)
@@ -974,17 +916,23 @@ export default function ApplyPage() {
     )
   }
 
-  // ── OTP verification ─────────────────────────────────────────────────────────
+  // ── Early email verification (right after "Create your account") ────────────
 
-  if (submittedEmail && !verified) {
+  if (submittedEmail) {
     return (
-      <SplitShell step={9} showPhase currentPhase={5}>
+      <SplitShell step={1} showPhase={false}>
         <OtpVerifyStep
           email={submittedEmail}
-          onVerified={() => setVerified(true)}
+          onVerified={() => {
+            setSubmittedEmail(null)
+            // Continue exactly where step 1 would have gone next.
+            const tid = getTransitionId(1, registrationType!)
+            const target = nextStep(1, registrationType!)
+            if (tid !== null) setPhaseTransition({ id: tid, targetStep: target })
+            else setStep(target)
+          }}
           onChangeEmail={async (newEmail) => {
-            await api.post('/auth/change-pending-email', { currentEmail: submittedEmail, newEmail })
-            await api.post('/auth/resend-otp', { email: newEmail })
+            await api.post('/auth/brand/signup/request-otp', { email: newEmail })
             set('email', newEmail)
             setSubmittedEmail(newEmail)
           }}
@@ -993,11 +941,11 @@ export default function ApplyPage() {
     )
   }
 
-  // ── Success ──────────────────────────────────────────────────────────────────
+  // ── Success (shown once the full application is submitted) ──────────────────
 
-  if (verified) {
+  if (applicationSubmitted) {
     return (
-      <SplitShell step={9} showPhase currentPhase={5}>
+      <SplitShell step={6} showPhase={false}>
         <SuccessContent />
       </SplitShell>
     )
@@ -1023,14 +971,14 @@ export default function ApplyPage() {
                 Icon: User,
                 title: 'Individual',
                 subtitle: 'Solo creator, artisan, or freelancer',
-                docs: 'Aadhar card & PAN card',
+                docs: "We'll ask for identity verification after you sign up",
               },
               {
                 type: 'business' as const,
                 Icon: Building2,
                 title: 'Business',
                 subtitle: 'Registered company, firm, or partnership',
-                docs: 'Aadhar, PAN & at least one business certificate',
+                docs: 'GST certificate & IEC certificate',
               },
             ]).map(({ type, Icon, title, subtitle, docs }) => (
               <button
@@ -1120,7 +1068,7 @@ export default function ApplyPage() {
                   id="email" type="email" placeholder="you@yourbrand.com" autoComplete="email"
                   value={form.email} onChange={(e) => set('email', e.target.value)} disabled={loading}
                 />
-                <FieldHint>You'll verify this with a 6-digit code after submitting.</FieldHint>
+                <FieldHint>We'll send a 6-digit code to verify this address before you continue.</FieldHint>
               </div>
 
               <div>
@@ -1186,7 +1134,6 @@ export default function ApplyPage() {
                   hint="Square image — shown on your shop page and search results. JPG or PNG, max 5 MB."
                   file={form.brandLogoFile}
                   onChange={(f) => set('brandLogoFile', f)}
-                  required
                   disabled={loading}
                 />
                 <FileUploadBox
@@ -1214,10 +1161,16 @@ export default function ApplyPage() {
                   <FieldLabel>
                     Website <span className="text-[#B0ACA3] font-[400]">(optional)</span>
                   </FieldLabel>
-                  <Input
-                    id="web" type="url" placeholder="https://yourbrand.com"
-                    value={form.websiteOrInstagram} onChange={(e) => set('websiteOrInstagram', e.target.value)} disabled={loading}
-                  />
+                  <div className="flex items-center h-10 rounded border border-border-warm bg-surface focus-within:ring-1 focus-within:ring-accent focus-within:border-accent transition-colors overflow-hidden">
+                    <span className="px-3 h-full flex items-center text-[14px] font-public-sans text-muted-text bg-muted-bg border-r border-border-warm shrink-0">
+                      https://
+                    </span>
+                    <input
+                      id="web" type="text" placeholder="yourbrand.com"
+                      value={form.websiteOrInstagram} onChange={(e) => set('websiteOrInstagram', e.target.value)} disabled={loading}
+                      className="flex-1 h-full px-3 bg-transparent text-[16px] font-public-sans text-primary placeholder:text-muted-text/60 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1279,44 +1232,8 @@ export default function ApplyPage() {
             </>
           )}
 
-          {/* ── Step 3: Your brand story ─────────────────────────────────── */}
+          {/* ── Step 3: About your business ──────────────────────────────── */}
           {step === 3 && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5 gap-2">
-                <FieldLabel>Brand story</FieldLabel>
-                <div className="flex items-center gap-3">
-                  {prevStory ? (
-                    <button type="button" onClick={undoStory}
-                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#888] hover:text-primary transition-colors shrink-0">
-                      <RotateCcw size={11} />Undo
-                    </button>
-                  ) : (
-                    <button type="button" onClick={polishStory} disabled={polishingStory || loading}
-                      className="inline-flex items-center gap-1 text-[12px] font-[500] text-[#7C6A5E] hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0">
-                      {polishingStory ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                      {polishingStory ? 'Polishing…' : 'Polish'}
-                    </button>
-                  )}
-                  <span className={cn('text-[12px]', form.brandStory.length < 100 ? 'text-[#B0ACA3]' : 'text-primary')}>
-                    {form.brandStory.length} / 1000
-                  </span>
-                </div>
-              </div>
-              <Textarea
-                id="brandStory" value={form.brandStory} onChange={(v) => set('brandStory', v)}
-                placeholder="Tell us about your brand's origins, the artisans behind it, and what drives you to create. Minimum 100 characters."
-                rows={10} disabled={loading} maxLength={1000}
-              />
-              {form.brandStory.length > 0 && form.brandStory.length < 100 && (
-                <p className="text-[12px] text-[#B0ACA3] mt-1.5">
-                  {100 - form.brandStory.length} more characters needed
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* ── Step 4: About your business ─────────────────────────────── */}
-          {step === 4 && (
             <>
               <div>
                 <FieldLabel>How many unique wholesale styles do you sell?</FieldLabel>
@@ -1348,149 +1265,22 @@ export default function ApplyPage() {
                 </Select>
                 <FieldHint>How long it typically takes to ship after receiving an order.</FieldHint>
               </div>
-
-              <div>
-                <FieldLabel>Returns window <span className="text-muted-text font-[400] normal-case">(optional)</span></FieldLabel>
-                <Input
-                  id="returnsWindowDays" type="number" min={1} max={365} placeholder="e.g. 60"
-                  value={form.returnsWindowDays} onChange={(e) => set('returnsWindowDays', e.target.value)} disabled={loading}
-                />
-                <FieldHint>Number of days buyers can return first-time orders. Leave blank if you don't offer returns.</FieldHint>
-              </div>
             </>
           )}
 
-          {/* ── Step 5: Identity documents ───────────────────────────────── */}
-          {step === 5 && (
+          {/* ── Step 4: Business documents ───────────────────────────────── */}
+          {step === 4 && (
             <>
-              <FileUploadBox
-                label="Aadhar card"
-                hint="Upload a clear scan or photo of your Aadhar card (front & back on one file)"
-                file={form.aadharFile} onChange={(f) => set('aadharFile', f)} required disabled={loading}
-              />
-              <FileUploadBox
-                label="PAN card"
-                hint="Upload a clear scan or photo of your PAN card"
-                file={form.panFile} onChange={(f) => set('panFile', f)} required disabled={loading}
-              />
-            </>
-          )}
-
-          {/* ── Step 6: Business documents ───────────────────────────────── */}
-          {step === 6 && (
-            <>
-              <FileUploadBox label="GST Certificate" file={form.gstCertFile} onChange={(f) => set('gstCertFile', f)} disabled={loading} />
+              <FileUploadBox label="GST Certificate" file={form.gstCertFile} onChange={(f) => set('gstCertFile', f)} required disabled={loading} />
+              <FileUploadBox label="IEC (Import Export Code) Certificate" file={form.iecCertFile} onChange={(f) => set('iecCertFile', f)} required disabled={loading} />
               <FileUploadBox label="Incorporation / Registration Certificate" file={form.incorporateCertFile} onChange={(f) => set('incorporateCertFile', f)} disabled={loading} />
               <FileUploadBox label="MSME Certificate" file={form.msmeCertFile} onChange={(f) => set('msmeCertFile', f)} disabled={loading} />
               <FileUploadBox label="ISO Certificate" file={form.isoCertFile} onChange={(f) => set('isoCertFile', f)} disabled={loading} />
-              <FileUploadBox label="IEC (Import Export Code) Certificate" file={form.iecCertFile} onChange={(f) => set('iecCertFile', f)} disabled={loading} />
             </>
           )}
 
-          {/* ── Step 7: Payout bank details ──────────────────────────────── */}
-          {step === 7 && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <FieldLabel>Account holder name</FieldLabel>
-                  <Input
-                    id="bankHolder" placeholder="As per bank records"
-                    value={form.bankAccountHolderName}
-                    onChange={(e) => set('bankAccountHolderName', e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <FieldLabel>Bank name</FieldLabel>
-                  <Input
-                    id="bankName" placeholder="e.g. HDFC Bank"
-                    value={form.bankName}
-                    onChange={(e) => set('bankName', e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <FieldLabel>Account number</FieldLabel>
-                  <div className="relative">
-                    <Input
-                      id="bankAccNum" type="password" placeholder="Enter account number"
-                      value={form.bankAccountNumber}
-                      onChange={(e) => set('bankAccountNumber', e.target.value)}
-                      disabled={loading}
-                      className="pr-10"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel>Confirm account number</FieldLabel>
-                  <Input
-                    id="bankConfirm" type="password" placeholder="Re-enter account number"
-                    value={form.bankConfirmAccountNumber}
-                    onChange={(e) => set('bankConfirmAccountNumber', e.target.value)}
-                    disabled={loading}
-                    className={cn(
-                      form.bankConfirmAccountNumber && form.bankConfirmAccountNumber !== form.bankAccountNumber
-                        ? 'border-red-400' : ''
-                    )}
-                  />
-                  {form.bankConfirmAccountNumber && form.bankConfirmAccountNumber !== form.bankAccountNumber && (
-                    <p className="text-[12px] text-red-600 mt-1.5">Account numbers do not match.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <FieldLabel>IFSC code</FieldLabel>
-                  <Input
-                    id="bankIfsc" placeholder="e.g. HDFC0001234" maxLength={11}
-                    value={form.bankIfscCode}
-                    onChange={(e) => set('bankIfscCode', e.target.value.toUpperCase())}
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <FieldLabel>Account type</FieldLabel>
-                  <select
-                    id="bankType"
-                    value={form.bankAccountType}
-                    onChange={(e) => set('bankAccountType', e.target.value as FormState['bankAccountType'])}
-                    disabled={loading}
-                    className={cn(
-                      'w-full h-10 px-3 rounded border border-[#D4D0C8] bg-white',
-                      'text-[15px] text-primary focus:outline-none focus:border-primary transition-colors'
-                    )}
-                  >
-                    <option value="SAVINGS">Savings</option>
-                    <option value="CURRENT">Current</option>
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>
-                    UPI ID <span className="text-[#B0ACA3] font-[400]">(optional)</span>
-                  </FieldLabel>
-                  <Input
-                    id="bankUpi" placeholder="yourname@upi"
-                    value={form.bankUpiId}
-                    onChange={(e) => set('bankUpiId', e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 rounded border border-[#E8E3DC] bg-[#FAFAF8]">
-                <p className="text-[13px] text-[#555] leading-[1.6]">
-                  Your bank details are encrypted and stored securely. They are only used for transferring your payout earnings and are never shared with buyers.
-                </p>
-              </div>
-            </>
-          )}
-
-          {/* ── Step 8: Review & submit ──────────────────────────────────── */}
-          {step === 8 && (
+          {/* ── Step 5: Review & submit ──────────────────────────────────── */}
+          {step === 5 && (
             <>
               <div className="rounded border border-[#E8E3DC] bg-white overflow-hidden divide-y divide-[#E8E3DC]">
                 <div className="px-5 py-4">
@@ -1509,32 +1299,19 @@ export default function ApplyPage() {
                     <ReviewRow label="Subcategories" value={form.subCategories.join(', ')} />
                   )}
                   <ReviewRow label="Location" value={[form.city, form.state].filter(Boolean).join(', ')} />
-                  {form.websiteOrInstagram && <ReviewRow label="Website" value={form.websiteOrInstagram} />}
-                  <ReviewRow label="Brand story" value={<span className="line-clamp-2 text-[13px] leading-[1.5]">{form.brandStory}</span>} />
+                  {form.websiteOrInstagram && <ReviewRow label="Website" value={`https://${form.websiteOrInstagram.replace(/^https?:\/\//i, '')}`} />}
                 </div>
                 <div className="px-5 py-4">
                   <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-[#B0ACA3] mb-2">Products</p>
                   <ReviewRow label="Wholesale styles" value={form.wholesaleProductCount} />
                   <ReviewRow label="Minimum order value" value={`₹${Number(form.minimumOrderValue).toLocaleString('en-IN')}`} />
                   <ReviewRow label="Lead time" value={LEAD_TIMES.find((l) => l.value === form.leadTime)?.label} />
-                  {form.returnsWindowDays && <ReviewRow label="Returns window" value={`${form.returnsWindowDays} days`} />}
                   <ReviewRow label="Shipping" value="All regions worldwide" />
-                </div>
-                <div className="px-5 py-4">
-                  <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-[#B0ACA3] mb-2">Payout bank account</p>
-                  <ReviewRow label="Account holder" value={form.bankAccountHolderName} />
-                  <ReviewRow label="Bank" value={form.bankName} />
-                  <ReviewRow label="Account number" value={`••••••${form.bankAccountNumber.slice(-4)}`} />
-                  <ReviewRow label="IFSC" value={form.bankIfscCode} />
-                  <ReviewRow label="Account type" value={form.bankAccountType === 'SAVINGS' ? 'Savings' : 'Current'} />
-                  {form.bankUpiId && <ReviewRow label="UPI ID" value={form.bankUpiId} />}
                 </div>
                 <div className="px-5 py-4">
                   <p className="text-[11px] font-[700] uppercase tracking-[0.08em] text-[#B0ACA3] mb-2">Documents</p>
                   {form.brandLogoFile && <ReviewRow label="Brand logo" value={form.brandLogoFile.name} />}
                   {form.brandBannerFile && <ReviewRow label="Brand banner" value={form.brandBannerFile.name} />}
-                  <ReviewRow label="Aadhar card" value={form.aadharFile?.name} />
-                  <ReviewRow label="PAN card" value={form.panFile?.name} />
                   {registrationType === 'business' && (
                     <>
                       {form.gstCertFile && <ReviewRow label="GST Certificate" value={form.gstCertFile.name} />}
@@ -1545,6 +1322,12 @@ export default function ApplyPage() {
                     </>
                   )}
                 </div>
+              </div>
+
+              <div className="p-4 rounded border border-[#E8E3DC] bg-[#FAFAF8]">
+                <p className="text-[13px] text-[#555] leading-[1.6]">
+                  Almost there — once approved, you'll finish setting up your brand story, identity verification, and payout bank details right from your seller dashboard.
+                </p>
               </div>
 
               <label className="flex items-start gap-3 cursor-pointer group">
@@ -1580,7 +1363,7 @@ export default function ApplyPage() {
           <NavButtons
             step={step}
             loading={loading}
-            isSubmit={step === 8}
+            isSubmit={step === 5}
             onBack={() => { setError(null); setStep(prevStep(step, registrationType!)) }}
           />
         </form>

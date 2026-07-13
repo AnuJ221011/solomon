@@ -199,7 +199,7 @@ const WHY_ITEMS = [
   {
     Icon: Shield,
     title: 'Secure, guaranteed payments',
-    body: 'Buyers pay upfront. We hold funds in escrow and release your payout within 30 days of dispatch — no chasing invoices, no bad debt.',
+    body: 'Buyers pay upfront. We hold funds in escrow and release your payout within 15 days of dispatch — no chasing invoices, no bad debt.',
   },
   {
     Icon: Zap,
@@ -294,7 +294,7 @@ const STEPS = [
   {
     number: '04',
     title: 'Receive orders & get paid',
-    body: 'Orders land in your seller portal. Ship, mark dispatched, and we release payment to your bank account within 30 days.',
+    body: 'Orders land in your seller portal. Ship, mark dispatched, and we release payment to your bank account within 15 days.',
   },
 ]
 
@@ -701,7 +701,7 @@ const FAQS = [
   },
   {
     q: 'When do I get paid?',
-    a: 'Standard payouts are released within 30 days of dispatch (Net 30, free). We also offer Express payouts — next-business-day for a 2.5% fee — coming soon.',
+    a: 'Standard payouts are released within 15 days of dispatch (free). We also offer Express payouts — next-business-day for a 2.5% fee — coming soon.',
   },
   {
     q: 'Do international buyers handle customs and import duties?',

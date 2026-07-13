@@ -298,7 +298,9 @@ model Product {
   orderCount       Int                 @default(0)
   // Product attributes
   material         String?
-  dimensions       String?
+  lengthCm         Float?
+  breadthCm        Float?
+  heightCm         Float?
   isHandmade       Boolean             @default(false)
   placeOfOrigin    String?
   isGITagged       Boolean             @default(false)
@@ -635,6 +637,7 @@ model ShareLink {
   brandProfile    BrandProfile    @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
   token           String          @unique @default(cuid())
   slug            String?         @unique
+  name            String?
   target          ShareLinkTarget
   productId       String?
   collectionId    String?

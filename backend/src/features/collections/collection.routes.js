@@ -4,6 +4,7 @@ import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 
@@ -37,7 +38,7 @@ router.get('/', async (req, res) => {
   sendSuccess(res, collections);
 });
 
-router.post('/', validate(createSchema), async (req, res) => {
+router.post('/', requireApprovedBrand, validate(createSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const collection = await prisma.collection.create({
     data: { ...req.body, brandProfileId },
@@ -45,7 +46,7 @@ router.post('/', validate(createSchema), async (req, res) => {
   sendSuccess(res, collection, 'Collection created and saved.', 201);
 });
 
-router.patch('/:id', validate(createSchema.partial()), async (req, res) => {
+router.patch('/:id', requireApprovedBrand, validate(createSchema.partial()), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);
@@ -53,7 +54,7 @@ router.patch('/:id', validate(createSchema.partial()), async (req, res) => {
   sendSuccess(res, updated, 'Collection updated successfully.');
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireApprovedBrand, async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);
@@ -61,7 +62,7 @@ router.delete('/:id', async (req, res) => {
   sendSuccess(res, null, 'Collection removed from your store.');
 });
 
-router.post('/:id/products', validate(addProductSchema), async (req, res) => {
+router.post('/:id/products', requireApprovedBrand, validate(addProductSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);
@@ -74,7 +75,7 @@ router.post('/:id/products', validate(addProductSchema), async (req, res) => {
   sendSuccess(res, item, 'Product added to collection');
 });
 
-router.delete('/:id/products/:productId', async (req, res) => {
+router.delete('/:id/products/:productId', requireApprovedBrand, async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const col = await prisma.collection.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!col) throw createError('Collection not found', 404);

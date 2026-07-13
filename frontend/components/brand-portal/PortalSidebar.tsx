@@ -56,7 +56,10 @@ const NAV_GROUPS: NavGroup[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function PortalSidebar() {
+export function PortalSidebar({ locked = false, onLockedClick }: {
+  locked?: boolean
+  onLockedClick?: () => void
+} = {}) {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
@@ -99,33 +102,49 @@ export function PortalSidebar() {
             <ul className="space-y-0.5">
               {group.items.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActive(href, exact)
+                const itemClassName = cn(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-md w-full text-left',
+                  'text-[13.5px] font-public-sans transition-colors',
+                  locked
+                    ? 'text-muted-text/50 cursor-not-allowed hover:bg-bg/60'
+                    : active
+                      ? 'bg-muted-bg text-primary font-[600]'
+                      : 'text-muted-text font-[400] hover:bg-bg hover:text-primary'
+                )
+                const content = (
+                  <>
+                    <Icon
+                      size={15}
+                      aria-hidden="true"
+                      className={cn('shrink-0', locked ? 'text-[#9CA3AF]/50' : active ? 'text-accent' : 'text-[#9CA3AF]')}
+                    />
+                    {label}
+                    {!locked && href === '/portal/messages' && unreadMessages > 0 && (
+                      <span className="ml-auto min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] font-[700] flex items-center justify-center">
+                        {unreadMessages > 9 ? '9+' : unreadMessages}
+                      </span>
+                    )}
+                    {!locked && active && !(href === '/portal/messages' && unreadMessages > 0) && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
+                    )}
+                  </>
+                )
                 return (
                   <li key={href}>
-                    <Link
-                      href={href}
-                      className={cn(
-                        'flex items-center gap-2.5 px-3 py-2 rounded-md',
-                        'text-[13.5px] font-public-sans transition-colors',
-                        active
-                          ? 'bg-muted-bg text-primary font-[600]'
-                          : 'text-muted-text font-[400] hover:bg-bg hover:text-primary'
-                      )}
-                    >
-                      <Icon
-                        size={15}
-                        aria-hidden="true"
-                        className={cn('shrink-0', active ? 'text-accent' : 'text-[#9CA3AF]')}
-                      />
-                      {label}
-                      {href === '/portal/messages' && unreadMessages > 0 && (
-                        <span className="ml-auto min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] font-[700] flex items-center justify-center">
-                          {unreadMessages > 9 ? '9+' : unreadMessages}
-                        </span>
-                      )}
-                      {active && !(href === '/portal/messages' && unreadMessages > 0) && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
-                      )}
-                    </Link>
+                    {locked ? (
+                      <button
+                        type="button"
+                        onClick={onLockedClick}
+                        title="Complete your profile to unlock this"
+                        className={itemClassName}
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      <Link href={href} className={itemClassName}>
+                        {content}
+                      </Link>
+                    )}
                   </li>
                 )
               })}

@@ -4,6 +4,7 @@ import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 
@@ -46,7 +47,7 @@ router.get('/', async (req, res) => {
   sendSuccess(res, promotions);
 });
 
-router.post('/', validate(createSchema), async (req, res) => {
+router.post('/', requireApprovedBrand, validate(createSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const promo = await prisma.promotion.create({
     data: { ...req.body, brandProfileId, startsAt: new Date(req.body.startsAt), endsAt: req.body.endsAt ? new Date(req.body.endsAt) : null },
@@ -54,7 +55,7 @@ router.post('/', validate(createSchema), async (req, res) => {
   sendSuccess(res, promo, 'Promotion created and scheduled.', 201);
 });
 
-router.patch('/:id', validate(updateSchema), async (req, res) => {
+router.patch('/:id', requireApprovedBrand, validate(updateSchema), async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const promo = await prisma.promotion.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!promo) throw createError('Promotion not found', 404);
@@ -70,7 +71,7 @@ router.patch('/:id', validate(updateSchema), async (req, res) => {
   sendSuccess(res, updated, 'Promotion updated successfully.');
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireApprovedBrand, async (req, res) => {
   const brandProfileId = await getBrandId(req.user.id);
   const promo = await prisma.promotion.findFirst({ where: { id: req.params.id, brandProfileId } });
   if (!promo) throw createError('Promotion not found', 404);

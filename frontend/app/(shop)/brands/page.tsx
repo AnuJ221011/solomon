@@ -49,9 +49,15 @@ function BrandCard({ brand }: { brand: Brand }) {
             View Brand <ArrowRight size={13} aria-hidden="true" />
           </span>
         </div>
+      </div>
 
-        {/* Logo — overlapping bottom edge */}
-        <div className="absolute bottom-0 left-4 translate-y-1/2 w-12 h-12 rounded border-2 border-white bg-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
+      {/* Info — offset for logo overlap */}
+      <div className="relative pt-8 pb-4 px-4 flex flex-col flex-1">
+        {/* Logo — overlaps the banner/info seam. Lives here (not inside the
+            banner div above) since that div's overflow-hidden — needed to
+            crop the banner image — would otherwise clip the half of the
+            logo that's meant to hang below it. */}
+        <div className="absolute -top-6 left-4 w-12 h-12 rounded border-2 border-white bg-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {logo ? (
             <Image src={logo} alt={`${name} logo`} fill sizes="48px" className="object-cover" />
           ) : (
@@ -60,10 +66,6 @@ function BrandCard({ brand }: { brand: Brand }) {
             </span>
           )}
         </div>
-      </div>
-
-      {/* Info — offset for logo overlap */}
-      <div className="pt-8 pb-4 px-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="font-playfair text-[18px] font-[500] text-primary leading-tight line-clamp-1">
             {name}

@@ -4,6 +4,7 @@ import prisma from '../../config/db.js';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createError } from '../../shared/utils/createError.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 import { emailField } from '../auth/auth.validator.js';
@@ -28,7 +29,7 @@ router.get('/', async (req, res) => {
   sendSuccess(res, members);
 });
 
-router.post('/', validate(inviteSchema), async (req, res) => {
+router.post('/', requireApprovedBrand, validate(inviteSchema), async (req, res) => {
   const invitee = await prisma.user.findUnique({ where: { email: req.body.email } });
   if (!invitee) throw createError('User with that email not found. They must sign up first.', 404);
   if (invitee.id === req.user.id) throw createError('Cannot add yourself as a team member', 400);
@@ -52,7 +53,7 @@ router.post('/', validate(inviteSchema), async (req, res) => {
   sendSuccess(res, member, 'Team member added successfully.', 201);
 });
 
-router.delete('/:userId', async (req, res) => {
+router.delete('/:userId', requireApprovedBrand, async (req, res) => {
   const member = await prisma.teamMember.findUnique({
     where: { userId_ownerUserId: { userId: req.params.userId, ownerUserId: req.user.id } },
   });

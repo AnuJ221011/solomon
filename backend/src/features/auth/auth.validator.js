@@ -74,6 +74,10 @@ export const verifyOtpSchema = z.object({
   otp: z.string().length(6),
 });
 
+export const requestEmailOtpSchema = z.object({
+  email: emailField,
+});
+
 export const forgotPasswordSchema = z.object({
   email: emailField,
 });

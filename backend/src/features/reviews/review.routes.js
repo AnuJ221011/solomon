@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticate } from '../../shared/middleware/authenticate.js';
 import { authorize } from '../../shared/middleware/authorize.js';
 import { validate, validateQuery } from '../../shared/middleware/validate.js';
+import { requireApprovedBrand } from '../../shared/middleware/requireApprovedBrand.js';
 import { createReview, respondToReview, editReview, listProductReviews } from './review.service.js';
 import { sendSuccess } from '../../shared/utils/response.js';
 
@@ -43,7 +44,7 @@ router.patch('/:id', authenticate, authorize('BUYER'), validate(editSchema), asy
 });
 
 // Brand
-router.post('/:id/respond', authenticate, authorize('BRAND'), validate(respondSchema), async (req, res) => {
+router.post('/:id/respond', authenticate, authorize('BRAND'), requireApprovedBrand, validate(respondSchema), async (req, res) => {
   const review = await respondToReview(req.user.id, req.params.id, req.body.brandResponse);
   sendSuccess(res, review, 'Brand response posted to review.');
 });
