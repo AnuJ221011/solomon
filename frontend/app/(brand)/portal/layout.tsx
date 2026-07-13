@@ -13,7 +13,7 @@ const MOBILE_TABS = [
   { href: '/portal', label: 'Overview' },
   { href: '/portal/orders', label: 'Orders' },
   { href: '/portal/products', label: 'Products' },
-  { href: '/portal/share-links', label: 'Links' },
+  { href: '/portal/messages', label: 'Messages' },
   { href: '/portal/settings', label: 'Settings' },
 ]
 

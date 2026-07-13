@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, Suspense } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Send, Search, MessageSquare, ArrowLeft } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
-import { AccountPageWrapper } from '@/components/shared/AccountPageWrapper'
 import { useAuthStore } from '@/lib/store/useAuthStore'
 import { cn } from '@/lib/utils'
 import {
@@ -27,7 +25,7 @@ function formatTime(iso: string) {
 }
 
 function getDisplayName(conv: Conversation) {
-  return conv.partner.brandProfile?.brandName ?? conv.partner.name ?? 'Unknown'
+  return conv.partner.name ?? 'Unknown'
 }
 
 function getInitial(name: string) {
@@ -36,7 +34,7 @@ function getInitial(name: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function BrandAvatar({ initial, size = 'md' }: { initial: string; size?: 'sm' | 'md' }) {
+function Avatar({ initial, size = 'md' }: { initial: string; size?: 'sm' | 'md' }) {
   return (
     <div className={cn(
       'rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 font-playfair font-[500] text-accent',
@@ -66,7 +64,7 @@ function ThreadItem({
         active ? 'bg-muted-bg' : 'hover:bg-muted-bg/60'
       )}
     >
-      <BrandAvatar initial={getInitial(name)} />
+      <Avatar initial={getInitial(name)} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className="font-public-sans text-[13px] font-[600] text-primary truncate">{name}</span>
@@ -108,16 +106,13 @@ function ChatBubble({ message, myId }: { message: Message; myId: string }) {
   )
 }
 
-// ─── Inner page (needs useSearchParams inside Suspense) ───────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-function MessagesInner() {
+export default function BrandMessagesPage() {
   const user = useAuthStore((s) => s.user)
-  const searchParams = useSearchParams()
-  const initialPartnerId = searchParams.get('partner')
-  const initialPartnerName = searchParams.get('name') ?? ''
 
-  const [activePartnerId, setActivePartnerId] = useState<string | null>(initialPartnerId)
-  const [mobileView, setMobileView] = useState<'threads' | 'chat'>(initialPartnerId ? 'chat' : 'threads')
+  const [activePartnerId, setActivePartnerId] = useState<string | null>(null)
+  const [mobileView, setMobileView] = useState<'threads' | 'chat'>('threads')
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -127,17 +122,13 @@ function MessagesInner() {
   const sendMessage = useSendMessage()
 
   const activeConv = conversations.find((c) => c.partnerId === activePartnerId)
-  // For a new conversation (partner from URL, no prior messages), show their name from URL param
-  const displayName = activeConv
-    ? getDisplayName(activeConv)
-    : (activePartnerId ? initialPartnerName : '')
-  const hasActiveThread = !!activeConv || (!!activePartnerId && !!initialPartnerId)
+  const displayName = activeConv ? getDisplayName(activeConv) : ''
 
   const filtered = search
     ? conversations.filter((c) => getDisplayName(c).toLowerCase().includes(search.toLowerCase()))
     : conversations
 
-  // Auto-select first conversation only when no partner is pre-selected from URL
+  // Auto-select the most recent conversation on load
   useEffect(() => {
     if (!activePartnerId && conversations.length > 0) {
       setActivePartnerId(conversations[0].partnerId)
@@ -157,11 +148,15 @@ function MessagesInner() {
   }
 
   return (
-    <AccountPageWrapper title="Messages" description="Direct conversations with brands">
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-[24px] leading-[1.3] font-[500] font-playfair text-primary">
+          Messages
+        </h1>
+      </div>
 
-      <div
-        className="border border-border-warm rounded overflow-hidden flex h-[calc(100dvh-200px)] min-h-[400px] md:h-[calc(100vh-280px)] md:min-h-[520px]"
-      >
+      <div className="border border-border-warm rounded overflow-hidden flex h-[calc(100vh-220px)] min-h-[480px] bg-white">
         {/* Left — thread list */}
         <div className={cn(
           'flex-shrink-0 border-r border-border-warm flex flex-col',
@@ -193,28 +188,11 @@ function MessagesInner() {
                 </div>
               ))
             )}
-            {/* Show new-conversation placeholder in thread list when coming from product page */}
-            {!convsLoading && initialPartnerId && !conversations.find((c) => c.partnerId === initialPartnerId) && (
-              <button
-                type="button"
-                onClick={() => { setActivePartnerId(initialPartnerId); setMobileView('chat') }}
-                className={cn(
-                  'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors border-b border-border-warm',
-                  activePartnerId === initialPartnerId ? 'bg-muted-bg' : 'hover:bg-muted-bg/60'
-                )}
-              >
-                <BrandAvatar initial={getInitial(initialPartnerName)} />
-                <div className="flex-1 min-w-0">
-                  <span className="font-public-sans text-[13px] font-[600] text-primary truncate block">{initialPartnerName}</span>
-                  <p className="font-public-sans text-[12px] text-muted-text">New conversation</p>
-                </div>
-              </button>
-            )}
-            {!convsLoading && filtered.length === 0 && !initialPartnerId && (
+            {!convsLoading && filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
                 <MessageSquare size={24} className="text-muted-text mb-2" aria-hidden="true" />
                 <p className="font-public-sans text-[13px] text-muted-text">
-                  {search ? 'No conversations found.' : 'No conversations yet.'}
+                  {search ? 'No conversations found.' : 'No messages from buyers yet.'}
                 </p>
               </div>
             )}
@@ -230,7 +208,7 @@ function MessagesInner() {
         </div>
 
         {/* Right — active conversation */}
-        {!hasActiveThread ? (
+        {!activeConv ? (
           <div className={cn(
             'flex-1 items-center justify-center font-public-sans text-[14px] text-muted-text',
             mobileView === 'threads' ? 'hidden md:flex' : 'flex'
@@ -252,10 +230,10 @@ function MessagesInner() {
               >
                 <ArrowLeft size={18} aria-hidden="true" />
               </button>
-              <BrandAvatar initial={getInitial(displayName)} size="sm" />
+              <Avatar initial={getInitial(displayName)} size="sm" />
               <div>
                 <p className="font-public-sans text-[13px] font-[600] text-primary">{displayName}</p>
-                <p className="font-public-sans text-[11px] text-muted-text">Verified supplier</p>
+                <p className="font-public-sans text-[11px] text-muted-text">Buyer</p>
               </div>
             </div>
 
@@ -307,16 +285,6 @@ function MessagesInner() {
           </div>
         )}
       </div>
-    </AccountPageWrapper>
-  )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-export default function MessagesPage() {
-  return (
-    <Suspense>
-      <MessagesInner />
-    </Suspense>
+    </div>
   )
 }

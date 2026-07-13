@@ -11,10 +11,12 @@ import {
   CreditCard,
   BarChart2,
   Settings,
+  MessageCircle,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store/useAuthStore'
+import { useConversations } from '@/hooks/queries/useMessages'
 
 // ─── Nav groups ────────────────────────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/portal/orders', label: 'Orders', icon: ShoppingBag },
       { href: '/portal/products', label: 'Products', icon: Package },
+      { href: '/portal/messages', label: 'Messages', icon: MessageCircle },
     ],
   },
   {
@@ -70,6 +73,9 @@ export function PortalSidebar() {
     if (exact) return pathname === href
     return pathname.startsWith(href)
   }
+
+  const { data: conversations = [] } = useConversations()
+  const unreadMessages = conversations.reduce((sum, c) => sum + c.unreadCount, 0)
 
   return (
     <aside className="h-screen w-[260px] bg-white border-r border-border-warm flex flex-col fixed left-0 top-0 z-30">
@@ -111,7 +117,12 @@ export function PortalSidebar() {
                         className={cn('shrink-0', active ? 'text-accent' : 'text-[#9CA3AF]')}
                       />
                       {label}
-                      {active && (
+                      {href === '/portal/messages' && unreadMessages > 0 && (
+                        <span className="ml-auto min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] font-[700] flex items-center justify-center">
+                          {unreadMessages > 9 ? '9+' : unreadMessages}
+                        </span>
+                      )}
+                      {active && !(href === '/portal/messages' && unreadMessages > 0) && (
                         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
                       )}
                     </Link>
