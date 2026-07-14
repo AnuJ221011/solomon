@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import {
   ArrowRight, Globe2, Shield, Zap, BarChart3, Star,
-  ChevronDown, Store, Award, Users, Package, CheckCircle2,
+  ChevronDown, ChevronRight, Store, Award, Users, Package, CheckCircle2,
   TrendingUp, Clock, Percent, MessageSquare, Smartphone,
   BadgeCheck, IndianRupee, Layers, Share2, PartyPopper,
 } from 'lucide-react'
@@ -631,6 +631,112 @@ function Testimonials() {
   )
 }
 
+// ─── The man behind it ────────────────────────────────────────────────────────
+
+const FOUNDER_STATS = [
+  { value: '7K+',   label: 'Instagram community' },
+  { value: '300+',  label: 'Brands launched across 20+ countries' },
+  { value: '₹7.5L', label: 'Grants raised for Solomon Bharat' },
+  { value: '5',     label: 'Countries personally exported to' },
+]
+
+const FOUNDER_HIGHLIGHTS = [
+  "Mentor at Tetr College of Business & Masters' Union",
+  "Incubated at Masters' Union",
+  'Backed by Ashish Singhal (Founder, CoinSwitch) & Masters\' Union',
+  'Previously exported to UK, Australia, Canada, Bangkok & Qatar',
+]
+
+function FounderSection() {
+  return (
+    <section className="py-14 lg:py-20 bg-surface border-y border-border-warm relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-accent/[0.05] blur-[120px] -translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+
+          {/* Left: photo + stats */}
+          <div>
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] sm:aspect-[16/11] border border-border-warm">
+              <Image
+                src="https://res.cloudinary.com/dxnqyvcdl/image/upload/v1784015077/founder-pranjal_u57boj.jpg"
+                alt="Pranjal S Agrawal, Founder of Solomon Bharat"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" aria-hidden />
+              <div className="absolute bottom-5 left-5">
+                <p className="font-playfair text-[20px] font-[500] text-white leading-tight">Pranjal S Agrawal</p>
+                <p className="font-public-sans text-[12px] text-white/70">Founder · Solomon Bharat</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-5">
+              {FOUNDER_STATS.map(({ value, label }) => (
+                <div key={label} className="bg-bg border border-border-warm rounded-xl p-5">
+                  <p className="font-playfair text-[26px] font-[500] text-primary leading-none">{value}</p>
+                  <p className="font-public-sans text-[12px] text-muted-text mt-1.5 leading-snug">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: copy */}
+          <div>
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="w-8 h-px bg-accent flex-shrink-0" />
+              <p className="font-public-sans text-[11px] font-[700] text-accent uppercase tracking-[0.12em]">
+                The man behind it
+              </p>
+            </div>
+            <h2 className="font-playfair text-[30px] sm:text-[38px] font-[600] text-primary leading-[1.15] mb-5">
+              Built by someone who has{' '}
+              <span className="text-accent italic">actually exported</span>.
+            </h2>
+            <p className="font-public-sans text-[15px] text-muted-text leading-[1.75] mb-6">
+              Solomon Bharat is led by <strong className="text-primary font-[600]">Pranjal S Agrawal</strong> — a
+              content creator, exporter and mentor who has spent the last few years helping
+              Indian founders take their craft to the world.
+            </p>
+
+            <div className="flex flex-col gap-3 mb-8">
+              {FOUNDER_HIGHLIGHTS.map((text) => (
+                <div key={text} className="flex items-start gap-2">
+                  <ChevronRight size={14} className="text-accent flex-shrink-0 mt-[3px]" aria-hidden />
+                  <span className="font-public-sans text-[14px] text-primary/80 leading-[1.6]">{text}</span>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://instagram.com/pranjalsagrawal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-accent text-white font-[600] font-public-sans text-[13px] px-5 py-2.5 hover:bg-accent-hover transition-colors mb-8"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <circle cx="12" cy="12" r="5" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              Follow @pranjalsagrawal
+            </a>
+
+            <div className="bg-bg border border-border-warm rounded-xl p-6">
+              <p className="font-playfair text-[17px] italic text-primary leading-[1.5]">
+                &ldquo;Now I&apos;m taking Indian businesses global — at scale.&rdquo;
+              </p>
+              <p className="font-public-sans text-[13px] text-muted-text mt-3">— Pranjal S Agrawal</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Requirements ─────────────────────────────────────────────────────────────
 
 const REQUIREMENTS = [
@@ -842,6 +948,7 @@ export default function SellPage() {
         <CommissionSection />
         <PortalSection />
         <Testimonials />
+        <FounderSection />
         <RequirementsSection />
         <FAQ />
         <FinalCTA />
