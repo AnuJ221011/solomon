@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Trirong, Quattrocento_Sans } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { Providers } from '@/providers/Providers'
 
@@ -33,6 +34,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${trirong.variable} ${quattrocentoSans.variable}`}>
       <body>
+        <Script id="clarity-analytics" strategy="afterInteractive">
+          {`(function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "xma6kt9rls");`}
+        </Script>
         <Providers>{children}</Providers>
       </body>
     </html>
