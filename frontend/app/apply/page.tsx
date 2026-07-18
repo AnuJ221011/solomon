@@ -1138,7 +1138,7 @@ export default function ApplyPage() {
                 />
                 <FileUploadBox
                   label="Brand banner"
-                  hint="Wide banner image — displayed at the top of your shop page. JPG or PNG, max 5 MB."
+                  hint="Displayed at the top of your shop page. Recommended 1600×400px (4:1), JPG or PNG, max 5 MB."
                   file={form.brandBannerFile}
                   onChange={(f) => set('brandBannerFile', f)}
                   required

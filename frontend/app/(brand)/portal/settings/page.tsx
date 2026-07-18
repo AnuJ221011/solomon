@@ -758,7 +758,7 @@ export default function SettingsPage() {
                 </button>
               </div>
             </Field>
-            <Field label="Banner" hint="Wide image (1600×400 recommended), max 8 MB. You can also drag a file onto this row.">
+            <Field label="Banner" hint="Recommended 1600×400px (4:1), JPG or PNG, max 8 MB. You can also drag a file onto this row.">
               <div
                 onDragOver={(e) => { e.preventDefault(); if (!uploadingBanner) setDraggingBanner(true) }}
                 onDragLeave={() => setDraggingBanner(false)}
